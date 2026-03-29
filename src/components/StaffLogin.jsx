@@ -56,7 +56,7 @@ const StaffLogin = ({ role, onBack, onLoginSuccess }) => {
             Login
           </button>
 
-          {role !== 'Manager' && (
+          {role !== 'Manager' && role !== 'Admin' && (
             <button className="w-full py-3 bg-[#7D162E] hover:bg-[#631124] text-white font-medium rounded-md shadow-sm transition-all mt-2 tracking-wide">
               Forgot Password
             </button>

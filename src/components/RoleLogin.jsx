@@ -5,6 +5,7 @@ const RoleLogin = ({ onSelect }) => {
     { id: 'Cashier', label: 'Login as Cashier' },
     { id: 'Inventory', label: 'Login as Inventory' },
     { id: 'Manager', label: 'Login as Manager' },
+    ({ id: 'Admin', label: 'Login as Admin' }),
   ];
 
   return (

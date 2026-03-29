@@ -33,7 +33,7 @@ function App() {
         />
       )}
       
-      {view === "dashboard" && <DashboardLayout />}
+      {view === "dashboard" && <DashboardLayout role={selectedRole} />}
     </div>
   );
 }
