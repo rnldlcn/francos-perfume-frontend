@@ -2,7 +2,7 @@ import React from 'react';
 
 const DashboardLayout = () => {
   return (
-    <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-sans text-[16px]">
+    <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-montserrat text-[16px]">
       
       {/* SIDEBAR: w-64 (256px) - Perfect multiple of 8 */}
       <div className="w-64 bg-[#1E1E1E] text-white flex flex-col">
@@ -26,6 +26,14 @@ const DashboardLayout = () => {
           <div className="flex items-center gap-2 cursor-pointer p-2 hover:bg-[#333] transition-colors rounded">
              <div className="w-4 h-4 bg-gray-500"></div>
              <p className="text-gray-300">Requests</p>
+          </div>
+          <div className="flex items-center gap-2 cursor-pointer p-2 hover:bg-[#333] transition-colors rounded">
+             <div className="w-4 h-4 bg-gray-500"></div>
+             <p className="text-gray-300">Transactions</p>
+          </div>
+          <div className="flex items-center gap-2 cursor-pointer p-2 hover:bg-[#333] transition-colors rounded">
+             <div className="w-4 h-4 bg-gray-500"></div>
+             <p className="text-gray-300">Forecast</p>
           </div>
         </div>
       </div>
