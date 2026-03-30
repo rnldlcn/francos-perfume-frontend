@@ -17,26 +17,25 @@ const StaffLogin = ({ onLogin }) => {
   const handleLogin = (e) => {
     e.preventDefault();
     
-    // Simulate backend role verification
     let simulatedRole = 'manager'; 
     if (email.toLowerCase().includes('cashier')) simulatedRole = 'cashier staff';
     if (email.toLowerCase().includes('inventory')) simulatedRole = 'inventory staff';
     
-    // INTERCEPT MANAGERS
     if (simulatedRole === 'manager') {
       setIsManagerSelection(true);
     } else {
-      onLogin(simulatedRole, email);
+      // Normal staff login: True role and Active role are the same
+      onLogin({ trueRole: simulatedRole, activeRole: simulatedRole, email: email });
     }
   };
 
   const handleManagerModuleSelect = (moduleName) => {
     if (moduleName === 'Cashier') {
-      // Temporarily downgrade their permissions strictly to Cashier
-      onLogin('cashier staff', email);
+      // True Role = Manager. Active Role = Cashier.
+      onLogin({ trueRole: 'manager', activeRole: 'cashier staff', email: email });
     } else if (moduleName === 'Inventory') {
-      // Keep their full Manager permissions (Dashboard, Inventory, Forecast, etc.)
-      onLogin('manager', email);
+      // True Role = Manager. Active Role = Manager.
+      onLogin({ trueRole: 'manager', activeRole: 'manager', email: email });
     }
   };
 
