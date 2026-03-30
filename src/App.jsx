@@ -3,16 +3,13 @@ import StaffLogin from './pages/StaffLogin';
 import DashboardLayout from './pages/DashboardLayout';
 
 const App = () => {
-  // This state tracks if someone is logged in, and what their role/email is.
-  // When it is 'null', they are forced to the login screen.
   const [user, setUser] = useState(null);
 
-  // This gets passed to the StaffLogin component
-  const handleLogin = (role, email) => {
-    setUser({ role, email });
+  // Now accepts an object with multiple properties
+  const handleLogin = (userData) => {
+    setUser(userData);
   };
 
-  // This gets passed to the DashboardLayout Header component
   const handleLogout = () => {
     setUser(null);
   };
@@ -23,7 +20,8 @@ const App = () => {
         <StaffLogin onLogin={handleLogin} />
       ) : (
         <DashboardLayout 
-          role={user.role} 
+          trueRole={user.trueRole} 
+          activeRole={user.activeRole} 
           userEmail={user.email} 
           onLogout={handleLogout} 
         />
