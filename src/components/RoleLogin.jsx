@@ -1,9 +1,10 @@
 
-const RoleGateway = ({ onSelect }) => {
+const RoleLogin = ({ onSelect }) => {
   const roles = [
     { id: 'Cashier', label: 'Login as Cashier' },
     { id: 'Inventory', label: 'Login as Inventory' },
     { id: 'Manager', label: 'Login as Manager' },
+    ({ id: 'Admin', label: 'Login as Admin' }),
   ];
 
   return (
@@ -27,4 +28,4 @@ const RoleGateway = ({ onSelect }) => {
   );
 };
 
-export default RoleGateway;
+export default RoleLogin;
