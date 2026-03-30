@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import logo from '../assets/FrancoPerfumeLogo.png';
-import Inventory from './Inventory'; 
+import Inventory from './Inventory';
 
 const DashboardLayout = ({ role, userEmail, onLogout }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
