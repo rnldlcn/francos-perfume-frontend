@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
 const Header = ({ role, userEmail, onLogout, canSwitchAccess, onSwitchAccess }) => {
