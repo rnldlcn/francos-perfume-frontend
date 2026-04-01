@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
 
-const AddProductModal = ({isOpen, onlose}) => {
+const AddProductModal = ({isOpen, onClose}) => {
 
 if (!isOpen) return null;
 
