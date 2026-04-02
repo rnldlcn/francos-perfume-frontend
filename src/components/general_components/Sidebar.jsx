@@ -43,21 +43,21 @@ const Sidebar = ({ role, activeTab, setActiveTab }) => {
         {isManager && (
           <div onClick={() => setActiveTab('Transaction History')} className={getTabClass('Transaction History')}>
             <FileClock size={32}/>
-             <p className="text-xl">Transaction History</p>
+             <p className="text-xl">Transactions</p>
           </div>
         )}
 
         {isManager && (
           <div onClick={() => setActiveTab('Barcode')} className={getTabClass('Barcode')}>
             <Barcode size={32}/>
-             <p className="text-xl">Barcode Generation</p>
+             <p className="text-xl">Barcode</p>
           </div>
         )}
 
         {isManager && (
           <div onClick={() => setActiveTab('Discount')} className={getTabClass('Discount')}>
             <Tag size={32}/>
-             <p className="text-xl">Discount Management</p>
+             <p className="text-xl">Discount</p>
           </div>
         )}
 
