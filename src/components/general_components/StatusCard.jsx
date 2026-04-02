@@ -18,7 +18,12 @@ const StatusCard = ({
                 <Icon className={color} size={24}></Icon>
             </div>
             <div className="text-3xl font-bold pt-6">{mainValue}</div>
-            <div className="text-custom-gray text-xl pt-2"><span className={`${color} font-bold`}>{secondValue}</span>{subText}<span className={`${color} font-bold`}>{thirdValue}</span>{secondSubText}</div>
+            <div className="flex items-center gap-1 text-custom-gray text-xl pt-2">
+                {secondValue && <span className={`${color} font-bold`}>{secondValue}</span>}
+                {subText}
+                {thirdValue && <span className={`${color} font-bold`}>{thirdValue}</span>}
+                {secondSubText}
+            </div>
         </div>
     );
 };
