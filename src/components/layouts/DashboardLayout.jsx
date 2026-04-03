@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import Header from '../../components/general_components/Header';
 import Sidebar from '../../components/general_components/Sidebar';
 import DashboardHome from '../../pages/DashboardHomePage'; // NEW IMPORT
+import Forecast from '../../pages/ForecastPage';
 import Inventory from '../../pages/InventoryPage';
 import POS from '../../pages/PointOfSalePage';
+import Request from '../../pages/RequestPage';
 
 const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, onLogout }) => {
   const baseRole = trueRole ? trueRole.toLowerCase() : '';
@@ -60,9 +62,10 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
           {/* LOOK HOW CLEAN THIS IS NOW */}
           {activeTab === 'Dashboard' && <DashboardHome role ={currentActiveRole}/>}
           {activeTab === 'Inventory' && <Inventory role ={currentActiveRole}/>}
-          
+          {activeTab === 'Forecast' && <Forecast />}
+          {activeTab === 'Requests' && <Request />}
+
           {/* You can do the exact same thing for these three pages next! */}
-          {activeTab === 'Requests' && <h1 className="text-[32px] font-bold">Delivery Requests</h1>}
           {activeTab === 'Transaction History' && <h1 className="text-[32px] font-bold">Transaction History</h1>}
           {activeTab === 'Forecast' && <h1 className="text-[32px] font-bold">Sales Forecasting</h1>}
 
