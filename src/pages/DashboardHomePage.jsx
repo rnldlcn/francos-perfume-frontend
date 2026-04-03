@@ -29,7 +29,7 @@ const DashboardHome = ({ role }) => {
       {
       /* 
         ADD A STATEMENT THAT CHANGES THE COLORS OF THE STATUS DEPENDING WHETHER ITS POSITIVE OR NOT
-        THIS IS TO BE CHANGED
+        THIS IS TO BE DONE IN THE FUTURE
       */
       }
 
