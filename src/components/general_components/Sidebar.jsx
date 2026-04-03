@@ -16,13 +16,13 @@ const Sidebar = ({ role, activeTab, setActiveTab }) => {
   };
 
   return (
-            <div className="w-64 bg-custom-black text-custom-white flex flex-col z-20 shrink-0">
-      <div className="py-8 px-6 border-b border-[#333] flex flex-col items-center justify-center mb-4">
+    <div className="w-64 bg-custom-black text-custom-white flex flex-col z-20 shrink-0">
+      <div className="py-6 px-6 border-b border-[#333] flex flex-col items-center justify-center ">
         <img src={logo} alt={companyPictureAlt} className="h-24 w-auto object-contain mb-6" />
         <span className="text-1xl tracking-widest text-custom-gray font-semibold uppercase">Main Menu</span>
       </div>
       
-      <div className="flex flex-col gap-2 w-full overflow-y-auto ">
+      <div className="w-full flex flex-col gap-2 overflow-y-auto sidebar-scroll">
         <div onClick={() => setActiveTab('Dashboard')} className={getTabClass('Dashboard')}>
             <LayoutDashboard size={24}/>
             <p className="text-1xl">Dashboard</p>
@@ -44,7 +44,7 @@ const Sidebar = ({ role, activeTab, setActiveTab }) => {
         </div>
 
         {isManager && (
-          <div onClick={() => setActiveTab('Transaction History')} className={getTabClass('Transaction History')}>
+          <div onClick={() => setActiveTab('Transactions')} className={getTabClass('Transactions')}>
             <FileClock size={24}/>
              <p className="text-1xl">Transactions</p>
           </div>

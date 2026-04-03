@@ -6,6 +6,7 @@ import Forecast from '../../pages/ForecastPage';
 import Inventory from '../../pages/InventoryPage';
 import POS from '../../pages/PointOfSalePage';
 import Request from '../../pages/RequestPage';
+import Transaction from '../../pages/TransactionsPage';
 
 const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, onLogout }) => {
   const baseRole = trueRole ? trueRole.toLowerCase() : '';
@@ -28,7 +29,11 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
 
   const canSwitchAccess = baseRole === 'manager';
 
-  // FULL SCREEN TAKEOVER FOR POS
+  {
+    /*
+      SET UI TO POS
+    */
+  }
   if (activeTab === 'POS') {
     return (
       <POS 
@@ -40,13 +45,10 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
     );
   }
 
-  
-  console.log(currentActiveRole)
-  // STANDARD DASHBOARD LAYOUT
+
   return (
     <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-montserrat text-[16px]">
       <Sidebar role={currentActiveRole} activeTab={activeTab} setActiveTab={setActiveTab} />
-      
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header 
           role={currentActiveRole} 
@@ -56,19 +58,17 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
           onSwitchAccess={handleSwitchAccess} 
         />
         
+        {
+          /* 
+            ADD ALL PAGES HERE
+          */
+        }
         <main className="flex-1 p-8 overflow-auto bg-[#F7F7F9]">
-          
-          
-          {/* LOOK HOW CLEAN THIS IS NOW */}
           {activeTab === 'Dashboard' && <DashboardHome role ={currentActiveRole}/>}
           {activeTab === 'Inventory' && <Inventory role ={currentActiveRole}/>}
           {activeTab === 'Forecast' && <Forecast />}
           {activeTab === 'Requests' && <Request />}
-
-          {/* You can do the exact same thing for these three pages next! */}
-          {activeTab === 'Transaction History' && <h1 className="text-[32px] font-bold">Transaction History</h1>}
-          {activeTab === 'Forecast' && <h1 className="text-[32px] font-bold">Sales Forecasting</h1>}
-
+          {activeTab === 'Transactions' && <Transaction />}
         </main>
       </div>
     </div>

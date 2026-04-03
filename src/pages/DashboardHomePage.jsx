@@ -4,11 +4,12 @@ import StatusCard from "../components/general_components/StatusCard";
 const DashboardHome = ({ role }) => {
 
   const isManager = role === 'manager';
-
   
-
-  {/* TEMP DATA */}
-  
+  {
+    /* 
+    TEMP DATA 
+    */
+  }
   const cards = [
     {title: "Total Inventory", mainValue: 1450, subText: "from last month", Icon: Boxes, color: "text-custom-green", secondValue: "+" + 12 + "%"},
     {title: "Pending Requests", mainValue: 5, subText: "outbound", Icon: Clock, color: "text-custom-blue", secondValue: 3, thirdValue: 2, secondSubText: "inbound"},
@@ -27,10 +28,10 @@ const DashboardHome = ({ role }) => {
       <p className="text-custom-gray text-sm mb-8">System overview and quick metrics.</p>
       
       {
-      /* 
-        ADD A STATEMENT THAT CHANGES THE COLORS OF THE STATUS DEPENDING WHETHER ITS POSITIVE OR NOT
-        THIS IS TO BE DONE IN THE FUTURE
-      */
+        /* 
+          ADD A STATEMENT THAT CHANGES THE COLORS OF THE STATUS DEPENDING WHETHER ITS POSITIVE OR NOT
+          THIS IS TO BE DONE IN THE FUTURE
+        */
       }
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">

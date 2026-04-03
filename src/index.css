@@ -31,19 +31,62 @@
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-custom-gray);
+  border: 2px solid var(--color-custom-black)
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  scrollbar-gutter: stable both-edges;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-custom-gray); 
-  border-radius: 8px;
-  border: 2px solid var(--color-custom-black)
+body:hover ::-webkit-scrollbar-thumb,
+div:hover ::-webkit-scrollbar-thumb {
+  background-color: #878787; /* Your custom-gray */
+  border: 3px solid #1c1c1c; /* Match your background color to make it look "thin" */
 }
+
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-custom-primary-50-opacity)
+  background-color: var(--color-custom-primary) !important; 
+}
+
+.sidebar-scroll {
+  direction: rtl;
+  overflow-y: auto;
+  scrollbar-width: none
+}
+
+.sidebar-scroll > *{
+  direction: ltr;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 8px;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: var(--color-custom-gray);
+  scrollbar-width: auto;
+  border: 2px solid transparent;
+  background-clip: padding-box; 
+}
+
+.sidebar-scroll::webkit-scrollbar {
+  width: 10px;
 }
