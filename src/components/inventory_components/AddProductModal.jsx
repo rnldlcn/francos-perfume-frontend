@@ -31,3 +31,4 @@ const handleSubmit = () => {
     </div>
   );
 };
+export default AddProductModal;

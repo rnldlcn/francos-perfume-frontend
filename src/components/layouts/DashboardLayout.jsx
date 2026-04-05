@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import Inventory from './Inventory';
-import POS from './POS';
-import DashboardHome from './DashboardHome'; // NEW IMPORT
+import { useEffect, useState } from 'react';
+import Header from '../../components/general_components/Header';
+import Sidebar from '../../components/general_components/Sidebar';
+import DashboardHome from '../../pages/DashboardHomePage'; // NEW IMPORT
+import Forecast from '../../pages/ForecastPage';
+import Inventory from '../../pages/InventoryPage';
+import POS from '../../pages/PointOfSalePage';
+import Request from '../../pages/RequestPage';
+import Transaction from '../../pages/TransactionsPage';
 
 const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, onLogout }) => {
   const baseRole = trueRole ? trueRole.toLowerCase() : '';
@@ -21,16 +24,16 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
   }, [currentActiveRole]);
 
   const handleSwitchAccess = () => {
-    if (currentActiveRole === 'manager') {
-      setCurrentActiveRole('cashier staff');
-    } else {
-      setCurrentActiveRole('manager');
-    }
+    currentActiveRole === 'manager' ? setCurrentActiveRole('cashier staff') : setCurrentActiveRole('manager');
   };
 
   const canSwitchAccess = baseRole === 'manager';
 
-  // FULL SCREEN TAKEOVER FOR POS
+  {
+    /*
+      SET UI TO POS
+    */
+  }
   if (activeTab === 'POS') {
     return (
       <POS 
@@ -42,11 +45,10 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
     );
   }
 
-  // STANDARD DASHBOARD LAYOUT
+
   return (
     <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-montserrat text-[16px]">
       <Sidebar role={currentActiveRole} activeTab={activeTab} setActiveTab={setActiveTab} />
-      
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header 
           role={currentActiveRole} 
@@ -56,17 +58,17 @@ const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, o
           onSwitchAccess={handleSwitchAccess} 
         />
         
+        {
+          /* 
+            ADD ALL PAGES HERE
+          */
+        }
         <main className="flex-1 p-8 overflow-auto bg-[#F7F7F9]">
-          
-          {/* LOOK HOW CLEAN THIS IS NOW */}
-          {activeTab === 'Dashboard' && <DashboardHome />}
+          {activeTab === 'Dashboard' && <DashboardHome role ={currentActiveRole}/>}
           {activeTab === 'Inventory' && <Inventory role ={currentActiveRole}/>}
-          
-          {/* You can do the exact same thing for these three pages next! */}
-          {activeTab === 'Requests' && <h1 className="text-[32px] font-bold">Delivery Requests</h1>}
-          {activeTab === 'Transaction History' && <h1 className="text-[32px] font-bold">Transaction History</h1>}
-          {activeTab === 'Forecast' && <h1 className="text-[32px] font-bold">Sales Forecasting</h1>}
-
+          {activeTab === 'Forecast' && <Forecast />}
+          {activeTab === 'Requests' && <Request />}
+          {activeTab === 'Transactions' && <Transaction />}
         </main>
       </div>
     </div>

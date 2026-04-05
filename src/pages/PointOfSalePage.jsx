@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import ProductCard from '../components/ProductCard';
 import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import logo from '../assets/FrancoPerfumeLogo.png';
-import DiscountModal from '../components/DiscountModal';
-import ProductModal from '../components/ProductModal';
-import ProfileDropdown from '../components/ProfileDropdown';
+import DiscountModal from '../components/cashier_components/DiscountModal';
+import ProductCard from '../components/cashier_components/ProductCard';
+import ProductModal from '../components/cashier_components/ProductModal';
+import ProfileDropdown from '../components/general_components/ProfileDropdown';
 
 const POS = ({ userEmail, onLogout, canSwitchAccess, onSwitchAccess }) => {
   const [cart, setCart] = useState([]);
@@ -87,7 +87,7 @@ const POS = ({ userEmail, onLogout, canSwitchAccess, onSwitchAccess }) => {
       {/* HEADER */}
       <header className="flex justify-between items-start px-8 pt-6 pb-4 shrink-0 relative">
         <div className="flex flex-col gap-4">
-          <span className="text-gray-500 font-bold tracking-widest text-xs uppercase">
+          <span className="text-custom-gray font-bold tracking-widest text-xs uppercase">
             {canSwitchAccess ? 'MANAGER - CASHIER' : 'CASHIER'}
           </span>
           <div className="flex items-center gap-4">
