@@ -1,6 +1,6 @@
 import { useState } from "react";
-import FilterBar from "../components/general_components/FilterBar";
-import SearchBar from "../components/general_components/SearchBar";
+import FilterBar from "../../components/shared/FilterBar";
+import SearchBar from "../../components/shared/SearchBar";
 
 const RequestPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +13,7 @@ const RequestPage = () => {
     }
 
     const filterSelections = [
-        { key: 'perfume', label: 'Perfume', options: ['']},
+        { key: 'perfume', label: 'Perfume', options: ['Perfume']},
         { key: 'status', label: 'Status', options: ['Pending', 'Denied', 'Cancelled', 'Received']},
         { key: 'requested_from', label: 'Requested From', options: ['Requested From']},
         { key: 'sent_to', label: 'Sent To', options: ['Sent To']}
