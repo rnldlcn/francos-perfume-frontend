@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import Header from '../components/shared/Header';
 import Sidebar from '../components/shared/Sidebar';
-import POS from '../pages/cashier/PointOfSalePage';
 import Forecast from '../pages/dashboard/ForecastPage';
 import DashboardHome from '../pages/dashboard/HomePage'; // NEW IMPORT
 import Inventory from '../pages/dashboard/InventoryPage';
 import Request from '../pages/dashboard/RequestPage';
 import Transaction from '../pages/dashboard/TransactionsPage';
+import POS from '../pages/pos/PointOfSalePage';
 
 const DashboardLayout = ({ trueRole, activeRole: initialActiveRole, userEmail, onLogout }) => {
   const baseRole = trueRole ? trueRole.toLowerCase() : '';
