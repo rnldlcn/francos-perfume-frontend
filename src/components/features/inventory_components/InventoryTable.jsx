@@ -41,7 +41,10 @@ const InventoryTable = ({data, columns, role, onIncrease, onDecrease, onEdit}) =
     },
   })
 
-
+  {/*
+    ADD THE FILTERING, PAGINATION, AND SORTING LOGIC HERE USING THE useReactTable HOOK
+  */
+  }
     return (
       <div className="space y-4">
         <div className="rounded-md border border-gray-200 bg-white">

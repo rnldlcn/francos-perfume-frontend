@@ -93,13 +93,8 @@ const Inventory = ({ role }) => {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [sortConfig, setSortConfig] = useState({
-    key: "id",
-    direction: "ascending",
-  });
-
   const [filters, setFilters] = useState({
-    type: "All Types",
+    type: "All Perfume Types",
     branch: "All Branches",
     gender: "All Genders",
   });
@@ -193,23 +188,6 @@ const Inventory = ({ role }) => {
     });
   };
 
-  const handleSort = (key) => {
-    setSortConfig((prev) => {
-      if (prev?.key === key) {
-        return {
-          key,
-          direction:
-            prev.direction === "ascending" ? "descending" : "ascending",
-        };
-      }
-    });
-
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
 
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch =
@@ -230,16 +208,6 @@ const Inventory = ({ role }) => {
       item.gender === filters.gender;
 
     return matchesSearch && matchesType && matchesBranch && matchesGender
-  });
-
-  const sortedData = [...filteredInventory].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === "ascending" ? -1 : 1;
-    }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === "ascending" ? 1 : -1;
-    }
-    return 0;
   });
 
   return (
@@ -296,7 +264,7 @@ const Inventory = ({ role }) => {
 
       <InventoryTable
         role={role}
-        data={sortedData}
+        data={filteredInventory}
         onIncrease={handleIncreaseQty}
         onDecrease={handleDecreaseQty}
         onEdit={handleOpenEditModal}
