@@ -12,7 +12,8 @@ import Inventory from './pages/dashboard/InventoryPage';
 import ManageAccounts from './pages/dashboard/ManageAccountsPage';
 import Request from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
-import ArchivesPage from './pages/dashboard/ArchivesPage'; // FIXED: Changed 'Transaction' to 'TransactionsPage'
+import ArchivesPage from './pages/dashboard/ArchivesPage'; 
+import AuditLogPage from './pages/dashboard/AuditLogPage';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -70,6 +71,7 @@ const App = () => {
           <Route path="discount" element={<Discount />} />
           <Route path="accounts" element={<ManageAccounts />} />
           <Route path="archives" element={<ArchivesPage />} />
+          <Route path="audit" element={<AuditLogPage />} />
         </Route>
 
         {/* Fallback */}

@@ -123,14 +123,14 @@ const Sidebar = ({ role, activeTab, setActiveTab }) => {
               <p className="text-base">Accounts</p>
             </Link>
 
-            {/* AUDIT LOG - Left as a div for now since we haven't built the page/route yet */}
-            <div
+            <Link
+              to="/audit"
               onClick={() => setActiveTab("Audit Log")}
               className={getTabClass("Audit Log")}
             >
               <Logs size={24} />
               <p className="text-base">Audit Log</p>
-            </div>
+            </Link>
 
             {/* ARCHIVES */}
             <Link
