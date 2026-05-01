@@ -6,7 +6,7 @@ import AddProductModal from "../../components/features/inventory_components/AddP
 import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { fetchAllInventory } from "../../services/InventoryService";
+import { fetchAllInventory, updateQuantity } from "../../services/InventoryService";
 import { UseAuth } from "../../services/UseAuth";
 
 const filterSelections = [
@@ -29,16 +29,6 @@ const filterSelections = [
 ];
 
 const InventoryPage = ({ role }) => {
-  const { user } = UseAuth();
-  const isManager = role === "manager";
-
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [filters, setFilters] = useState({
-    type: "All Perfume Types",
-    branch: "All Branches",
-    gender: "All Genders",
-  });
 
   const columns = [
   {
@@ -88,8 +78,8 @@ const InventoryPage = ({ role }) => {
       const item = row.original;
         return (
           <div className="flex gap-1">
-            <Button variant="primary" size="icon-sm" onClick={() => increment(item.id)}><Plus size={14}/></Button>
-            <Button variant="primary" size="icon-sm" onClick={() => decrement(item.id)}><Minus size={14}/></Button>
+            <Button variant="primary" size="icon-sm" onClick={() => handleQuantityUpdate(item.product_id, 1)}><Plus size={14}/></Button>
+            <Button variant="primary" size="icon-sm" onClick={() => handleQuantityUpdate(item.product_id, -1)}><Minus size={14}/></Button>
             <Button variant="primary" size="icon-sm" onClick={() => handleOpenEditModal(item.id, role)}><Edit size={14}/></Button>
           </div>
         )
@@ -97,14 +87,23 @@ const InventoryPage = ({ role }) => {
     }
   ];
 
+  const { user } = UseAuth();
+  const isManager = role === "manager";
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [filters, setFilters] = useState({
+    type: "All Perfume Types",
+    branch: "All Branches",
+    gender: "All Genders",
+  });
+
   const [inventory, setInventory] = useState([]);
-  // add a loading state to prevent rendering the table before data is fetched
   const [isLoading, setIsLoading] = useState(true);
 
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [updatingProductId, setUpdatingProductId] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
-
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
@@ -114,6 +113,7 @@ const InventoryPage = ({ role }) => {
         const result = await fetchAllInventory(token);
         setInventory(result.data || []);
       } catch (error) {
+        // add popups
         alert("Inventory failed: " + error.message);
       }
     }
@@ -141,22 +141,21 @@ const InventoryPage = ({ role }) => {
   */
 
   // --- LOGIC: Qty Buttons ---
-  const increment = useCallback(async (id) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item,
-      ),
-    );
-  }, []);
-
-  const decrement = useCallback(async (id) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(0, item.qty - 1) } : item,
-      ),
-    );
-  }, []); 
-
+  const handleQuantityUpdate = useCallback(async (id, newQty) => {
+    try {
+      const updatedProduct = await updateQuantity(id, newQty, user.accessToken);
+      setInventory((prev) =>
+        prev.map((item) =>
+          item.id === id 
+            ? { ...item, qty: updatedProduct.product_qty } 
+            : item,
+        ),
+      );
+    } catch (error) {
+      // add popups
+      alert("Failed to update quantity: " + error.message);
+    }
+  }, [user.accessToken]);
 
   const handleOpenEditModal = (id) => {
     const productToEdit = inventory.find((item) => item.id === id);
