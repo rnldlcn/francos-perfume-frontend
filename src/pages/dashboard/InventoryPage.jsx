@@ -75,17 +75,18 @@ const InventoryPage = ({ role }) => {
     header: 'Actions',
     id: 'actions',
     cell: ({row}) => {
-      const item = row.original;
+      const product = row.original;
         return (
           <div className="flex gap-1">
-            <Button variant="primary" size="icon-sm" onClick={() => handleQuantityUpdate(item.product_id, 1)}><Plus size={14}/></Button>
-            <Button variant="primary" size="icon-sm" onClick={() => handleQuantityUpdate(item.product_id, -1)}><Minus size={14}/></Button>
-            <Button variant="primary" size="icon-sm" onClick={() => handleOpenEditModal(item.id, role)}><Edit size={14}/></Button>
+            <Button variant="primary" size="icon-sm" onClick={() => increment(product.product_id)}><Plus size={14}/></Button>
+            <Button variant="primary" size="icon-sm" onClick={() => decrement(product.product_id)}><Minus size={14}/></Button>
+            <Button variant="primary" size="icon-sm" onClick={() => handleOpenEditModal(product.product_id, role)}><Edit size={14}/></Button>
           </div>
         )
       }
     }
   ];
+
 
   const { user } = UseAuth();
   const isManager = role === "manager";
@@ -101,7 +102,6 @@ const InventoryPage = ({ role }) => {
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [updatingProductId, setUpdatingProductId] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -141,24 +141,30 @@ const InventoryPage = ({ role }) => {
   */
 
   // --- LOGIC: Qty Buttons ---
-  const handleQuantityUpdate = useCallback(async (id, newQty) => {
+  const handleQuantityUpdate = useCallback(async (productId, newQty) => {
+    if (!productId) return;
     try {
-      const updatedProduct = await updateQuantity(id, newQty, user.accessToken);
+
+      const updatedProduct = await updateQuantity(productId, newQty, user.accessToken);
       setInventory((prev) =>
-        prev.map((item) =>
-          item.id === id 
-            ? { ...item, qty: updatedProduct.product_qty } 
-            : item,
+        prev.map((product) =>
+          product.product_id === productId
+            ? { ...product, product_qty: updatedProduct.product_qty } 
+            : product,
         ),
       );
     } catch (error) {
       // add popups
       alert("Failed to update quantity: " + error.message);
     }
+
   }, [user.accessToken]);
 
+  const increment = useCallback((productId) => handleQuantityUpdate(productId, 1), [handleQuantityUpdate]);
+  const decrement = useCallback((productId) => handleQuantityUpdate(productId, -1), [handleQuantityUpdate]);
+
   const handleOpenEditModal = (id) => {
-    const productToEdit = inventory.find((item) => item.id === id);
+    const productToEdit = inventory.find((product) => product.product_id === id);
     setEditingProduct(productToEdit);
     setIsEditModalOpen(true);
   };
@@ -166,8 +172,8 @@ const InventoryPage = ({ role }) => {
   const handleSaveEdit = async (updatedProduct) => {
     // 🚨 LOCAL UPDATE:
     setInventory((prev) =>
-      prev.map((item) =>
-        item.id === updatedProduct.id ? updatedProduct : item,
+      prev.map((product) =>
+        product.product_id === updatedProduct.product_id ? updatedProduct : product,
       ),
     );
     setIsEditModalOpen(false);
@@ -181,7 +187,7 @@ const InventoryPage = ({ role }) => {
         body: JSON.stringify(updatedProduct)
       });
       if (response.ok) {
-        setInventory(prev => prev.map(item => item.id === updatedProduct.id ? updatedProduct : item));
+        setInventory(prev => prev.map(product => product.id === updatedProduct.id ? updatedProduct : product));
         setIsEditModalOpen(false);
       } else {
         alert("Failed to save changes to database.");
@@ -201,13 +207,13 @@ const InventoryPage = ({ role }) => {
   };
 
 
-  const filteredInventory = inventory.filter((item) => {
+  const filteredInventory = inventory.filter((product) => {
   // 1. Defend against missing properties and handle Number to String conversion
-  const name = item.product_name || "";
-  const id = item.product_display_id?.toString() || ""; // Using display_id from your DTO
-  const type = item.product_type || "";
-  const branch = item.branch_display_id || ""; // From your DTO
-  const gender = item.product_gender || "";
+  const name = product.product_name || "";
+  const id = product.product_display_id?.toString() || ""; // Using display_id from your DTO
+  const type = product.product_type || "";
+  const branch = product.branch_display_id || ""; // From your DTO
+  const gender = product.product_gender || "";
 
   const matchesSearch =
     name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -228,7 +234,7 @@ const InventoryPage = ({ role }) => {
   return (
     <div className="flex flex-col h-full animate-fade-in relative">
       {/* HEADER SECTION */}
-      <div className="flex justify-between items-end mb-6">
+      <div className="flex justify-between products-end mb-6">
         <div>
           <h1 className="text-[32px] font-bold text-custom-black tracking-tight leading-none mb-2">
             Inventory
@@ -256,7 +262,7 @@ const InventoryPage = ({ role }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex products-center gap-4 mb-6">
         <SearchBar
           value={searchQuery}
           onChange={(value) => {
