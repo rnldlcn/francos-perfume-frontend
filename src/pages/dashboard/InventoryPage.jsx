@@ -100,7 +100,13 @@ const InventoryPage = ({ role }) => {
   });
 
   const [inventory, setInventory] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 10;
+  // use this for loading
   const [isLoading, setIsLoading] = useState(true);
+ 
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -110,15 +116,18 @@ const InventoryPage = ({ role }) => {
     const getInventoryData = async (token) => {
       try {
         setIsLoading(true);
-        const result = await fetchAllInventory(token);
+        const result = await fetchAllInventory(token, page, PAGE_SIZE);
+        console.log("Fetched inventory data:", result.data);
         setInventory(result.data || []);
+        setTotalPages(result.totalInventoriesPage);
+        setTotalCount(result.totalInventories);
       } catch (error) {
         // add popups
         alert("Inventory failed: " + error.message);
       }
     }
     getInventoryData(user.accessToken);
-  }, [user.accessToken]);
+  }, [user.accessToken, page]);
 
   const handleAddProduct = (newProduct) => {
     // 1. Give it a temporary fake ID until you connect a real database later
@@ -140,7 +149,6 @@ const InventoryPage = ({ role }) => {
   }, []);
   */
 
-  // --- LOGIC: Qty Buttons ---
   const handleQuantityUpdate = useCallback(async (productId, newQty) => {
     if (!productId) return;
     try {
@@ -281,6 +289,11 @@ const InventoryPage = ({ role }) => {
       <DataTable
         data={filteredInventory}
         columns={columns}
+        manualPagination={true}
+        pageCount={totalPages}
+        pageIndex={page - 1}
+        onPageChange={(newPage) => setPage(newPage + 1)}
+        totalCount={totalCount}
       />
 
       <EditProductModal

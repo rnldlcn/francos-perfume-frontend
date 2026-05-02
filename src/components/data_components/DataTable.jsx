@@ -4,24 +4,40 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
-const DataTable = ({ data, columns }) => {
+const DataTable = ({ data, columns, customSortingFunctions = {}, defaultSort = [], manualPagination = false, pageCount, totalCount, pageIndex, onPageChange, pageSize = 10 }) => {
 
-    const [sorting, setSorting] = useState([
-        { id: 'product_display_id', desc: true },
-    ])
+    const [sorting, setSorting] = useState(defaultSort);
+    //{ id: 'product_display_id', desc: true },
+    //const statusOrder = { "PENDING": 0, "RECEIVED": 1, "DENIED": 2, "CANCELLED": 3};
 
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10});
+    const [localPagination, setLocalPagination] = useState({ pageIndex: 0, pageSize: 10});
 
-    const statusOrder = { "PENDING": 0, "RECEIVED": 1, "DENIED": 2, "CANCELLED": 3};
-
+    const pagination = manualPagination ? { pageIndex: pageIndex ?? 0, pageSize } : localPagination;
+    
+    
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+
         state: {
             sorting,
             pagination
         },
+
+        sortingFunctions: customSortingFunctions,
+        onSortingChange: setSorting,
+        onPaginationChange: manualPagination
+            ? (updater) => {
+                const next = typeof updater === 'function' ? updater(pagination) : updater;
+                onPageChange?.(next.pageIndex);
+            } : setLocalPagination,
+        enableSortingRemoval: false
+
+
+        /*
         sortingFns: {
             statusSort: (rowA, rowB, columnID) => {
                 const a = statusOrder[rowA.getValue(columnID)] ?? 99;
@@ -30,12 +46,11 @@ const DataTable = ({ data, columns }) => {
                 return a - b;
             }
         },
-        onSortingChange: setSorting,
-        getSortedRowModel: getSortedRowModel(),
-        onPaginationChange: setPagination,
-        getPaginationRowModel: getPaginationRowModel(),
-        enableSortingRemoval: false,
+        */
+    
     });
+    const count = table.getRowModel().rows.length;
+    const total = manualPagination ? (totalCount ?? 0) : data.length;
 
     return (
         <div className="rounded-md border bg-white">
@@ -75,7 +90,7 @@ const DataTable = ({ data, columns }) => {
             </Table>
 
             <div className="flex justify-between items-center mt-4 text-sm text-custom-gray">
-                <span className="text-custom-gray"> Showing {table.getRowModel().rows.length} out of {table.getRowCount()} </span>
+                <span className="text-custom-gray"> Showing {count} out of {total} </span>
                 <div className="flex gap-2">
                     <button onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}><ChevronLeft size={16}/></button>
                     <span>{table.getState().pagination.pageIndex + 1} / {table.getPageCount()}</span>
