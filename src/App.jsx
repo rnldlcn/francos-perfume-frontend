@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MobileBlocker from './components/features/pos_components/MobileBlocker';
 import DashboardLayout from './layouts/DashboardLayout';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import LoginPage from './pages/auth/LoginPage';
 import ArchivesPage from './pages/dashboard/ArchivesPage';
 import AuditLogPage from './pages/dashboard/AuditLogPage';
@@ -70,12 +71,12 @@ const App = () => {
     <Router>
       <NavigationManager user={user} />
       <Routes>
+        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route path='/login' 
           element={
             !user ? <LoginPage onLogin={login} /> : <Navigate to={user.activeRole === 'cashier' ? '/pos' : '/home'} replace />
           }
         />
-
         <Route path='/home'
           element={
             user ? <DashboardLayout user={user} onSwitchAccess={handleSwitchAccess} onLogout={logout} /> : <Navigate to='/login' replace /> 
