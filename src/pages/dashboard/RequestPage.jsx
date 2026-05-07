@@ -1,45 +1,88 @@
+import { useEffect, useState } from "react";
+import { Eye, Send, Inbox, ChevronDown } from "lucide-react";
 import DataTable from "@/components/data_components/DataTable";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import CreateRequestModal from "../../components/features/request_components/CreateRequestModal";
 import RequestDetailsModal from "../../components/features/request_components/RequestDetailsModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
+import { UseAuth } from "../../services/UseAuth"; // Assuming you need token for DB
 
-const initialRequestTableData = [
-  { id: "REQ-001", perfume: "Apricot Spray", qty: 50, requested_from: "Sta. Lucia", sent_to: "Riverbanks", date_created: "2026/04/01", time: "12:00 PM", status: "PENDING" },
-  { id: "REQ-002", perfume: "Ocean Breeze", qty: 30, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/02", time: "01:30 PM", status: "PENDING" },
-  { id: "REQ-003", perfume: "Midnight Wood", qty: 100, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/03", time: "09:15 AM", status: "RECEIVED" },
-  { id: "REQ-004", perfume: "Citrus Bloom", qty: 25, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/04", time: "11:45 AM", status: "PENDING" },
-  { id: "REQ-005", perfume: "Velvet Rose", qty: 50, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/05", time: "02:00 PM", status: "CANCELLED" },
-  { id: "REQ-006", perfume: "Apricot Spray", qty: 10, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/06", time: "04:20 PM", status: "PENDING" },
-  { id: "REQ-007", perfume: "Ocean Breeze", qty: 60, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/07", time: "10:00 AM", status: "PENDING" },
-  { id: "REQ-008", perfume: "Midnight Wood", qty: 45, requested_from: "Sta. Lucia", sent_to: "Riverbanks", date_created: "2026/04/08", time: "03:10 PM", status: "DENIED" },
-  { id: "REQ-009", perfume: "Citrus Bloom", qty: 80, requested_from: "Sta. Lucia", sent_to: "Riverbanks", date_created: "2026/04/09", time: "08:30 AM", status: "PENDING" },
-  { id: "REQ-010", perfume: "Velvet Rose", qty: 50, requested_from: "Riverbanks", sent_to: "Sta. Lucia", date_created: "2026/04/10", time: "01:00 PM", status: "RECEIVED" },
-];
-
-const filterSelectionsTop = [
-  { key: "perfume", label: "All Perfumes", options: ["All Perfumes", "Apricot Spray", "Ocean Breeze", "Midnight Wood", "Citrus Bloom", "Velvet Rose"] },
-  { key: "status", label: "All Statuses", options: ["All Statuses", "Pending", "Denied", "Cancelled", "Received"] },
-];
-
-const filterSelectionsBottom = [
-  { key: "requested_from", label: "Requested From", options: ["All Branches", "Sta. Lucia", "Riverbanks"] },
-  { key: "sent_to", label: "Sent To", options: ["All Branches", "Sta. Lucia", "Riverbanks"] },
+const statusOptions = [
+  { key: "status", label: "Filter: Status", options: ["All Statuses", "Manager Review", "Owner Review", "Approved", "Rejected"] },
 ];
 
 const RequestPage = () => {
-  const [requests, setRequests] = useState(initialRequestTableData);
+  const { user } = UseAuth();
+  
+  // --- STATE ---
+  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ perfume: "All Perfumes", status: "All Statuses", requested_from: "", sent_to: "", date_created: "" });
-  const [activeTab, setActiveTab] = useState("inbound");
+  const [filters, setFilters] = useState({ status: "All Statuses" });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [requestType, setRequestType] = useState("request"); // 'send' or 'request'
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
+  // --- DATABASE FETCH (API INTEGRATION) ---
+  useEffect(() => {
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      try {
+        // 🔌 UNCOMMENT AND UPDATE THIS WHEN YOUR .NET CONTROLLER IS READY
+        /*
+        const response = await fetch('https://localhost:5001/api/requests', {
+          headers: { 'Authorization': `Bearer ${user.accessToken}` }
+        });
+        if (!response.ok) throw new Error("Failed to fetch requests");
+        const data = await response.json();
+        setRequests(data);
+        */
+
+        // 🚧 FALLBACK DUMMY DATA UNTIL BACKEND IS CONNECTED
+        const dummyDbData = [
+          { id: "REQ-001", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Manager Review", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
+          { id: "REQ-002", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Owner Review", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
+          { id: "REQ-003", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Approved", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
+          { id: "REQ-004", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Rejected", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
+        ];
+        setRequests(dummyDbData);
+      } catch (error) {
+        console.error("Database connection error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, [user?.accessToken]);
+
+  // --- STATUS BADGE RENDERER ---
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Manager Review":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-transparent shadow-none hover:bg-blue-100">🕒 {status}</Badge>;
+      case "Owner Review":
+        return <Badge variant="outline" className="bg-pink-100 text-pink-700 border-transparent shadow-none hover:bg-pink-100">🕒 {status}</Badge>;
+      case "Approved":
+        return <Badge variant="outline" className="bg-green-100 text-green-700 border-transparent shadow-none hover:bg-green-100">✓ {status}</Badge>;
+      case "Rejected":
+        return <Badge variant="outline" className="bg-red-100 text-red-700 border-transparent shadow-none hover:bg-red-100">✕ {status}</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // --- TABLE COLUMNS ---
   const columns = [
     {
       header: 'REQ ID',
@@ -47,23 +90,23 @@ const RequestPage = () => {
       enableSorting: true
     },
     {
-      header: 'Perfume',
-      accessorKey: 'perfume',
-      enableSorting: true
+      header: 'From → To',
+      id: 'from_to',
+      cell: ({ row }) => `${row.original.requested_from} → ${row.original.sent_to}`
     },
     {
-      header: 'Quantity',
+      header: 'Status',
+      accessorKey: 'status',
+      cell: ({ row }) => getStatusBadge(row.original.status)
+    },
+    {
+      header: 'Units',
       accessorKey: 'qty',
-      enableSorting: true
+      cell: ({ row }) => `${row.original.qty} units`
     },
     {
-      header: 'Requested From',
-      accessorKey: 'requested_from',
-      enableSorting: true
-    },
-    {
-      header: 'Sent To',
-      accessorKey: 'sent_to',
+      header: 'Created By',
+      accessorKey: 'created_by',
       enableSorting: true
     },
     {
@@ -72,26 +115,14 @@ const RequestPage = () => {
       enableSorting: true
     },
     {
-      header: 'Time',
-      accessorKey: 'time',
-      enableSorting: true
-    },
-    {
-      header: 'Status',
-      accessorKey: 'status',
-      sortingFns: 'statusSort',
-      enableSorting: true
-    },
-    {
-      header: 'Actions',
+      header: 'Action',
       id: 'actions',
-      cell: ({row}) => {
+      cell: ({ row }) => {
         const item = row.original;
         return (
-          // PASS THE ENTIRE ITEM OBJECT, NOT JUST THE ID
-          <Button variant="primary" size="sm" onClick={() => handleOpenDetails(item)}>
-            <Eye size={14} className="mr-1"/> View Details
-          </Button>    
+          <Button variant="outline" size="sm" className="h-8 text-xs bg-[#E5D5C1]/20 hover:bg-[#E5D5C1]/40 border-transparent text-[#333]" onClick={() => handleOpenDetails(item)}>
+            <Eye size={14} className="mr-1.5 opacity-70"/> View Details
+          </Button>
         )
       }
     }
@@ -100,82 +131,108 @@ const RequestPage = () => {
   // --- FILTER ENGINE ---
   const filteredData = requests.filter((item) => {
     const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = item.id.toLowerCase().includes(searchLower) || item.perfume.toLowerCase().includes(searchLower);
-    const matchesPerfume = !filters.perfume || filters.perfume === "All Perfumes" || item.perfume === filters.perfume;
-    const matchesStatus = !filters.status || filters.status === "All Statuses" || item.status.toLowerCase() === filters.status.toLowerCase();
     
-    // FIX: Using correct object keys from initialRequestTableData
-    const matchesFrom = !filters.requested_from || filters.requested_from === "All Branches" || item.requested_from === filters.requested_from;
-    const matchesTo = !filters.sent_to || filters.sent_to === "All Branches" || item.sent_to === filters.sent_to;
-    
-    const formattedDate = filters.date_created ? filters.date_created.replace(/-/g, "/") : "";
-    // FIX: Using correct date key
-    const matchesDate = !formattedDate || item.date_created === formattedDate;
+    // Search by ID, Branch, or Creator as requested in the mockup
+    const matchesSearch = 
+      item.id.toLowerCase().includes(searchLower) || 
+      item.requested_from.toLowerCase().includes(searchLower) || 
+      item.sent_to.toLowerCase().includes(searchLower) ||
+      item.created_by.toLowerCase().includes(searchLower);
+      
+    const matchesStatus = !filters.status || filters.status === "All Statuses" || item.status === filters.status;
 
-    return matchesSearch && matchesPerfume && matchesStatus && matchesFrom && matchesTo && matchesDate;
+    return matchesSearch && matchesStatus;
   });
 
-  const handleClearFilters = () => {
-    setFilters({ perfume: "All Perfumes", status: "All Statuses", requested_from: "", sent_to: "", date_created: "" });
-    setSearchQuery("");
+  // --- HANDLERS ---
+  const handleOpenNewTransfer = (type) => {
+    setRequestType(type);
+    setIsModalOpen(true);
   };
 
   const handleAddRequest = (newRequest) => {
+    // Optimistic UI update while DB processes
     setRequests([newRequest, ...requests]);
   };
 
-  // FIX: Properly accept the full request object and open the modal
   const handleOpenDetails = (requestObj) => {
     setSelectedRequest(requestObj);
     setIsDetailsOpen(true);
   };
 
   return (
-    <div className="flex flex-col h-full animate-fade-in relative">
-      <h1 className="text-[32px] font-bold text-custom-black mb-1 leading-none tracking-tight">Request</h1>
-      <p className="text-custom-gray text-sm mb-6">Check requests and confirm</p>
-
-      {/* FILTER SECTION */}
-      <div className="flex flex-col gap-3 mb-8">
-        <div className="flex items-center gap-4">
-          <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e?.target ? e.target.value : e)} />
-          <FilterBar filters={filters} setFilters={setFilters} filterSelections={filterSelectionsTop} />
+    <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
+      
+      {/* HEADER */}
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h1 className="text-[32px] font-bold text-[#333] mb-1 leading-none tracking-tight">Request</h1>
+          <p className="text-gray-500 text-sm">View and manage inventory transfer requests</p>
         </div>
 
-        <div className="flex items-center gap-4">
-          <FilterBar filters={filters} setFilters={setFilters} filterSelections={filterSelectionsBottom} />
-          <div className="relative">
-            <span className="absolute -top-4 left-0 text-[10px] text-custom-gray">Date Created:</span>
-            <input type="date" value={filters.date_created} onChange={(e) => setFilters({ ...filters, date_created: e.target.value })} className="border border-custom-gray-2 rounded-md px-3 py-1.5 text-sm text-custom-gray focus:outline-none focus:ring-1 focus:ring-custom-gray" />
-          </div>
-          <Button variant="outline-destructive" onClick={handleClearFilters}>
-            Clear filters
-          </Button>
-        </div>
+        {/* NEW TRANSFER DROPDOWN */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="primary" className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] shadow-sm px-4">
+              <span className="text-lg leading-none mr-2">+</span> New Transfer <ChevronDown size={16} className="ml-2 opacity-70"/>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-white p-1 rounded-lg border border-gray-200 shadow-lg">
+            <DropdownMenuItem 
+              onClick={() => handleOpenNewTransfer('send')} 
+              className="cursor-pointer gap-3 p-2 hover:bg-gray-50 focus:bg-gray-50 rounded-md"
+            >
+              <Send size={16} className="opacity-70"/> <span className="font-medium text-[#333]">Send Stock</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => handleOpenNewTransfer('request')} 
+              className="cursor-pointer gap-3 p-2 hover:bg-gray-50 focus:bg-gray-50 rounded-md"
+            >
+              <Inbox size={16} className="opacity-70"/> <span className="font-medium text-[#333]">Request for Stock</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      <h2 className="text-2xl font-bold text-custom-black mb-1">Existing Requests</h2>
-      <p className="text-custom-gray text-sm mb-4">List of all previous existing requests</p>
-
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex bg-custom-gray-2 p-1 rounded-md border border-custom-gray-2">
-          <button onClick={() => setActiveTab("inbound")} className={`px-6 py-1.5 text-sm rounded-sm font-medium transition-colors ${activeTab === "inbound" ? "bg-custom-primary text-custom-black shadow-sm" : "text-custom-gray hover:text-custom-black"}`}>Inbound (4)</button>
-          <button onClick={() => setActiveTab("outbound")} className={`px-6 py-1.5 text-sm rounded-sm font-medium transition-colors ${activeTab === "outbound" ? "bg-custom-primary text-custom-black shadow-sm" : "text-custom-gray hover:text-custom-black"}`}>Outbound (4)</button>
+      {/* FILTER SECTION */}
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="w-full max-w-xl">
+          <SearchBar 
+            value={searchQuery} 
+            onChange={(e) => setSearchQuery(e?.target ? e.target.value : e)} 
+            placeholder="Search by ID, branch, or creator"
+          />
         </div>
-
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-          <span className="text-lg leading-none">+</span> Create a new request
-        </Button>
+        <div className="w-64">
+          <FilterBar filters={filters} setFilters={setFilters} filterSelections={statusOptions} />
+        </div>
       </div>
 
       {/* DATA TABLE */}
-      <DataTable 
-        data={filteredData}
-        columns={columns}
-      />
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex-1">
+        {isLoading ? (
+           <div className="p-10 text-center text-gray-400">Loading requests from database...</div>
+        ) : (
+          <DataTable 
+            data={filteredData}
+            columns={columns}
+          />
+        )}
+      </div>
 
-      <RequestDetailsModal isOpen={isDetailsOpen} onClose={() => setIsDetailsOpen(false)} request={selectedRequest} />
-      <CreateRequestModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleAddRequest} />
+      {/* MODALS */}
+      <RequestDetailsModal 
+        isOpen={isDetailsOpen} 
+        onClose={() => setIsDetailsOpen(false)} 
+        request={selectedRequest} 
+      />
+      
+      <CreateRequestModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleAddRequest} 
+        type={requestType} 
+      />
     </div>
   );
 };
