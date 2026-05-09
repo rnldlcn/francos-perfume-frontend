@@ -12,7 +12,7 @@ import { ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddProductModal from "../../components/features/inventory_components/AddProductModal";
 import EditProductModal from "../../components/features/inventory_components/EditProductModal";
-import EditBatchModal from "../../components/features/inventory_components/EditBatchModal"; // <--- NEW IMPORT
+import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import { fetchAllInventory } from "../../services/InventoryService";
@@ -20,9 +20,9 @@ import { UseAuth } from "../../services/UseAuth";
 import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png";
 
 const filterSelections = [
-  { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Premium", "Classic"] },
-  { key: "branch", label: "Branch", options: ["All Branches", "Sta. Lucia", "Riverbanks"] },
-  { key: "gender", label: "Gender", options: ["All Genders", "Unisex", "Male", "Female"] },
+  { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Standard", "Premium", "Signature"] },
+  { key: "branch", label: "Branch", options: ["All Branches", "Sta. Lucia", "Riverbanks", "Warehouse"] },
+  { key: "gender", label: "Gender", options: ["All Genders", "Unisex", "Men", "Women"] },
 ];
 
 const Inventory = ({ role }) => {
@@ -40,30 +40,40 @@ const Inventory = ({ role }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState({});
 
-  // MODAL STATES
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
-  const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false); // <--- NEW STATE
-  const [editingBatch, setEditingBatch] = useState(null); // <--- NEW STATE
+  const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState(null);
 
   useEffect(() => {
     const getInventoryData = async (token) => {
       try {
         setIsLoading(true);
-        const data = await fetchAllInventory(token);
+        const response = await fetchAllInventory(token);
         
-        // 🚨 CRITICAL FIX: If backend doesn't supply batches yet, bind dummy batches to the object
-        // Otherwise, edits won't stick because the state is strictly read-only.
-        const dataWithBatches = data.map(item => ({
-          ...item,
-          batches: item.batches || [
-            { batchId: `BAT-${Math.floor(100 + Math.random() * 900)}`, dateReceived: "2026-11-04", targetDate: "2026-11-10", qty: 2 },
-            { batchId: `BAT-${Math.floor(100 + Math.random() * 900)}`, dateReceived: "2026-11-04", targetDate: "2026-11-10", qty: 3 }
-          ]
-        }));
+        const inventoryArray = response.data || []; 
+        
+        const dataWithBatches = inventoryArray.map(item => {
+          // 🔧 FIXED: Read both lowercase 'batches' (from real API) and uppercase 'Batches' just in case
+          const backendBatches = item.batches || item.Batches || []; 
+          
+          const mappedBatches = backendBatches.map(b => ({
+            batchId: b.batch_display_id || b.batchId,
+            dateReceived: new Date(b.date_received || b.dateReceived).toLocaleDateString(),
+            targetDate: (b.target_date || b.targetDate) ? new Date(b.target_date || b.targetDate).toLocaleDateString() : "N/A",
+            qty: b.quantity || b.qty
+          }));
+
+          return {
+            ...item,
+            // Fallback to the API's total_units if the array mapping acts up
+            totalUnits: item.total_units || 0, 
+            batches: mappedBatches
+          };
+        });
         
         setInventory(dataWithBatches);
       } catch (error) {
@@ -75,32 +85,32 @@ const Inventory = ({ role }) => {
     getInventoryData(user.accessToken);
   }, [user.accessToken]);
 
-  const toggleRow = (id) => {
-    setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleRow = (rowKey) => {
+    setExpandedRows((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }));
   };
 
-  // --- HANDLERS FOR BATCHES ---
   const handleOpenEditBatchModal = (batch, product) => {
-    // Merge product info into the batch object so the modal can read it
     setEditingBatch({ 
       ...batch, 
       perfumeName: product.product_name, 
-      productId: product.product_display_id 
+      productId: product.product_display_id,
+      branchName: product.branch_name 
     });
     setIsEditBatchModalOpen(true);
   };
 
   const handleSaveBatchEdit = (updatedBatch) => {
-    // Locally update the specific batch inside the inventory state array
     setInventory((prev) =>
       prev.map((product) => {
-        if (product.product_display_id === updatedBatch.productId) {
+        if (product.product_display_id === updatedBatch.productId && product.branch_name === updatedBatch.branchName) {
           const updatedBatches = product.batches.map(b =>
             b.batchId === updatedBatch.batchId 
               ? { ...b, qty: updatedBatch.qty, targetDate: updatedBatch.targetDate } 
               : b
           );
-          return { ...product, batches: updatedBatches };
+          // Recalculate total units locally after a save
+          const newTotal = updatedBatches.reduce((sum, b) => sum + parseInt(b.qty || 0), 0);
+          return { ...product, batches: updatedBatches, totalUnits: newTotal };
         }
         return product;
       })
@@ -108,12 +118,12 @@ const Inventory = ({ role }) => {
     setIsEditBatchModalOpen(false);
   };
 
-  // --- HANDLERS FOR PRODUCTS ---
   const handleAddProduct = (newProduct) => {
     const productWithId = {
       ...newProduct,
       id: Math.floor(Math.random() * 1000).toString(),
-      batches: [], 
+      batches: [],
+      totalUnits: 0 
     };
     setInventory([productWithId, ...inventory]);
   };
@@ -143,9 +153,10 @@ const Inventory = ({ role }) => {
     const matchesSearch =
       name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       id.includes(searchQuery);
-    const matchesType = filters.type === "All Perfume Types" || type === filters.type;
-    const matchesBranch = filters.branch === "All Branches" || branch === filters.branch;
-    const matchesGender = filters.gender === "All Genders" || gender === filters.gender;
+      
+    const matchesType = filters.type === "All Perfume Types" || type.toLowerCase() === filters.type.toLowerCase();
+    const matchesBranch = filters.branch === "All Branches" || branch.toLowerCase() === filters.branch.toLowerCase();
+    const matchesGender = filters.gender === "All Genders" || gender.toLowerCase() === filters.gender.toLowerCase();
 
     return matchesSearch && matchesType && matchesBranch && matchesGender;
   });
@@ -194,21 +205,22 @@ const Inventory = ({ role }) => {
           <div className="text-center py-10 text-gray-400">No products found.</div>
         ) : (
           filteredInventory.map((product) => {
-            const isExpanded = expandedRows[product.product_display_id];
+            const rowKey = `${product.product_display_id}-${product.branch_name}`;
+            const isExpanded = expandedRows[rowKey];
             
-            // Read batches from the state we mapped in useEffect
             const batches = product.batches || [];
             
-            const totalUnits = batches.reduce((sum, b) => sum + b.qty, 0);
+            // 🔧 Use the totalUnits we mapped above
+            const displayUnits = product.totalUnits || 0;
             const totalBatches = batches.length;
-            const isLowStock = totalUnits < 10;
+            const isLowStock = displayUnits > 0 && displayUnits < 10;
 
             return (
-              <div key={product.product_display_id} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all">
+              <div key={rowKey} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all">
                 
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                  onClick={() => toggleRow(product.product_display_id)}
+                  onClick={() => toggleRow(rowKey)}
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-gray-400 p-2">
@@ -216,16 +228,18 @@ const Inventory = ({ role }) => {
                     </div>
                     
                     <div className="h-12 w-12 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden shrink-0">
-                      <img src={perfumePlaceholder} alt="Product" className="object-cover h-10 w-10 opacity-60" />
+                      <img src={product.product_image_url || perfumePlaceholder} alt="Product" className="object-cover h-10 w-10 opacity-60" />
                     </div>
 
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-3">
                         <h3 className="font-bold text-lg text-[#333] leading-none">{product.product_name || "Unknown Product"}</h3>
-                        {isLowStock && <Badge variant="destructive" className="h-5 text-[10px]">⚠️ Low Stock</Badge>}
+                        {isLowStock && <Badge variant="destructive" className="h-5 text-[10px] uppercase font-bold tracking-wider">⚠️ Low Stock</Badge>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="h-5 bg-green-50 text-green-700 border-green-200">{product.branch_name}</Badge>
+                        <Badge variant="outline" className={`h-5 border text-xs ${product.branch_name?.toUpperCase() === 'WAREHOUSE' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                          {product.branch_name?.toUpperCase() || "UNKNOWN BRANCH"}
+                        </Badge>
                         <Badge variant="outline" className="h-5 bg-blue-50 text-blue-700 border-blue-200">{product.product_type}</Badge>
                         <Badge variant="outline" className="h-5 bg-pink-50 text-pink-700 border-pink-200">{product.product_gender}</Badge>
                       </div>
@@ -233,7 +247,7 @@ const Inventory = ({ role }) => {
                   </div>
 
                   <div className="text-right pr-4">
-                    <p className="font-bold text-[#333] text-lg">{totalUnits} units</p>
+                    <p className="font-bold text-[#333] text-lg">{displayUnits} units</p>
                     <p className="text-xs text-gray-500">{totalBatches} batches</p>
                   </div>
                 </div>
@@ -241,7 +255,7 @@ const Inventory = ({ role }) => {
                 {isExpanded && (
                   <div className="border-t border-gray-100 bg-gray-50/50 p-4">
                     {totalBatches === 0 ? (
-                      <div className="text-center py-6 font-bold text-gray-400 bg-white border border-gray-200 rounded-md">
+                      <div className="text-center py-6 font-bold text-gray-400 bg-white border border-gray-200 rounded-md tracking-widest text-sm">
                         NO AVAILABLE BATCH FOUND
                       </div>
                     ) : (
@@ -264,7 +278,6 @@ const Inventory = ({ role }) => {
                                 <TableCell className="text-gray-600">{batch.targetDate}</TableCell>
                                 <TableCell className="text-center text-gray-700">{batch.qty}</TableCell>
                                 <TableCell className="text-right pr-4">
-                                  {/* THE EDIT BATCH BUTTON TRIGGER */}
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
@@ -301,7 +314,6 @@ const Inventory = ({ role }) => {
         onSave={handleAddProduct}
       />
 
-      {/* NEW EDIT BATCH MODAL COMPONENT */}
       <EditBatchModal
         isOpen={isEditBatchModalOpen}
         onClose={() => setIsEditBatchModalOpen(false)}
