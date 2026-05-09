@@ -9,7 +9,8 @@ import {
   Logs,
   Tag,
   UserPen,
-  Truck // Added Truck icon for Deliveries
+  Truck,
+  ShoppingBag // 🔧 MOVED TO THE TOP!
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
@@ -30,7 +31,7 @@ const Sidebar = ({ user }) => {
   const hasFullAccess = isManager || isOwner || isAdmin;
 
   const getTabClass = (path) => {
-    const isActive = location.pathname.startsWith(path); // Changed to startWith so active state stays when viewing details
+    const isActive = location.pathname.startsWith(path); 
     
     // Exact match for home, startsWith for others
     const isActuallyActive = path === "/home" ? location.pathname === "/home" : isActive;
@@ -72,6 +73,14 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
+        {/* FORECAST - Restricted from Admin */}
+        {!isAdmin && (
+          <Link to="/home/forecast" className={getTabClass("/home/forecast")}>
+            <ChartNoAxesCombined size={24} />
+            <p className="text-base">Sales Forecast</p>
+          </Link>
+        )}
+
         {/* REQUESTS - Restricted from Admin */}
         {!isAdmin && (
           <Link to="/home/requests" className={getTabClass("/home/requests")}>
@@ -88,19 +97,19 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
-        {/* FORECAST - Restricted from Admin */}
-        {!isAdmin && (
-          <Link to="/home/forecast" className={getTabClass("/home/forecast")}>
-            <ChartNoAxesCombined size={24} />
-            <p className="text-base">Forecast</p>
-          </Link>
-        )}
-
         {/* TRANSACTIONS - Manager & Owner Only */}
         {hasManagementAccess && (
           <Link to="/home/transactions" className={getTabClass("/home/transactions")}>
             <FileClock size={24} />
-            <p className="text-base">Transactions</p>
+            <p className="text-base">Transactions List</p>
+          </Link>
+        )}
+
+        {/* PRODUCTS - Manager & Owner Only */}
+        {hasManagementAccess && (
+          <Link to="/home/products" className={getTabClass("/home/products")}>
+            <ShoppingBag size={24} />
+            <p className="text-base">Products</p>
           </Link>
         )}
 
@@ -122,19 +131,19 @@ const Sidebar = ({ user }) => {
 
         {/* --- ADMINISTRATIVE SECTION --- */}
 
-        {/* ACCOUNTS - Manager, Owner, and Admin */}
-        {hasFullAccess && (
-          <Link to="/home/accounts" className={getTabClass("/home/accounts")}>
-            <UserPen size={24} />
-            <p className="text-base">Accounts</p>
-          </Link>
-        )}
-
         {/* AUDIT LOG - Manager, Owner, and Admin */}
         {hasFullAccess && (
           <Link to="/home/audit" className={getTabClass("/home/audit")}>
             <Logs size={24} />
             <p className="text-base">Audit Log</p>
+          </Link>
+        )}
+
+        {/* ACCOUNTS - Manager, Owner, and Admin */}
+        {hasFullAccess && (
+          <Link to="/home/accounts" className={getTabClass("/home/accounts")}>
+            <UserPen size={24} />
+            <p className="text-base">Accounts</p>
           </Link>
         )}
 

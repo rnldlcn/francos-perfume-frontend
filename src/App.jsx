@@ -16,6 +16,7 @@ import TransactionsPage from './pages/dashboard/TransactionsPage';
 import PointOfSalePage from './pages/pos/PointOfSalePage';
 import CreateTransferRequest from './pages/dashboard/CreateTransferRequest';
 import { UseAuth } from './services/UseAuth';
+import ProductsPage from './pages/dashboard/ProductsPage';
 
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage'; 
 
@@ -96,7 +97,7 @@ const App = () => {
             {/* ---> DELIVERIES ROUTES <--- */}
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
-
+            <Route path="products" element={<ProductsPage />} />
             <Route path="forecast" element={<ForecastPage />} />
           </Route>
 
