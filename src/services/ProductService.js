@@ -21,5 +21,44 @@ export const ProductService = {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         return handleResponse(response);
+    },
+
+    addProduct: async (payload) => {
+        const token = sessionStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/add`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        return handleResponse(response);
+    },
+
+    updateProduct: async (id, payload) => {
+        const token = sessionStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/updateProduct/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        return handleResponse(response);
+    },
+
+    // 🔧 Added the Archive endpoint to support the new button
+    archiveProduct: async (id) => {
+        const token = sessionStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/archive/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return handleResponse(response);
     }
 };
