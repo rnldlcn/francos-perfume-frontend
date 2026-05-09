@@ -1,26 +1,22 @@
 import { useEffect, useState } from "react";
-import { Eye, Send, Inbox, ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom"; 
+import { Eye } from "lucide-react"; 
 import DataTable from "@/components/data_components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import CreateRequestModal from "../../components/features/request_components/CreateRequestModal";
-import RequestDetailsModal from "../../components/features/request_components/RequestDetailsModal";
+
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { UseAuth } from "../../services/UseAuth"; // Assuming you need token for DB
+import { UseAuth } from "../../services/UseAuth";
+import { RequestService } from "../../services/RequestService"; // <-- ADDED THIS IMPORT
 
 const statusOptions = [
-  { key: "status", label: "Filter: Status", options: ["All Statuses", "Manager Review", "Owner Review", "Approved", "Rejected"] },
+  { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },
 ];
 
 const RequestPage = () => {
   const { user } = UseAuth();
+  const navigate = useNavigate(); 
   
   // --- STATE ---
   const [requests, setRequests] = useState([]);
@@ -28,36 +24,19 @@ const RequestPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({ status: "All Statuses" });
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [requestType, setRequestType] = useState("request"); // 'send' or 'request'
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
   // --- DATABASE FETCH (API INTEGRATION) ---
   useEffect(() => {
     const fetchRequests = async () => {
       setIsLoading(true);
       try {
-        // 🔌 UNCOMMENT AND UPDATE THIS WHEN YOUR .NET CONTROLLER IS READY
-        /*
-        const response = await fetch('https://localhost:5001/api/requests', {
-          headers: { 'Authorization': `Bearer ${user.accessToken}` }
-        });
-        if (!response.ok) throw new Error("Failed to fetch requests");
-        const data = await response.json();
-        setRequests(data);
-        */
-
-        // 🚧 FALLBACK DUMMY DATA UNTIL BACKEND IS CONNECTED
-        const dummyDbData = [
-          { id: "REQ-001", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Manager Review", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
-          { id: "REQ-002", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Owner Review", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
-          { id: "REQ-003", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Approved", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
-          { id: "REQ-004", requested_from: "Riverbanks", sent_to: "Sta. Lucia", status: "Rejected", qty: 24, created_by: "Sample O. Name", date_created: "11/04/2026 12:00 AM" },
-        ];
-        setRequests(dummyDbData);
+        // LIVE API CALL - Matches your RequestController.DisplayRequests method
+        const response = await RequestService.getAllRequests();
+        
+        // The C# controller returns: { totalRequests, totalPages, page, pageSize, data: [...] }
+        setRequests(response.data || []); 
       } catch (error) {
         console.error("Database connection error:", error);
+        alert("Failed to load requests from the database.");
       } finally {
         setIsLoading(false);
       }
@@ -68,51 +47,52 @@ const RequestPage = () => {
 
   // --- STATUS BADGE RENDERER ---
   const getStatusBadge = (status) => {
-    switch (status) {
-      case "Manager Review":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-transparent shadow-none hover:bg-blue-100">🕒 {status}</Badge>;
-      case "Owner Review":
-        return <Badge variant="outline" className="bg-pink-100 text-pink-700 border-transparent shadow-none hover:bg-pink-100">🕒 {status}</Badge>;
-      case "Approved":
-        return <Badge variant="outline" className="bg-green-100 text-green-700 border-transparent shadow-none hover:bg-green-100">✓ {status}</Badge>;
-      case "Rejected":
-        return <Badge variant="outline" className="bg-red-100 text-red-700 border-transparent shadow-none hover:bg-red-100">✕ {status}</Badge>;
+    switch (status?.toUpperCase()) {
+      case "PENDING MANAGER":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-transparent shadow-none hover:bg-blue-100">🕒 MGR Review</Badge>;
+      case "PENDING OWNER":
+        return <Badge variant="outline" className="bg-pink-100 text-pink-700 border-transparent shadow-none hover:bg-pink-100">🕒 Owner Review</Badge>;
+      case "APPROVED":
+        return <Badge variant="outline" className="bg-green-100 text-green-700 border-transparent shadow-none hover:bg-green-100">✓ Approved</Badge>;
+      case "REJECTED":
+        return <Badge variant="outline" className="bg-red-100 text-red-700 border-transparent shadow-none hover:bg-red-100">✕ Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  // --- TABLE COLUMNS ---
+  // --- TABLE COLUMNS (Updated to match DisplayRequestDTO.cs) ---
   const columns = [
     {
       header: 'REQ ID',
-      accessorKey: 'id',
+      accessorKey: 'request_display_id', // Mapped to C# DTO
       enableSorting: true
     },
     {
       header: 'From → To',
       id: 'from_to',
-      cell: ({ row }) => `${row.original.requested_from} → ${row.original.sent_to}`
+      cell: ({ row }) => `${row.original.requested_from} → ${row.original.delivered_to}` // Mapped to C# DTO
     },
     {
       header: 'Status',
-      accessorKey: 'status',
-      cell: ({ row }) => getStatusBadge(row.original.status)
+      accessorKey: 'request_status', // Mapped to C# DTO
+      cell: ({ row }) => getStatusBadge(row.original.request_status)
     },
     {
-      header: 'Units',
-      accessorKey: 'qty',
-      cell: ({ row }) => `${row.original.qty} units`
+      header: 'Total Items',
+      accessorKey: 'item_count', // Mapped to C# DTO
+      cell: ({ row }) => `${row.original.item_count} items`
     },
     {
       header: 'Created By',
-      accessorKey: 'created_by',
+      accessorKey: 'employee_display_id', // Mapped to C# DTO
       enableSorting: true
     },
     {
       header: 'Date Created',
-      accessorKey: 'date_created',
-      enableSorting: true
+      accessorKey: 'request_date_submitted', // Mapped to C# DTO
+      enableSorting: true,
+      cell: ({ row }) => new Date(row.original.request_date_submitted).toLocaleDateString()
     },
     {
       header: 'Action',
@@ -120,7 +100,13 @@ const RequestPage = () => {
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <Button variant="outline" size="sm" className="h-8 text-xs bg-[#E5D5C1]/20 hover:bg-[#E5D5C1]/40 border-transparent text-[#333]" onClick={() => handleOpenDetails(item)}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 text-xs bg-[#E5D5C1]/20 hover:bg-[#E5D5C1]/40 border-transparent text-[#333]" 
+            // Navigates using the database INT ID for the backend lookup
+            onClick={() => navigate(`/home/requests/${item.request_id}`)}
+          >
             <Eye size={14} className="mr-1.5 opacity-70"/> View Details
           </Button>
         )
@@ -132,33 +118,17 @@ const RequestPage = () => {
   const filteredData = requests.filter((item) => {
     const searchLower = searchQuery.toLowerCase();
     
-    // Search by ID, Branch, or Creator as requested in the mockup
+    // Updated to search against the correct C# DTO properties
     const matchesSearch = 
-      item.id.toLowerCase().includes(searchLower) || 
-      item.requested_from.toLowerCase().includes(searchLower) || 
-      item.sent_to.toLowerCase().includes(searchLower) ||
-      item.created_by.toLowerCase().includes(searchLower);
+      (item.request_display_id?.toLowerCase() || "").includes(searchLower) || 
+      (item.requested_from?.toLowerCase() || "").includes(searchLower) || 
+      (item.delivered_to?.toLowerCase() || "").includes(searchLower) ||
+      (item.employee_display_id?.toLowerCase() || "").includes(searchLower);
       
-    const matchesStatus = !filters.status || filters.status === "All Statuses" || item.status === filters.status;
+    const matchesStatus = !filters.status || filters.status === "All Statuses" || item.request_status === filters.status;
 
     return matchesSearch && matchesStatus;
   });
-
-  // --- HANDLERS ---
-  const handleOpenNewTransfer = (type) => {
-    setRequestType(type);
-    setIsModalOpen(true);
-  };
-
-  const handleAddRequest = (newRequest) => {
-    // Optimistic UI update while DB processes
-    setRequests([newRequest, ...requests]);
-  };
-
-  const handleOpenDetails = (requestObj) => {
-    setSelectedRequest(requestObj);
-    setIsDetailsOpen(true);
-  };
 
   return (
     <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
@@ -166,32 +136,18 @@ const RequestPage = () => {
       {/* HEADER */}
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-[32px] font-bold text-[#333] mb-1 leading-none tracking-tight">Request</h1>
+          <h1 className="text-[32px] font-bold text-[#333] mb-1 leading-none tracking-tight">Requests</h1>
           <p className="text-gray-500 text-sm">View and manage inventory transfer requests</p>
         </div>
 
-        {/* NEW TRANSFER DROPDOWN */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="primary" className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] shadow-sm px-4">
-              <span className="text-lg leading-none mr-2">+</span> New Transfer <ChevronDown size={16} className="ml-2 opacity-70"/>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-white p-1 rounded-lg border border-gray-200 shadow-lg">
-            <DropdownMenuItem 
-              onClick={() => handleOpenNewTransfer('send')} 
-              className="cursor-pointer gap-3 p-2 hover:bg-gray-50 focus:bg-gray-50 rounded-md"
-            >
-              <Send size={16} className="opacity-70"/> <span className="font-medium text-[#333]">Send Stock</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => handleOpenNewTransfer('request')} 
-              className="cursor-pointer gap-3 p-2 hover:bg-gray-50 focus:bg-gray-50 rounded-md"
-            >
-              <Inbox size={16} className="opacity-70"/> <span className="font-medium text-[#333]">Request for Stock</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* DIRECT ROUTING BUTTON TO CREATE PAGE */}
+        <Button 
+          variant="primary" 
+          className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] shadow-sm px-4 font-semibold"
+          onClick={() => navigate('/home/new-transfer')} 
+        >
+          <span className="text-lg leading-none mr-2">+</span> New Transfer
+        </Button>
       </div>
 
       {/* FILTER SECTION */}
@@ -220,19 +176,6 @@ const RequestPage = () => {
         )}
       </div>
 
-      {/* MODALS */}
-      <RequestDetailsModal 
-        isOpen={isDetailsOpen} 
-        onClose={() => setIsDetailsOpen(false)} 
-        request={selectedRequest} 
-      />
-      
-      <CreateRequestModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onSave={handleAddRequest} 
-        type={requestType} 
-      />
     </div>
   );
 };

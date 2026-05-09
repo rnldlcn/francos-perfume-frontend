@@ -14,11 +14,17 @@ import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
 import PointOfSalePage from './pages/pos/PointOfSalePage';
+import CreateTransferRequest from './pages/dashboard/CreateTransferRequest';
 import { UseAuth } from './services/UseAuth';
+
+import RequestDetailsPage from './components/features/request_components/RequestDetailsPage'; 
+
+// ---> FIXED DELIVERIES IMPORTS based on your exact folder structure <--- 
+import DeliveriesPage from './pages/dashboard/DeliveriesPage'; 
+import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 
 const ProtectedRoute = ({ user, allowedRoles }) => {
   if (!user) return <Navigate to="/login" />;
-  // Check if the current active role is in the allowed list
   if (allowedRoles && !allowedRoles.includes(user.activeRole)) { 
     return <Navigate to="/home" replace />; 
   }
@@ -32,12 +38,9 @@ const NavigationManager = ({ user }) => {
   useEffect(() => {
     if (user) {
       const role = user.activeRole;
-      
-      // Redirect Cashiers away from Dashboard
       if (role === 'cashier' && path !== '/pos') {
         navigate('/pos', { replace: true });
       } 
-      // Redirect Dashboard Roles (Manager, Owner, Admin, Staff) to Dashboard
       else if (['manager', 'owner', 'admin', 'staff'].includes(role)) {
         if (!path.startsWith('/home') && path !== '/pos') {
           navigate('/home', { replace: true });
@@ -81,17 +84,23 @@ const App = () => {
             user ? <DashboardLayout user={user} onSwitchAccess={handleSwitchAccess} onLogout={logout} /> : <Navigate to='/login' replace /> 
           }
         >
-          {/* 1. PUBLIC DASHBOARD PAGES (All Dashboard Roles) */}
           <Route index element={<HomePage role={user?.trueRole} />} />
 
           {/* 2. INVENTORY OPS (Manager, Owner, & Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'staff']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
+            <Route path="new-transfer" element={<CreateTransferRequest />} /> 
+            <Route path="requests/:id" element={<RequestDetailsPage />} />
+            
+            {/* ---> DELIVERIES ROUTES <--- */}
+            <Route path="deliveries" element={<DeliveriesPage />} />
+            <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
+
             <Route path="forecast" element={<ForecastPage />} />
           </Route>
 
-          {/* 3. SALES OPS (Manager & Owner Only - Hidden from Staff) */}
+          {/* 3. SALES OPS (Manager & Owner Only) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner']} />}>
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="discount" element={<DiscountPage />} />
@@ -110,7 +119,6 @@ const App = () => {
           </Route>
         </Route>
         
-        {/* POS Access (Managers and Cashiers) */}
         <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'cashier']} />}>
           <Route path="/pos" element={<PointOfSalePage user={user} onLogout={logout} onSwitchAccess={handleSwitchAccess} />} />
         </Route>

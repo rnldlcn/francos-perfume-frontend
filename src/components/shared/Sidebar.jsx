@@ -8,7 +8,8 @@ import {
   LayoutDashboard,
   Logs,
   Tag,
-  UserPen
+  UserPen,
+  Truck // Added Truck icon for Deliveries
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
@@ -29,10 +30,14 @@ const Sidebar = ({ user }) => {
   const hasFullAccess = isManager || isOwner || isAdmin;
 
   const getTabClass = (path) => {
-    const isActive = location.pathname === path;
+    const isActive = location.pathname.startsWith(path); // Changed to startWith so active state stays when viewing details
+    
+    // Exact match for home, startsWith for others
+    const isActuallyActive = path === "/home" ? location.pathname === "/home" : isActive;
+
     return `flex items-center w-full gap-2 cursor-pointer p-5 transition-colors duration-300
     ${
-      isActive
+      isActuallyActive
         ? "bg-custom-primary/20 text-custom-white border-r-4 border-custom-primary"
         : "hover:bg-white/10 text-custom-gray"
     }`;
@@ -72,6 +77,14 @@ const Sidebar = ({ user }) => {
           <Link to="/home/requests" className={getTabClass("/home/requests")}>
             <HandHelping size={24} />
             <p className="text-base">Requests</p>
+          </Link>
+        )}
+
+        {/* DELIVERIES - Restricted from Admin */}
+        {!isAdmin && (
+          <Link to="/home/deliveries" className={getTabClass("/home/deliveries")}>
+            <Truck size={24} />
+            <p className="text-base">Deliveries</p>
           </Link>
         )}
 
