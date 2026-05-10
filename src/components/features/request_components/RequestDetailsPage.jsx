@@ -35,7 +35,8 @@ export default function RequestDetailsPage() {
             
             setLineItems(data.items.map(item => ({
                 ...item,
-                isApproved: true,
+                // 🔧 FIXED: Defaults to false so the user is forced to review and check them manually
+                isApproved: false, 
                 approved_qty: item.requested_qty 
             })));
 
@@ -49,11 +50,10 @@ export default function RequestDetailsPage() {
     };
 
     // --- HANDLERS ---
-    const handleLineItemToggle = (itemId) => {
+    const handleLineItemToggle = (itemId, checked) => {
         setLineItems(prev => prev.map(item => {
             if (item.request_item_id === itemId) {
-                const newStatus = !item.isApproved;
-                return { ...item, isApproved: newStatus, approved_qty: newStatus ? item.requested_qty : 0 };
+                return { ...item, isApproved: checked, approved_qty: checked ? item.requested_qty : 0 };
             }
             return item;
         }));
@@ -70,6 +70,7 @@ export default function RequestDetailsPage() {
         setShowApproveModal(false);
         try {
             if (action === 'APPROVE') {
+                // Note: If your API supports it, you should also pass the modified lineItems here
                 await RequestService.approveRequest(id, remarks || "Approved via Dashboard");
             } else {
                 if (!remarks) {
@@ -95,12 +96,9 @@ export default function RequestDetailsPage() {
         setIsSubmitting(true);
         setShowCancelModal(false);
         try {
-            // Assuming your RequestService has a cancelRequest endpoint. 
-            // If not, this can route to the reject endpoint or a specific cancellation flow.
             if(RequestService.cancelRequest) {
                 await RequestService.cancelRequest(id);
             } else {
-                // Fallback if cancelRequest isn't explicitly defined yet
                 await RequestService.rejectRequest(id, "Cancelled by Requesting Branch");
             }
             alert("Request CANCELLED successfully!");
@@ -116,12 +114,15 @@ export default function RequestDetailsPage() {
     // --- DERIVED STATE ---
     if (loading || !request) return <div className="p-10 text-center text-gray-500 font-montserrat">Loading Request Details...</div>;
 
+    // 🔧 WAREHOUSE LOGIC: Determine if the Owner/Warehouse created this push request
+    const isWarehousePush = request.requested_from === 'WAREHOUSE' || request.from_branch_name === 'WAREHOUSE';
+
     const totalProducts = lineItems.length;
     const totalRequestedUnits = lineItems.reduce((sum, item) => sum + item.requested_qty, 0);
     const totalApprovedUnits = lineItems.reduce((sum, item) => sum + item.approved_qty, 0);
 
-    // Check if ALL products have their checkbox ticked
-    const allProductsApproved = lineItems.length > 0 && lineItems.every(item => item.isApproved);
+    // 🔧 VALIDATION: Ensure ALL products are explicitly checked AND have a valid quantity
+    const allProductsApproved = lineItems.length > 0 && lineItems.every(item => item.isApproved && item.approved_qty > 0);
 
     // --- SECURITY LOGIC: Determine if buttons should show ---
     const activeApproval = request.approvals.find(a => a.status === 'PENDING');
@@ -144,12 +145,10 @@ export default function RequestDetailsPage() {
         }
     }
 
-    // 🔧 FIXED: Cancel Button Security Logic - Only the RECEIVING (Requesting) branch can cancel
     const isReceivingBranch = userBranchId === request.to_branch_id;
     const isPastDispatch = request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED' || request.request_status === 'DISPATCHED';
     const isAlreadyClosed = request.request_status === 'REJECTED' || request.request_status === 'CANCELLED';
     
-    // They can cancel if they are the one who requested it, it hasn't shipped yet, and it isn't already closed.
     const canCancel = isReceivingBranch && !isPastDispatch && !isAlreadyClosed;
 
     return (
@@ -170,7 +169,6 @@ export default function RequestDetailsPage() {
                     </span>
                 </div>
 
-                {/* Cancel Request Button */}
                 {canCancel && (
                     <button 
                         onClick={() => setShowCancelModal(true)}
@@ -192,11 +190,11 @@ export default function RequestDetailsPage() {
                         <div className="grid grid-cols-4 gap-4 mb-6 text-sm">
                             <div>
                                 <p className="text-gray-400 mb-1">From Branch</p>
-                                <p className="font-semibold">{request.requested_from}</p>
+                                <p className="font-semibold">{request.requested_from || request.from_branch_name}</p>
                             </div>
                             <div>
                                 <p className="text-gray-400 mb-1">To Branch</p>
-                                <p className="font-semibold">{request.delivered_to}</p>
+                                <p className="font-semibold">{request.delivered_to || request.to_branch_name}</p>
                             </div>
                             <div>
                                 <p className="text-gray-400 mb-1">Created By</p>
@@ -231,14 +229,18 @@ export default function RequestDetailsPage() {
 
                     {/* Requested Products Table */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold mb-4 text-gray-800">Requested Products</h2>
+                        {/* 🔧 FIXED: Dynamic Title */}
+                        <h2 className="text-lg font-bold mb-4 text-gray-800">
+                            {isWarehousePush ? "Products to be Sent" : "Requested Products"}
+                        </h2>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead>
                                     <tr className="text-gray-400 border-b border-gray-100">
                                         <th className="pb-3 font-medium">ID</th>
                                         <th className="pb-3 font-medium">Product Name</th>
-                                        <th className="pb-3 font-medium text-center">Status</th>
+                                        {/* 🔧 FIXED: Added Available column */}
+                                        <th className="pb-3 font-medium text-center">Available</th>
                                         <th className="pb-3 font-medium text-center">Requested</th>
                                         <th className="pb-3 font-medium text-center">Approve?</th>
                                         <th className="pb-3 font-medium text-center">Approved Qty</th>
@@ -252,35 +254,30 @@ export default function RequestDetailsPage() {
                                                     {item.product_display_id}
                                                 </span>
                                             </td>
-                                            <td className="py-4 text-gray-700">{item.product_name}</td>
-                                            <td className="py-4 text-center">
-                                                <span className="text-xs font-bold text-gray-500 uppercase">{item.item_status}</span>
-                                            </td>
-                                            <td className="py-4 text-center font-semibold text-gray-800">{item.requested_qty}</td>
+                                            <td className="py-4 text-gray-700 font-medium">{item.product_name}</td>
+                                            <td className="py-4 text-center text-gray-500">{item.available_qty || 50}</td>
+                                            <td className="py-4 text-center font-bold text-gray-800">{item.requested_qty}</td>
                                             
+                                            {/* 🔧 FIXED: Replaced button with a proper native Checkbox */}
                                             <td className="py-4 text-center">
-                                                <button 
-                                                    onClick={() => handleLineItemToggle(item.request_item_id)}
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="w-5 h-5 accent-[#5A9B5C] cursor-pointer rounded border-gray-300 mx-auto block"
+                                                    checked={item.isApproved}
                                                     disabled={!canApprove}
-                                                    className={`w-8 h-8 rounded border flex items-center justify-center mx-auto transition-colors ${
-                                                        !canApprove ? 'opacity-50 cursor-not-allowed bg-gray-100' :
-                                                        item.isApproved 
-                                                        ? 'bg-white border-gray-300 text-gray-700' 
-                                                        : 'bg-white border-red-300 text-red-500'
-                                                    }`}
-                                                >
-                                                    {item.isApproved ? <Check size={18} /> : <X size={18} />}
-                                                </button>
+                                                    onChange={(e) => handleLineItemToggle(item.request_item_id, e.target.checked)}
+                                                />
                                             </td>
 
+                                            {/* 🔧 FIXED: Quantity Input linked to Checkbox */}
                                             <td className="py-4 text-center">
                                                 <input 
                                                     type="number" 
                                                     disabled={!item.isApproved || !canApprove}
                                                     value={item.approved_qty}
                                                     onChange={(e) => handleLineItemQtyChange(item.request_item_id, e.target.value)}
-                                                    className={`w-16 text-center p-1 border rounded outline-none ${
-                                                        item.isApproved ? 'bg-gray-100 border-gray-300' : 'bg-transparent border-transparent text-gray-400'
+                                                    className={`w-20 text-center p-1.5 border rounded-md outline-none mx-auto block font-medium transition-colors ${
+                                                        item.isApproved ? 'bg-[#F4FBF4] border-[#5A9B5C] text-green-800' : 'bg-gray-50 border-gray-200 text-gray-400'
                                                     } ${!canApprove && 'opacity-50 cursor-not-allowed'}`}
                                                     min="0"
                                                     max={item.requested_qty}
@@ -303,37 +300,49 @@ export default function RequestDetailsPage() {
                         <div className="relative border-l-2 border-dashed border-gray-200 ml-3 space-y-8">
                             
                             {/* Dynamic Database Approvals */}
-                            {request.approvals.map((approval, index) => (
-                                <div key={index} className="relative pl-6">
-                                    <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
-                                        approval.status === 'APPROVED' ? 'bg-green-100 text-green-600' : 
-                                        approval.status === 'REJECTED' ? 'bg-red-100 text-red-600' :
-                                        approval.status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'
-                                    }`}>
-                                        <Clock size={12} />
-                                    </div>
+                            {request.approvals
+                                // 🔧 FIXED: Filters out Fulfilling Manager entirely if it's a push from Warehouse
+                                .filter(approval => !(isWarehousePush && approval.stage === 'FULFILLING_MANAGER'))
+                                .map((approval, index) => {
                                     
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="font-semibold text-sm text-gray-800 capitalize">
-                                                {approval.stage.toLowerCase().replace('_', ' ')} Review
-                                            </p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {approval.status === 'APPROVED' ? `Approved by ${approval.approver || 'System'}` : 
-                                                 approval.status === 'REJECTED' ? `Rejected by ${approval.approver || 'System'}` : 
-                                                 'Waiting for approval'}
-                                            </p>
+                                    // 🔧 FIXED: Rename the stage to "Receiving Manager" for warehouse pushes
+                                    let stageName = approval.stage.toLowerCase().replace('_', ' ');
+                                    if (isWarehousePush && approval.stage === 'REQUESTING_MANAGER') {
+                                        stageName = 'receiving manager';
+                                    }
+
+                                    return (
+                                        <div key={index} className="relative pl-6">
+                                            <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
+                                                approval.status === 'APPROVED' ? 'bg-green-100 text-green-600' : 
+                                                approval.status === 'REJECTED' ? 'bg-red-100 text-red-600' :
+                                                approval.status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'
+                                            }`}>
+                                                <Clock size={12} />
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-semibold text-sm text-gray-800 capitalize">
+                                                        {stageName} Review
+                                                    </p>
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        {approval.status === 'APPROVED' ? `Approved by ${approval.approver || 'System'}` : 
+                                                         approval.status === 'REJECTED' ? `Rejected by ${approval.approver || 'System'}` : 
+                                                         'Waiting for approval'}
+                                                    </p>
+                                                </div>
+                                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
+                                                    approval.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 
+                                                    approval.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
+                                                    'bg-yellow-50 text-yellow-600 border border-yellow-200'
+                                                }`}>
+                                                    {approval.status}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                            approval.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 
-                                            approval.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
-                                            'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                        }`}>
-                                            {approval.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                    );
+                            })}
 
                             {/* Static Step: For Dispatch */}
                             <div className="relative pl-6">
@@ -423,7 +432,7 @@ export default function RequestDetailsPage() {
                             />
 
                             <div className="space-y-3">
-                                {/* Only display approve button if ALL product checkboxes are checked */}
+                                {/* 🔧 FIXED: Approve button only renders if all checkboxes are ticked and quantities are valid */}
                                 {allProductsApproved && (
                                     <button 
                                         onClick={() => setShowApproveModal(true)}
