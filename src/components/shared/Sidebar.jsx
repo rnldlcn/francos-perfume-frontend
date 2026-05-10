@@ -10,7 +10,7 @@ import {
   Tag,
   UserPen,
   Truck,
-  ShoppingBag // 🔧 MOVED TO THE TOP!
+  ShoppingBag
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
@@ -105,8 +105,8 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
-        {/* PRODUCTS - Manager & Owner Only */}
-        {hasManagementAccess && (
+        {/* PRODUCTS - Owner Only */}
+        {isOwner && (
           <Link to="/home/products" className={getTabClass("/home/products")}>
             <ShoppingBag size={24} />
             <p className="text-base">Products</p>
@@ -121,8 +121,8 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
-        {/* DISCOUNT - Manager & Owner Only */}
-        {hasManagementAccess && (
+        {/* DISCOUNT - Owner Only */}
+        {isOwner && (
           <Link to="/home/discount" className={getTabClass("/home/discount")}>
             <Tag size={24} />
             <p className="text-base">Discount</p>

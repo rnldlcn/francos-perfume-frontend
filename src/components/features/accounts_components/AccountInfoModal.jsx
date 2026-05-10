@@ -13,6 +13,11 @@ const AccountInfoModal = ({ isOpen, onClose, account, onEditClick, onActionCompl
     return null;
   }
 
+  // --- ROLE BASED ACCESS LOGIC ---
+  // Safely grab the role from the context or session storage
+  const currentRole = user?.trueRole?.toUpperCase() || user?.activeRole?.toUpperCase() || sessionStorage.getItem('activeRole')?.toUpperCase() || '';
+  const canModify = currentRole === 'OWNER' || currentRole === 'ADMIN';
+
   // --- ACTUAL API HANDLERS ---
   const handleResetConfirm = async () => {
     setIsProcessing(true);
@@ -171,12 +176,15 @@ const AccountInfoModal = ({ isOpen, onClose, account, onEditClick, onActionCompl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => { onClose(); onEditClick(); }} className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] py-2.5 rounded-md font-medium transition-colors">Edit Account</button>
-            <button onClick={() => setShowResetConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Reset Password</button>
-            <button onClick={() => setShowDeactivateConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Deactivate Account</button>
-            <button onClick={() => setShowDeactivateConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Archive Account</button>
-          </div>
+          {/* 🔧 FIXED: Action buttons are completely hidden if the user is not an Owner or Admin */}
+          {canModify && (
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => { onClose(); onEditClick(); }} className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] py-2.5 rounded-md font-medium transition-colors">Edit Account</button>
+              <button onClick={() => setShowResetConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Reset Password</button>
+              <button onClick={() => setShowDeactivateConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Deactivate Account</button>
+              <button onClick={() => setShowDeactivateConfirm(true)} className="border border-[#D47B7B] text-[#D47B7B] hover:bg-red-50 py-2.5 rounded-md font-medium transition-colors">Archive Account</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
