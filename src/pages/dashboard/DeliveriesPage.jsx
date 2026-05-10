@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RequestService } from '../../services/RequestService';
 import { DeliveryService } from '../../services/DeliveryService'; 
 import { Clock, CheckCircle, Truck, XCircle, Eye } from 'lucide-react';
+import StatusBadge from '../../components/shared/StatusBadge'; // 🔧 NEW: Imported the StatusBadge component
 
 export default function DeliveriesPage() {
     const navigate = useNavigate();
@@ -103,21 +104,16 @@ export default function DeliveriesPage() {
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-bold text-gray-800">{req.item_count} Products</p>
-                                <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase border ${
-                                    req.request_status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' :
-                                    req.request_status === 'IN TRANSIT' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                }`}>
-                                    {req.request_status.replace('_', ' ')}
-                                </span>
+                                <p className="font-bold text-gray-800 mb-1">{req.item_count} Products</p>
+                                {/* 🔧 FIXED: Replaced messy Tailwind logic with the clean StatusBadge */}
+                                <StatusBadge status={req.request_status} />
                             </div>
                         </div>
 
                         <div className="flex gap-3">
                             {/* ACTION: SENDER MARKS AS IN TRANSIT */}
                             {req.request_status === 'FOR DISPATCH' && req.from_branch_id === userBranchId && (
-                                <button onClick={() => handleDispatch(req.request_id)} className="flex-[2] bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-bold transition shadow-sm">
+                                <button onClick={() => handleDispatch(req.request_id)} className="flex-[2] bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-bold transition shadow-sm">
                                     <CheckCircle size={18} /> Mark as In Transit
                                 </button>
                             )}

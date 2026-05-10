@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X, Clock, AlertTriangle } from 'lucide-react';
 import { RequestService } from '../../../services/RequestService'; 
 import { UseAuth } from "../../../services/UseAuth";
 
@@ -17,6 +17,10 @@ export default function RequestDetailsPage() {
     
     // Line item state for checkboxes and quantities
     const [lineItems, setLineItems] = useState([]);
+
+    // Modal States
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showApproveModal, setShowApproveModal] = useState(false);
 
     // --- FETCH DATA ---
     useEffect(() => {
@@ -63,6 +67,7 @@ export default function RequestDetailsPage() {
 
     const handleAction = async (action) => {
         setIsSubmitting(true);
+        setShowApproveModal(false);
         try {
             if (action === 'APPROVE') {
                 await RequestService.approveRequest(id, remarks || "Approved via Dashboard");
@@ -86,6 +91,28 @@ export default function RequestDetailsPage() {
         }
     };
 
+    const handleCancelRequest = async () => {
+        setIsSubmitting(true);
+        setShowCancelModal(false);
+        try {
+            // Assuming your RequestService has a cancelRequest endpoint. 
+            // If not, this can route to the reject endpoint or a specific cancellation flow.
+            if(RequestService.cancelRequest) {
+                await RequestService.cancelRequest(id);
+            } else {
+                // Fallback if cancelRequest isn't explicitly defined yet
+                await RequestService.rejectRequest(id, "Cancelled by Requesting Branch");
+            }
+            alert("Request CANCELLED successfully!");
+            navigate('/home/requests');
+        } catch (error) {
+            console.error(error);
+            alert(`Failed to cancel request: ${error.message}`);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     // --- DERIVED STATE ---
     if (loading || !request) return <div className="p-10 text-center text-gray-500 font-montserrat">Loading Request Details...</div>;
 
@@ -93,13 +120,16 @@ export default function RequestDetailsPage() {
     const totalRequestedUnits = lineItems.reduce((sum, item) => sum + item.requested_qty, 0);
     const totalApprovedUnits = lineItems.reduce((sum, item) => sum + item.approved_qty, 0);
 
+    // Check if ALL products have their checkbox ticked
+    const allProductsApproved = lineItems.length > 0 && lineItems.every(item => item.isApproved);
+
     // --- SECURITY LOGIC: Determine if buttons should show ---
     const activeApproval = request.approvals.find(a => a.status === 'PENDING');
     let canApprove = false;
+    const userBranchId = parseInt(sessionStorage.getItem('branchId')); 
 
     if (activeApproval && user) {
         const role = user.activeRole.toUpperCase();
-        const userBranchId = parseInt(sessionStorage.getItem('branchId')); 
         
         if (activeApproval.stage === 'OWNER' && role === 'OWNER') {
             canApprove = true;
@@ -114,21 +144,41 @@ export default function RequestDetailsPage() {
         }
     }
 
+    // 🔧 FIXED: Cancel Button Security Logic - Only the RECEIVING (Requesting) branch can cancel
+    const isReceivingBranch = userBranchId === request.to_branch_id;
+    const isPastDispatch = request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED' || request.request_status === 'DISPATCHED';
+    const isAlreadyClosed = request.request_status === 'REJECTED' || request.request_status === 'CANCELLED';
+    
+    // They can cancel if they are the one who requested it, it hasn't shipped yet, and it isn't already closed.
+    const canCancel = isReceivingBranch && !isPastDispatch && !isAlreadyClosed;
+
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat">
+        <div className="p-6 bg-gray-50 min-h-screen font-montserrat relative">
             
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-                <button 
-                    onClick={() => navigate(-1)}
-                    className="px-4 py-2 bg-amber-100 text-amber-800 rounded font-semibold hover:bg-amber-200 transition-colors"
-                >
-                    &lt; Back
-                </button>
-                <h1 className="text-2xl font-bold text-gray-800">{request.request_display_id}</h1>
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold border border-blue-200">
-                    {request.request_status}
-                </span>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="px-4 py-2 bg-amber-100 text-amber-800 rounded font-semibold hover:bg-amber-200 transition-colors"
+                    >
+                        &lt; Back
+                    </button>
+                    <h1 className="text-2xl font-bold text-gray-800">{request.request_display_id}</h1>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold border border-blue-200">
+                        {request.request_status}
+                    </span>
+                </div>
+
+                {/* Cancel Request Button */}
+                {canCancel && (
+                    <button 
+                        onClick={() => setShowCancelModal(true)}
+                        className="px-4 py-2 bg-red-700 text-white rounded font-bold hover:bg-red-800 transition-colors flex items-center gap-2 shadow-sm"
+                    >
+                        <X size={18} /> Cancel Request
+                    </button>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -373,13 +423,16 @@ export default function RequestDetailsPage() {
                             />
 
                             <div className="space-y-3">
-                                <button 
-                                    onClick={() => handleAction('APPROVE')}
-                                    disabled={isSubmitting}
-                                    className="w-full py-3 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 hover:bg-green-100 transition-colors flex justify-center items-center gap-2"
-                                >
-                                    <Check size={18} /> Approve Request
-                                </button>
+                                {/* Only display approve button if ALL product checkboxes are checked */}
+                                {allProductsApproved && (
+                                    <button 
+                                        onClick={() => setShowApproveModal(true)}
+                                        disabled={isSubmitting}
+                                        className="w-full py-3 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 hover:bg-green-100 transition-colors flex justify-center items-center gap-2"
+                                    >
+                                        <Check size={18} /> Approve Request
+                                    </button>
+                                )}
                                 <button 
                                     onClick={() => handleAction('REJECT')}
                                     disabled={isSubmitting}
@@ -393,6 +446,71 @@ export default function RequestDetailsPage() {
 
                 </div>
             </div>
+
+            {/* --- CANCEL CONFIRMATION MODAL --- */}
+            {showCancelModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 mx-auto">
+                            <AlertTriangle className="text-red-600" size={24} />
+                        </div>
+                        <h2 className="text-xl font-bold text-center text-gray-800 mb-2">Cancel Transfer Request?</h2>
+                        <p className="text-center text-gray-600 mb-6">
+                            Are you sure you want to cancel <strong>{request?.request_display_id}</strong>? This action cannot be undone and will terminate the request entirely.
+                        </p>
+                        
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowCancelModal(false)}
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                                No, Keep It
+                            </button>
+                            <button 
+                                onClick={handleCancelRequest}
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors"
+                            >
+                                {isSubmitting ? "Cancelling..." : "Yes, Cancel Request"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- APPROVE CONFIRMATION MODAL --- */}
+            {showApproveModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-4 mx-auto">
+                            <Check className="text-green-600" size={24} />
+                        </div>
+                        <h2 className="text-xl font-bold text-center text-gray-800 mb-2">Confirm Approval</h2>
+                        <p className="text-center text-gray-600 mb-6">
+                            You have checked all products for <strong>{request?.request_display_id}</strong>. Are you sure you want to officially approve this stage of the request?
+                        </p>
+                        
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setShowApproveModal(false)}
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={() => handleAction('APPROVE')}
+                                disabled={isSubmitting}
+                                className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors"
+                            >
+                                {isSubmitting ? "Approving..." : "Yes, Approve"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Eye } from "lucide-react"; 
 import DataTable from "@/components/data_components/DataTable";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import { UseAuth } from "../../services/UseAuth";
-import { RequestService } from "../../services/RequestService"; // <-- ADDED THIS IMPORT
+import { RequestService } from "../../services/RequestService";
+import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
 
 const statusOptions = [
   { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },
@@ -45,22 +45,6 @@ const RequestPage = () => {
     fetchRequests();
   }, [user?.accessToken]);
 
-  // --- STATUS BADGE RENDERER ---
-  const getStatusBadge = (status) => {
-    switch (status?.toUpperCase()) {
-      case "PENDING MANAGER":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-transparent shadow-none hover:bg-blue-100">🕒 MGR Review</Badge>;
-      case "PENDING OWNER":
-        return <Badge variant="outline" className="bg-pink-100 text-pink-700 border-transparent shadow-none hover:bg-pink-100">🕒 Owner Review</Badge>;
-      case "APPROVED":
-        return <Badge variant="outline" className="bg-green-100 text-green-700 border-transparent shadow-none hover:bg-green-100">✓ Approved</Badge>;
-      case "REJECTED":
-        return <Badge variant="outline" className="bg-red-100 text-red-700 border-transparent shadow-none hover:bg-red-100">✕ Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   // --- TABLE COLUMNS (Updated to match DisplayRequestDTO.cs) ---
   const columns = [
     {
@@ -76,7 +60,8 @@ const RequestPage = () => {
     {
       header: 'Status',
       accessorKey: 'request_status', // Mapped to C# DTO
-      cell: ({ row }) => getStatusBadge(row.original.request_status)
+      // 🔧 FIXED: Replaced the bulky switch statement with your clean component
+      cell: ({ row }) => <StatusBadge status={row.original.request_status} />
     },
     {
       header: 'Total Items',
