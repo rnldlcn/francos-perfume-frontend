@@ -84,9 +84,9 @@ const Sidebar = ({ user }) => {
 
         {/* REQUESTS - Restricted from Admin */}
         {!isAdmin && (
-          <Link to="/home/restock" className={getTabClass("/home/restock")}>
+          <Link to="/home/requests" className={getTabClass("/home/requests")}>
             <HandHelping size={24} />
-            <p className="text-base">Restock</p>
+            <p className="text-base">Requests</p>
           </Link>
         )}
 

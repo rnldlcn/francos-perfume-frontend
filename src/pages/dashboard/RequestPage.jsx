@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; 
-import { Eye } from "lucide-react"; 
 import DataTable from "@/components/data_components/DataTable";
 import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { UseAuth } from "../../services/UseAuth";
-import { RequestService } from "../../services/RequestService";
 import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
+import { RequestService } from "../../services/RequestService";
+import { UseAuth } from "../../services/UseAuth";
 
 const statusOptions = [
   { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },
@@ -50,55 +50,34 @@ const RequestPage = () => {
     {
       header: 'REQ ID',
       accessorKey: 'request_display_id', // Mapped to C# DTO
-      header: 'ID',
-      accessorKey: 'request_display_id',
       enableSorting: true
     },
     {
       header: 'From → To',
       id: 'from_to',
       cell: ({ row }) => `${row.original.requested_from} → ${row.original.delivered_to}` // Mapped to C# DTO
-      header: 'Perfume ID',
-      accessorKey: 'product_display_id',
-      enableSorting: true
-    },
-    {
-      header: 'Perfume Name',
-      accessorKey: 'product_name',
-      sortingFn: 'alphanumeric',
     },
     {
       header: 'Status',
       accessorKey: 'request_status', // Mapped to C# DTO
       // 🔧 FIXED: Replaced the bulky switch statement with your clean component
       cell: ({ row }) => <StatusBadge status={row.original.request_status} />
-      header: 'Quantity',
-      accessorKey: 'request_qty',
-      enableSorting: true
     },
     {
       header: 'Total Items',
       accessorKey: 'item_count', // Mapped to C# DTO
       cell: ({ row }) => `${row.original.item_count} items`
-      header: 'Requested From',
-      accessorKey: 'requested_from', // to change
-      enableSorting: true
     },
     {
-      header: 'Delivered To',
-      accessorKey: 'delivered_to', // to change
+      header: 'Created By',
+      accessorKey: 'employee_display_id', // Mapped to C# DTO
       enableSorting: true
     },
     {
       header: 'Date Created',
-      accessorKey: 'request_date_created', 
-      enableSorting: true
-    },
-    {
-      header: 'Status',
-      accessorKey: 'request_status',
-      sortingFns: 'statusSort',
-      enableSorting: true
+      accessorKey: 'request_date_submitted', // Mapped to C# DTO
+      enableSorting: true,
+      cell: ({ row }) => new Date(row.original.request_date_submitted).toLocaleDateString()
     },
     {
       header: 'Action',
@@ -186,4 +165,4 @@ const RequestPage = () => {
   );
 };
 
-export default RestockPage;
+export default RequestPage;
