@@ -1,171 +1,258 @@
-import { useState, useEffect } from "react";
-import SearchBar from "../../components/shared/SearchBar";
+import React, { useState, useEffect } from 'react';
+import { Search, Receipt, ArrowRightLeft, Calendar } from 'lucide-react';
+import { UseAuth } from '../../services/UseAuth';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
 
-// --- DUMMY DATA (Simulating POS Sales & Inventory Restocks) ---
-const initialTransactions = [
-  { id: '20260328-001', details: 'Sale: 1x perfume', processedBy: 'John Smith', amount: 300.00, type: 'Sale', time: '12:24 PM', date: '2025-09-09' },
-  { id: '20260328-002', details: 'Restock: 5x perfume', processedBy: 'John Smith', amount: -3000.00, type: 'Restock', time: '12:24 PM', date: '2025-09-09' },
-  { id: '20260328-003', details: 'Sale: 1x perfume', processedBy: 'John Smith', amount: 300.00, type: 'Sale', time: '12:24 PM', date: '2025-09-09' },
-  { id: '20260328-004', details: 'Sale: 2x perfume', processedBy: 'Jane Doe', amount: 600.00, type: 'Sale', time: '01:15 PM', date: '2025-09-10' },
-  { id: '20260328-005', details: 'Restock: 1x perfume', processedBy: 'John Smith', amount: -300.00, type: 'Restock', time: '02:00 PM', date: '2025-09-10' },
-];
+export default function TransactionsPage() {
+    const { user } = UseAuth();
+    const userBranchId = parseInt(sessionStorage.getItem('branchId'));
+    const isManager = user?.activeRole?.toUpperCase() === 'MANAGER';
 
-const TransactionsPage = () => {
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ details: 'All', processedBy: 'All', dateFrom: '', dateTo: '' });
-  
-  // Modal State
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    // --- STATE ---
+    const [activeTab, setActiveTab] = useState('SALES'); 
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+    const [sales, setSales] = useState([]);
+    const [transfers, setTransfers] = useState([]); // Empty until C# endpoint is built
 
-  /* 🔌 BACKEND GUIDE: FETCHING FROM POS DATABASE
-     --------------------------------------------
-     useEffect(() => {
-       const fetchTransactions = async () => {
-         try {
-           const response = await fetch('https://localhost:5001/api/transactions');
-           const data = await response.json();
-           setTransactions(data);
-         } catch (err) { console.error("Database connection failed", err); }
-       };
-       fetchTransactions();
-     }, []);
-  */
+    // --- PAGINATION ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20; // 🔧 Updated to 20 items per page
 
-  // --- FILTER ENGINE ---
-  const filteredData = transactions.filter((t) => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = t.id.toLowerCase().includes(searchLower) || t.processedBy.toLowerCase().includes(searchLower);
-    
-    const matchesType = filters.details === 'All' || t.type === filters.details;
-    const matchesStaff = filters.processedBy === 'All' || t.processedBy === filters.processedBy;
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchQuery]);
 
-    // Date Range Logic
-    const matchesDateFrom = !filters.dateFrom || new Date(t.date) >= new Date(filters.dateFrom);
-    const matchesDateTo = !filters.dateTo || new Date(t.date) <= new Date(filters.dateTo);
+    // --- FETCH DATA ---
+    const fetchHistory = async () => {
+        setIsLoading(true);
+        try {
+            // 🔧 pageSize set to 999999 to guarantee ALL transactions are fetched from the database
+            const response = await fetch(`http://localhost:5000/api/Transaction/displayTransactions?page=1&pageSize=999999`, {
+                headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+            });
 
-    return matchesSearch && matchesType && matchesStaff && matchesDateFrom && matchesDateTo;
-  });
+            if (response.ok) {
+                const json = await response.json();
+                const rawData = json.data || json;
 
-  const handleClearFilters = () => {
-    setFilters({ details: 'All', processedBy: 'All', dateFrom: '', dateTo: '' });
-    setSearchQuery("");
-  };
+                const formattedSales = rawData.map(s => {
+                    const itemsDetail = s.product_list && s.product_list.length > 0 
+                        ? s.product_list.map(i => `${i.qty}x ${i.product_name}`).join(', ')
+                        : 'Unknown items';
 
-  // Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+                    return {
+                        id: s.sales_order_id,
+                        details: `Sale: ${itemsDetail}`,
+                        processedBy: s.processed_by || 'Unknown Staff',
+                        amount: s.amount || 0,
+                        type: 'Sale',
+                        rawDate: new Date(s.transaction_date),
+                        date: new Date(s.transaction_date).toLocaleDateString('en-CA'),
+                        time: new Date(s.transaction_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                        branch_name: 'Current Branch', 
+                        payment_method: 'N/A' 
+                    };
+                });
 
-  return (
-    <div className="flex flex-col h-full animate-fade-in font-montserrat">
-      <div className="flex justify-between items-start mb-1">
-        <div>
-          <h1 className="text-[32px] font-bold text-[#333] tracking-tight leading-none">Transaction History</h1>
-          <p className="text-gray-400 text-sm mt-1">Review all sales and restock activities</p>
+                setSales(formattedSales);
+            }
+        } catch (error) {
+            console.error("Failed to fetch transaction history:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchHistory();
+    }, [user?.accessToken]);
+
+    // --- FILTER LOGIC ---
+    const filteredSales = sales.filter(s => {
+        const query = searchQuery.toLowerCase();
+        const searchMatch = (s.id || '').toLowerCase().includes(query) ||
+                            (s.details || '').toLowerCase().includes(query) ||
+                            (s.processedBy || '').toLowerCase().includes(query);
+        return searchMatch;
+    });
+
+    const filteredTransfers = transfers.filter(t => {
+        const query = searchQuery.toLowerCase();
+        const searchMatch = (t.id || '').toLowerCase().includes(query);
+        return searchMatch;
+    });
+
+    const currentData = activeTab === 'SALES' ? filteredSales : filteredTransfers;
+    const totalPages = Math.ceil(currentData.length / ITEMS_PER_PAGE);
+    const displayData = currentData.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    return (
+        <div className="p-6 bg-gray-50 min-h-screen font-montserrat flex flex-col">
+            
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-[32px] font-bold text-gray-800 leading-none mb-2">Transaction History</h1>
+                    <p className="text-gray-500 text-sm">View all POS sales and stock transfer logs.</p>
+                </div>
+                <button 
+                    onClick={fetchHistory}
+                    className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 shadow-sm"
+                >
+                    🔄 Refresh Status
+                </button>
+            </div>
+
+            {/* Top Bar: Tabs & Search */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                
+                {/* TABS */}
+                <div className="flex gap-2 w-full md:w-auto bg-gray-200 p-1 rounded-lg">
+                    <button 
+                        onClick={() => setActiveTab('SALES')} 
+                        className={`flex items-center gap-2 px-6 py-2.5 font-bold text-sm rounded transition-colors ${activeTab === 'SALES' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        <Receipt size={16} /> POS Sales
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('TRANSFERS')} 
+                        className={`flex items-center gap-2 px-6 py-2.5 font-bold text-sm rounded transition-colors ${activeTab === 'TRANSFERS' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        <ArrowRightLeft size={16} /> Stock Transfers
+                    </button>
+                </div>
+
+                {/* SEARCH */}
+                <div className="relative w-full md:w-96 shrink-0">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                        type="text" 
+                        placeholder={`Search ${activeTab === 'SALES' ? 'receipts or staff...' : 'transfer IDs...'}`} 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-gray-400 text-sm shadow-sm"
+                    />
+                </div>
+            </div>
+
+            {/* Table Container */}
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-600">
+                        <thead className="text-[12px] text-gray-400 uppercase bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold">Date & Time</th>
+                                <th className="px-6 py-4 font-semibold">{activeTab === 'SALES' ? 'Receipt No.' : 'Transfer ID'}</th>
+                                {activeTab === 'SALES' ? (
+                                    <>
+                                        <th className="px-6 py-4 font-semibold">Products Sold</th>
+                                        <th className="px-6 py-4 font-semibold">Processed By</th>
+                                        <th className="px-6 py-4 font-semibold">Payment</th>
+                                        <th className="px-6 py-4 font-semibold text-right">Total Amount</th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th className="px-6 py-4 font-semibold">Route</th>
+                                        <th className="px-6 py-4 font-semibold">Items Restocked</th>
+                                        <th className="px-6 py-4 font-semibold">Status</th>
+                                    </>
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-10 text-center text-gray-400 italic">
+                                        Loading history...
+                                    </td>
+                                </tr>
+                            ) : displayData.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-10 text-center text-gray-400 italic">
+                                        No {activeTab === 'SALES' ? 'sales' : 'transfers'} found matching your criteria.
+                                    </td>
+                                </tr>
+                            ) : (
+                                displayData.map((item, idx) => (
+                                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                        
+                                        {/* DATE */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar size={14} className="text-gray-400" />
+                                                {item.date} <span className="text-xs text-gray-400">({item.time})</span>
+                                            </div>
+                                        </td>
+
+                                        {/* ID */}
+                                        <td className="px-6 py-4 font-bold text-gray-800">{item.id}</td>
+
+                                        {/* DYNAMIC COLUMNS */}
+                                        {activeTab === 'SALES' ? (
+                                            <>
+                                                <td className="px-6 py-4 font-medium text-gray-700 max-w-xs truncate" title={item.details}>{item.details}</td>
+                                                <td className="px-6 py-4 text-gray-600">{item.processedBy}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className="px-2.5 py-1 text-[10px] font-bold uppercase rounded bg-gray-100 text-gray-600">
+                                                        {item.payment_method}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-bold text-[#94BE9F]">
+                                                    + ₱{Number(item.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}
+                                                </td>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="px-6 py-4">N/A</td>
+                                                <td className="px-6 py-4 font-medium">N/A</td>
+                                                <td className="px-6 py-4">N/A</td>
+                                            </>
+                                        )}
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                {displayData.length > 0 && (
+                    <div className="flex justify-between items-center mt-auto p-4 border-t border-gray-100 bg-gray-50 text-sm text-gray-500">
+                        <p>Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, currentData.length)} of {currentData.length} entries</p>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 bg-white border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                            >
+                                Prev
+                            </button>
+                            <span className="font-semibold text-gray-700">{currentPage} / {totalPages || 1}</span>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="px-3 py-1 bg-white border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* ACTIONS */}
+            <div className="flex gap-3 mt-4">
+                <button 
+                    onClick={() => setIsExportModalOpen(true)}
+                    className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm"
+                >
+                    📊 Export
+                </button>
+            </div>
+
+            <ExportTransactionModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} />
         </div>
-        <button className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 shadow-sm">
-          🔄 Refresh Status
-        </button>
-      </div>
-
-      {/* FILTER BAR */}
-      <div className="flex flex-wrap items-center gap-4 my-8 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div className="flex-1 min-w-[200px]">
-          <SearchBar value={searchQuery} onChange={(e) => setSearchQuery(e?.target ? e.target.value : e)} placeholder="Search transaction..." />
-        </div>
-        
-        <select value={filters.details} onChange={(e) => setFilters({...filters, details: e.target.value})} className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-600 outline-none">
-          <option value="All">Details</option>
-          <option value="Sale">Sales Only</option>
-          <option value="Restock">Restocks Only</option>
-        </select>
-
-        <select value={filters.processedBy} onChange={(e) => setFilters({...filters, processedBy: e.target.value})} className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-600 outline-none">
-          <option value="All">Processed By</option>
-          <option value="John Smith">John Smith</option>
-          <option value="Jane Doe">Jane Doe</option>
-        </select>
-
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <span className="absolute -top-4 left-0 text-[10px] text-gray-400">Date From:</span>
-            <input type="date" value={filters.dateFrom} onChange={(e) => setFilters({...filters, dateFrom: e.target.value})} className="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-gray-600" />
-          </div>
-          <div className="relative">
-            <span className="absolute -top-4 left-0 text-[10px] text-gray-400">Date To:</span>
-            <input type="date" value={filters.dateTo} onChange={(e) => setFilters({...filters, dateTo: e.target.value})} className="border border-gray-300 rounded-md px-2 py-1.5 text-sm text-gray-600" />
-          </div>
-        </div>
-
-        <button onClick={handleClearFilters} className="border border-dashed border-[#D47B7B] text-[#D47B7B] px-3 py-2 rounded-md text-xs font-bold hover:bg-red-50 transition-colors">
-          ✕ Clear filters
-        </button>
-      </div>
-
-      {/* TABLE */}
-      <div className="overflow-hidden bg-white rounded-lg border border-gray-200 shadow-sm">
-        <table className="w-full text-sm text-left">
-          <thead className="text-gray-400 uppercase text-[11px] border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 font-medium">Transaction ID ▾</th>
-              <th className="px-6 py-4 font-medium">Details ▾</th>
-              <th className="px-6 py-4 font-medium">Processed By ▾</th>
-              <th className="px-6 py-4 font-medium">Amount ▾</th>
-              <th className="px-6 py-4 font-medium">Time ▾</th>
-              <th className="px-6 py-4 font-medium text-center">Date ▾</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.map((t, index) => (
-              <tr key={t.id} className={index % 2 === 0 ? "bg-[#E3DFD6]/40" : "bg-white"}>
-                <td className="px-6 py-4 text-gray-500">{t.id}</td>
-                <td className="px-6 py-4 text-gray-700 font-medium">{t.details}</td>
-                <td className="px-6 py-4 text-gray-600">{t.processedBy}</td>
-                <td className={`px-6 py-4 font-bold ${t.amount > 0 ? 'text-[#94BE9F]' : 'text-[#902A3C]'}`}>
-                  {t.amount > 0 ? `+ ₱${t.amount.toFixed(2)}` : `- ₱${Math.abs(t.amount).toFixed(2)}`}
-                </td>
-                <td className="px-6 py-4 text-gray-500">{t.time}</td>
-                <td className="px-6 py-4 text-gray-500 text-center">{t.date}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* FOOTER */}
-      <div className="flex justify-between items-center mt-6">
-        <p className="text-sm text-gray-400">Showing {currentData.length} of {filteredData.length} entries</p>
-        <div className="flex gap-4">
-          <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} className="text-2xl text-gray-400 hover:text-gray-800">‹</button>
-          <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} className="text-2xl text-gray-400 hover:text-gray-800">›</button>
-        </div>
-      </div>
-
-      {/* ACTIONS */}
-      <div className="flex gap-3 mt-4">
-        {/* Connected the onClick handler to open the modal */}
-        <button 
-          onClick={() => setIsExportModalOpen(true)}
-          className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm"
-        >
-          📊 Export
-        </button>
-        <button className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm">
-          📥 Import
-        </button>
-      </div>
-
-      {/* MODAL INJECTION */}
-      <ExportTransactionModal 
-        isOpen={isExportModalOpen} 
-        onClose={() => setIsExportModalOpen(false)} 
-      />
-    </div>
-  );
-};
-
-export default TransactionsPage;
+    );
+}

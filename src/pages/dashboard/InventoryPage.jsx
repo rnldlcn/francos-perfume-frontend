@@ -48,6 +48,10 @@ const InventoryPage = ({ role }) => {
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
 
+  // --- PAGINATION STATE ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
   useEffect(() => {
     const getInventoryData = async (token) => {
       try {
@@ -57,7 +61,7 @@ const InventoryPage = ({ role }) => {
         const inventoryArray = response.data || []; 
         
         const dataWithBatches = inventoryArray.map(item => {
-          // 🔧 FIXED: Read both lowercase 'batches' (from real API) and uppercase 'Batches' just in case
+          // Read both lowercase 'batches' and uppercase 'Batches'
           const backendBatches = item.batches || item.Batches || []; 
           
           const mappedBatches = backendBatches.map(b => ({
@@ -69,7 +73,6 @@ const InventoryPage = ({ role }) => {
 
           return {
             ...item,
-            // Fallback to the API's total_units if the array mapping acts up
             totalUnits: item.total_units || 0, 
             batches: mappedBatches
           };
@@ -108,7 +111,6 @@ const InventoryPage = ({ role }) => {
               ? { ...b, qty: updatedBatch.qty, targetDate: updatedBatch.targetDate } 
               : b
           );
-          // Recalculate total units locally after a save
           const newTotal = updatedBatches.reduce((sum, b) => sum + parseInt(b.qty || 0), 0);
           return { ...product, batches: updatedBatches, totalUnits: newTotal };
         }
@@ -143,6 +145,7 @@ const InventoryPage = ({ role }) => {
     setIsEditModalOpen(false);
   };
 
+  // --- FILTERING ---
   const filteredInventory = inventory.filter((item) => {
     const name = item.product_name || "";
     const id = item.product_display_id?.toString() || "";
@@ -160,6 +163,18 @@ const InventoryPage = ({ role }) => {
 
     return matchesSearch && matchesType && matchesBranch && matchesGender;
   });
+
+  // --- PAGINATION LOGIC ---
+  useEffect(() => {
+    // Reset to page 1 if user changes search or filters
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
+
+  const totalPages = Math.ceil(filteredInventory.length / ITEMS_PER_PAGE);
+  const currentInventory = filteredInventory.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
@@ -198,25 +213,23 @@ const InventoryPage = ({ role }) => {
         />
       </div>
 
-      <div className="flex flex-col gap-4 pb-8">
+      <div className="flex flex-col gap-4 pb-4 flex-1">
         {isLoading ? (
           <div className="text-center py-10 text-gray-400">Loading inventory data...</div>
         ) : filteredInventory.length === 0 ? (
           <div className="text-center py-10 text-gray-400">No products found.</div>
         ) : (
-          filteredInventory.map((product) => {
+          currentInventory.map((product) => {
             const rowKey = `${product.product_display_id}-${product.branch_name}`;
             const isExpanded = expandedRows[rowKey];
             
             const batches = product.batches || [];
-            
-            // 🔧 Use the totalUnits we mapped above
             const displayUnits = product.totalUnits || 0;
             const totalBatches = batches.length;
             const isLowStock = displayUnits > 0 && displayUnits < 10;
 
             return (
-              <div key={rowKey} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all">
+              <div key={rowKey} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all shrink-0">
                 
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
@@ -300,6 +313,32 @@ const InventoryPage = ({ role }) => {
           })
         )}
       </div>
+
+      {/* --- PAGINATION CONTROLS --- */}
+      {filteredInventory.length > 0 && !isLoading && (
+        <div className="flex justify-between items-center mt-auto pt-6 pb-2 text-sm text-gray-400">
+          <p>
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredInventory.length)} of {filteredInventory.length} entries
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              disabled={currentPage === 1}
+              className={`text-2xl transition-colors ${currentPage === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
+            >
+              ‹
+            </button>
+            <span className="text-gray-500 font-medium">{currentPage} / {totalPages || 1}</span>
+            <button
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className={`text-2xl transition-colors ${currentPage === totalPages || totalPages === 0 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
 
       <EditProductModal
         isOpen={isEditModalOpen}

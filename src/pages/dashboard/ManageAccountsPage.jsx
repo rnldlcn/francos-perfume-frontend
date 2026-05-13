@@ -19,6 +19,10 @@ const dummyAccounts = [
 
 const ManageAccountsPage = () => {
   const { user } = UseAuth();
+  const canSwitchAccess = user?.trueRole === 'manager';
+  
+  // 🔧 Lifted activeRole to component level for UI conditional rendering
+  const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
   
   // --- STATE ---
   const [accounts, setAccounts] = useState([]);
@@ -40,8 +44,6 @@ const ManageAccountsPage = () => {
   const fetchAccounts = async () => {
     setIsLoading(true);
     let backendAccounts = [];
-
-    const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
     const userBranchId = sessionStorage.getItem('branchId');
 
     try {
@@ -76,7 +78,6 @@ const ManageAccountsPage = () => {
       const mappedAccounts = authorizedAccounts.map(acc => ({
         id: acc.id || acc.employee_id || acc.userId, 
         email: acc.email || acc.employee_email,
-        // Use the backend full name if available, otherwise combine
         name: acc.name || acc.employee_full_name || `${acc.first_name} ${acc.last_name}`,
         first_name: acc.first_name,
         last_name: acc.last_name,
@@ -148,9 +149,12 @@ const ManageAccountsPage = () => {
           />
         </div>
 
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-          <span className="text-xl leading-none">+</span> Create New Account
-        </Button>
+        {/* 🔧 HIDDEN FOR MANAGERS */}
+        {activeRole !== 'MANAGER' && (
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            <span className="text-xl leading-none">+</span> Create New Account
+          </Button>
+        )}
       </div>
 
       <h2 className="text-2xl font-bold text-[#333] mb-6">Accounts List</h2>
@@ -181,7 +185,6 @@ const ManageAccountsPage = () => {
                     >
                     <td className="px-4 py-4 text-gray-700">{userObj.id}</td>
                     <td className="px-4 py-4">{userObj.email}</td>
-                    {/* 🔧 FIXED: Use the 'name' property directly */}
                     <td className="px-4 py-4 text-gray-700">{userObj.name}</td>
                     <td className="px-4 py-4 uppercase">{userObj.role}</td>
                     <td className="px-4 py-4">{userObj.branch}</td>

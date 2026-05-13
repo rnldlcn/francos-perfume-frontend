@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api/delivery';
+const API_BASE_URL = 'http://localhost:5000/api/Deliveries';
 
 const handleResponse = async (response) => {
     if (!response.ok) {

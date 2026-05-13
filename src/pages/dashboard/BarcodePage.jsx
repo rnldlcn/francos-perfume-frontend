@@ -11,12 +11,15 @@ export default function BarcodePage() {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [printQty, setPrintQty] = useState(1);
 
+    // --- PAGINATION STATE ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
+
     // --- FETCH DATA ---
     useEffect(() => {
         const fetchProducts = async () => {
             setIsLoading(true);
             try {
-                // Fetching from your existing Inventory endpoint to guarantee it works immediately
                 const response = await fetch('http://localhost:5000/api/Inventory/displayAll?pageSize=500', {
                     method: 'GET',
                     headers: { 
@@ -29,7 +32,6 @@ export default function BarcodePage() {
 
                 const result = await response.json();
                 
-                // Filter out branch duplicates to create a clean "Master Product" list
                 const uniqueProducts = [];
                 const seenIds = new Set();
 
@@ -42,7 +44,6 @@ export default function BarcodePage() {
 
                 setProducts(uniqueProducts);
                 
-                // Auto-select the first product if available
                 if (uniqueProducts.length > 0) {
                     setSelectedProduct(uniqueProducts[0]);
                 }
@@ -57,7 +58,7 @@ export default function BarcodePage() {
         fetchProducts();
     }, [user?.accessToken]);
 
-    // --- FILTER LOGIC ---
+    // --- FILTER & PAGINATION LOGIC ---
     const filteredProducts = products.filter(p => {
         const query = searchQuery.toLowerCase();
         return (
@@ -66,6 +67,16 @@ export default function BarcodePage() {
             (p.product_barcode || "").includes(query)
         );
     });
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery]);
+
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const currentProducts = filteredProducts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     // --- CAPSTONE 2 PLACEHOLDER HANDLERS ---
     const handleCapstone2Feature = (featureName) => {
@@ -85,7 +96,7 @@ export default function BarcodePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-1 min-h-0">
                 
                 {/* LEFT COLUMN: Product Selection */}
-                <div className="lg:col-span-5 flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm p-4 overflow-hidden">
+                <div className="lg:col-span-7 flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm p-4 overflow-hidden">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">Select Perfume</h2>
                     
                     {/* Search Bar */}
@@ -101,13 +112,13 @@ export default function BarcodePage() {
                     </div>
 
                     {/* Scrollable Product List */}
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar mb-4">
                         {isLoading ? (
                             <p className="text-center text-gray-400 py-10 text-sm">Loading products...</p>
                         ) : filteredProducts.length === 0 ? (
                             <p className="text-center text-gray-400 py-10 text-sm">No products found.</p>
                         ) : (
-                            filteredProducts.map(product => {
+                            currentProducts.map(product => {
                                 const isSelected = selectedProduct?.product_id === product.product_id;
                                 
                                 return (
@@ -146,18 +157,44 @@ export default function BarcodePage() {
                             })
                         )}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {!isLoading && filteredProducts.length > 0 && (
+                        <div className="flex justify-between items-center pt-4 border-t border-gray-100 shrink-0">
+                            <span className="text-xs text-gray-500">
+                                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredProducts.length)} of {filteredProducts.length}
+                            </span>
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className={`text-xl transition-colors ${currentPage === 1 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    ‹
+                                </button>
+                                <span className="text-sm font-medium text-gray-600">{currentPage} / {totalPages || 1}</span>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className={`text-xl transition-colors ${currentPage === totalPages || totalPages === 0 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    ›
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* RIGHT COLUMN: Barcode Preview */}
-                <div className="lg:col-span-7">
-                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 lg:p-8 h-full flex flex-col">
+                {/* RIGHT COLUMN: Barcode Preview (Now h-fit and sticky) */}
+                <div className="lg:col-span-5 h-fit sticky top-6">
+                    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 lg:p-8 flex flex-col">
                         <h2 className="text-xl font-bold text-gray-800 mb-6">Barcode Preview</h2>
                         
                         {selectedProduct ? (
-                            <div className="flex-1 flex flex-col">
+                            <div className="flex flex-col">
                                 
                                 {/* Info Header */}
-                                <div className="flex justify-between items-start mb-10 pb-6 border-b border-gray-100">
+                                <div className="flex justify-between items-start mb-8 pb-6 border-b border-gray-100">
                                     <div>
                                         <h3 className="font-bold text-lg text-gray-800">{selectedProduct.product_name}</h3>
                                         <p className="text-sm text-gray-500">{selectedProduct.product_display_id}</p>
@@ -170,16 +207,16 @@ export default function BarcodePage() {
                                 </div>
 
                                 {/* Placeholder Barcode Graphic */}
-                                <div className="flex-1 flex flex-col items-center justify-center mb-10">
-                                    <div className="bg-white border-2 border-dashed border-gray-300 p-8 rounded-xl flex flex-col items-center w-full max-w-sm">
-                                        <p className="font-bold tracking-widest text-gray-800 mb-2">SAMPLE ONLY</p>
-                                        <p className="font-mono text-sm tracking-[0.2em] text-gray-600 mb-3">
+                                <div className="flex flex-col items-center justify-center mb-8">
+                                    <div className="bg-white border-2 border-dashed border-gray-300 p-6 rounded-xl flex flex-col items-center w-full max-w-xs">
+                                        <p className="font-bold tracking-widest text-gray-800 mb-2 text-sm">SAMPLE ONLY</p>
+                                        <p className="font-mono text-xs tracking-[0.2em] text-gray-600 mb-3">
                                             {selectedProduct.product_barcode || '978-1-78280-808-4'}
                                         </p>
                                         
                                         {/* CSS Simulated Barcode Lines */}
-                                        <div className="flex h-24 w-full justify-between items-end px-4 mb-2">
-                                            {[...Array(40)].map((_, i) => (
+                                        <div className="flex h-20 w-full justify-between items-end px-2 mb-2">
+                                            {[...Array(35)].map((_, i) => (
                                                 <div 
                                                     key={i} 
                                                     className="bg-black" 
@@ -191,7 +228,7 @@ export default function BarcodePage() {
                                             ))}
                                         </div>
 
-                                        <p className="font-mono text-lg tracking-[0.3em] font-bold text-gray-800">
+                                        <p className="font-mono text-base tracking-[0.25em] font-bold text-gray-800">
                                             {selectedProduct.product_barcode || '9781782 808084'}
                                         </p>
                                         
@@ -209,7 +246,7 @@ export default function BarcodePage() {
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="space-y-3 mt-auto">
+                                <div className="space-y-3">
                                     <button 
                                         onClick={() => handleCapstone2Feature("Regenerate Barcode")}
                                         className="w-full py-3.5 bg-[#EAE2D0] hover:bg-[#DCD0B3] text-gray-800 font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -232,7 +269,7 @@ export default function BarcodePage() {
 
                             </div>
                         ) : (
-                            <div className="flex-1 flex items-center justify-center text-gray-400">
+                            <div className="flex-1 flex items-center justify-center text-gray-400 py-10">
                                 {isLoading ? "Loading..." : "Select a perfume from the left to preview its barcode."}
                             </div>
                         )}
