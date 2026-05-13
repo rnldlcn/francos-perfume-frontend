@@ -14,7 +14,6 @@ import HomePage from './pages/dashboard/HomePage';
 import InventoryPage from './pages/dashboard/InventoryPage';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import ProductsPage from './pages/dashboard/ProductsPage';
-import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
 import PointOfSalePage from './pages/pos/PointOfSalePage';
 import { UseAuth } from './services/UseAuth';
@@ -90,7 +89,6 @@ const App = () => {
           {/* 1. INVENTORY & DAILY OPS (Manager, Owner, & Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'staff']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
-            <Route path="requests" element={<RequestPage />} />
             <Route path="new-transfer" element={<CreateTransferRequest />} /> 
             <Route path="requests/:id" element={<RequestDetailsPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
