@@ -25,7 +25,7 @@ const filterSelections = [
   { key: "gender", label: "Gender", options: ["All Genders", "Unisex", "Men", "Women"] },
 ];
 
-const Inventory = ({ role }) => {
+const InventoryPage = ({ role }) => {
   const { user } = UseAuth();
   const isManager = role === "manager";
 
@@ -118,48 +118,6 @@ const Inventory = ({ role }) => {
     setIsEditBatchModalOpen(false);
   };
 
-
-  const { user } = UseAuth();
-  const isManager = role === "manager";
-
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [filters, setFilters] = useState({
-    type: "All Perfume Types",
-    branch: "All Branches",
-    gender: "All Genders",
-  });
-
-  const [inventory, setInventory] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 10;
-  // use this for loading
-  const [isLoading, setIsLoading] = useState(true);
- 
-
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  useEffect(() => {
-    const getInventoryData = async (token) => {
-      try {
-        setIsLoading(true);
-        const result = await fetchAllInventory(token, page, PAGE_SIZE);
-        console.log("Fetched inventory data:", result.data);
-        setInventory(result.data || []);
-        setTotalPages(result.totalInventoriesPage);
-        setTotalCount(result.totalInventories);
-      } catch (error) {
-        // add popups
-        alert("Inventory failed: " + error.message);
-      }
-    }
-    getInventoryData(user.accessToken);
-  }, [user.accessToken, page]);
-
   const handleAddProduct = (newProduct) => {
     const productWithId = {
       ...newProduct,
@@ -170,35 +128,8 @@ const Inventory = ({ role }) => {
     setInventory([productWithId, ...inventory]);
   };
 
-  /* // 🔌 UNCOMMENT WHEN .NET IS READY
-  const [inventory, setInventory] = useState([]);
-  useEffect(() => {
-    fetch('https://localhost:5001/api/inventory') 
-      .then(response => response.json())
-      .then(data => setInventory(data));
-  }, []);
-  */
-
-  // --- LOGIC: Qty Buttons ---
-  const increment = useCallback(async (id) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: item.qty + 1 } : item,
-      ),
-    );
-  }, []);
-
-  const decrement = useCallback(async (id) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, qty: Math.max(0, item.qty - 1) } : item,
-      ),
-    );
-  }, []); 
-
-
-  const handleOpenEditModal = (id, role) => {
-    const productToEdit = inventory.find((item) => item.id === id);
+  const handleOpenEditModal = (id) => {
+    const productToEdit = inventory.find((item) => item.product_display_id === id);
     setEditingProduct(productToEdit);
     setIsEditModalOpen(true);
   };
@@ -255,7 +186,7 @@ const Inventory = ({ role }) => {
         </div>
       </div>
 
-      <div className="flex products-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-6">
         <SearchBar
           value={searchQuery}
           onChange={(value) => setSearchQuery(value?.target ? value.target.value : value)}
