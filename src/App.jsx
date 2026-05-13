@@ -2,26 +2,27 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import MobileBlocker from './components/features/pos_components/MobileBlocker';
 import DashboardLayout from './layouts/DashboardLayout';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import LoginPage from './pages/auth/LoginPage';
 import ArchivesPage from './pages/dashboard/ArchivesPage';
 import AuditLogPage from './pages/dashboard/AuditLogPage';
 import BarcodePage from './pages/dashboard/BarcodePage';
+import CreateTransferRequest from './pages/dashboard/CreateTransferRequest';
 import DiscountPage from './pages/dashboard/DiscountPage';
 import ForecastPage from './pages/dashboard/ForecastPage';
 import HomePage from './pages/dashboard/HomePage';
 import InventoryPage from './pages/dashboard/InventoryPage';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
+import ProductsPage from './pages/dashboard/ProductsPage';
 import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
 import PointOfSalePage from './pages/pos/PointOfSalePage';
-import CreateTransferRequest from './pages/dashboard/CreateTransferRequest';
 import { UseAuth } from './services/UseAuth';
-import ProductsPage from './pages/dashboard/ProductsPage';
 
 // ---> DELIVERIES IMPORTS <--- 
-import RequestDetailsPage from './components/features/request_components/RequestDetailsPage'; 
-import DeliveriesPage from './pages/dashboard/DeliveriesPage'; 
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
+import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
+import DeliveriesPage from './pages/dashboard/DeliveriesPage';
 
 const ProtectedRoute = ({ user, allowedRoles }) => {
   if (!user) return <Navigate to="/login" />;
@@ -73,12 +74,12 @@ const App = () => {
     <Router>
       <NavigationManager user={user} />
       <Routes>
+        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route path='/login' 
           element={
             !user ? <LoginPage onLogin={login} /> : <Navigate to={user.activeRole === 'cashier' ? '/pos' : '/home'} replace />
           }
         />
-
         <Route path='/home'
           element={
             user ? <DashboardLayout user={user} onSwitchAccess={handleSwitchAccess} onLogout={logout} /> : <Navigate to='/login' replace /> 

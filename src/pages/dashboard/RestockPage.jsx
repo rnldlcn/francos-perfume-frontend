@@ -50,34 +50,55 @@ const RequestPage = () => {
     {
       header: 'REQ ID',
       accessorKey: 'request_display_id', // Mapped to C# DTO
+      header: 'ID',
+      accessorKey: 'request_display_id',
       enableSorting: true
     },
     {
       header: 'From → To',
       id: 'from_to',
       cell: ({ row }) => `${row.original.requested_from} → ${row.original.delivered_to}` // Mapped to C# DTO
+      header: 'Perfume ID',
+      accessorKey: 'product_display_id',
+      enableSorting: true
+    },
+    {
+      header: 'Perfume Name',
+      accessorKey: 'product_name',
+      sortingFn: 'alphanumeric',
     },
     {
       header: 'Status',
       accessorKey: 'request_status', // Mapped to C# DTO
       // 🔧 FIXED: Replaced the bulky switch statement with your clean component
       cell: ({ row }) => <StatusBadge status={row.original.request_status} />
+      header: 'Quantity',
+      accessorKey: 'request_qty',
+      enableSorting: true
     },
     {
       header: 'Total Items',
       accessorKey: 'item_count', // Mapped to C# DTO
       cell: ({ row }) => `${row.original.item_count} items`
+      header: 'Requested From',
+      accessorKey: 'requested_from', // to change
+      enableSorting: true
     },
     {
-      header: 'Created By',
-      accessorKey: 'employee_display_id', // Mapped to C# DTO
+      header: 'Delivered To',
+      accessorKey: 'delivered_to', // to change
       enableSorting: true
     },
     {
       header: 'Date Created',
-      accessorKey: 'request_date_submitted', // Mapped to C# DTO
-      enableSorting: true,
-      cell: ({ row }) => new Date(row.original.request_date_submitted).toLocaleDateString()
+      accessorKey: 'request_date_created', 
+      enableSorting: true
+    },
+    {
+      header: 'Status',
+      accessorKey: 'request_status',
+      sortingFns: 'statusSort',
+      enableSorting: true
     },
     {
       header: 'Action',
@@ -165,4 +186,4 @@ const RequestPage = () => {
   );
 };
 
-export default RequestPage;
+export default RestockPage;

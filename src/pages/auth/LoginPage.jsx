@@ -120,6 +120,7 @@ const LoginPage = ({ onLogin }) => {
                 Login
             </button>
         </form>
+        <p>Forgot password? <a href="/forgot-password" className="text-[#7D162E]">Reset it here</a>.</p>
       </div>
     </div>
   )

@@ -7,10 +7,9 @@ import {
   HandHelping,
   LayoutDashboard,
   Logs,
+  ShoppingBag,
   Tag,
-  UserPen,
-  Truck,
-  ShoppingBag
+  UserPen
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
@@ -84,9 +83,9 @@ const Sidebar = ({ user }) => {
 
         {/* REQUESTS - Restricted from Admin */}
         {!isAdmin && (
-          <Link to="/home/requests" className={getTabClass("/home/requests")}>
+          <Link to="/home/restock" className={getTabClass("/home/restock")}>
             <HandHelping size={24} />
-            <p className="text-base">Requests</p>
+            <p className="text-base">Restock</p>
           </Link>
         )}
 

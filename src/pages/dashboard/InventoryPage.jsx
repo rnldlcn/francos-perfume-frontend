@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,14 +10,14 @@ import {
 } from "@/components/ui/table";
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
+import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png";
 import AddProductModal from "../../components/features/inventory_components/AddProductModal";
-import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
+import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import { fetchAllInventory } from "../../services/InventoryService";
 import { UseAuth } from "../../services/UseAuth";
-import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png";
 
 const filterSelections = [
   { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Standard", "Premium", "Signature"] },
@@ -25,7 +25,7 @@ const filterSelections = [
   { key: "gender", label: "Gender", options: ["All Genders", "Unisex", "Men", "Women"] },
 ];
 
-const Inventory = ({ role }) => {
+const InventoryPage = ({ role }) => {
   const { user } = UseAuth();
   const isManager = role === "manager";
 
@@ -324,4 +324,4 @@ const Inventory = ({ role }) => {
   );
 };
 
-export default Inventory;
+export default InventoryPage;
