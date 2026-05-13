@@ -18,9 +18,8 @@ import CreateTransferRequest from './pages/dashboard/CreateTransferRequest';
 import { UseAuth } from './services/UseAuth';
 import ProductsPage from './pages/dashboard/ProductsPage';
 
+// ---> DELIVERIES IMPORTS <--- 
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage'; 
-
-// ---> FIXED DELIVERIES IMPORTS based on your exact folder structure <--- 
 import DeliveriesPage from './pages/dashboard/DeliveriesPage'; 
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 
@@ -87,23 +86,29 @@ const App = () => {
         >
           <Route index element={<HomePage role={user?.trueRole} />} />
 
-          {/* 2. INVENTORY OPS (Manager, Owner, & Staff) */}
+          {/* 1. INVENTORY & DAILY OPS (Manager, Owner, & Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'staff']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
             <Route path="new-transfer" element={<CreateTransferRequest />} /> 
             <Route path="requests/:id" element={<RequestDetailsPage />} />
-            
-            {/* ---> DELIVERIES ROUTES <--- */}
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
-            <Route path="products" element={<ProductsPage />} />
+            {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}
+            <Route path="barcode" element={<BarcodePage />} /> 
+          </Route>
+
+          {/* 2. ANALYTICS & TRANSACTIONS (Manager & Owner Only - Hidden from Staff) */}
+          <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner']} />}>
+            <Route path="transactions" element={<TransactionsPage />} />
+            {/* 🔧 Forecast moved here so Staff cannot access it */}
             <Route path="forecast" element={<ForecastPage />} />
           </Route>
 
-          {/* 3. SALES OPS (Manager & Owner Only) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner']} />}>
-            <Route path="transactions" element={<TransactionsPage />} />
+          {/* 3. BUSINESS CONTROL (Owner Only - Hidden from Managers & Staff) */}
+          <Route element={<ProtectedRoute user={user} allowedRoles={['owner']} />}>
+            {/* 🔧 Products and Discount moved here to match Sidebar limits */}
+            <Route path="products" element={<ProductsPage />} />
             <Route path="discount" element={<DiscountPage />} />
           </Route>
 
@@ -113,13 +118,9 @@ const App = () => {
             <Route path="archives" element={<ArchivesPage />} />
             <Route path="audit" element={<AuditLogPage />} />
           </Route>
-
-          {/* 5. TOOLS (Manager Only) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['manager']} />}>
-            <Route path="barcode" element={<BarcodePage />} />
-          </Route>
         </Route>
         
+        {/* POS SYSTEM */}
         <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'cashier']} />}>
           <Route path="/pos" element={<PointOfSalePage user={user} onLogout={logout} onSwitchAccess={handleSwitchAccess} />} />
         </Route>
