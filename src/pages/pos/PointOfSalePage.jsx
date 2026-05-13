@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Search, Filter, Check } from 'lucide-react'; // Added Filter and Check
 import { useEffect, useState } from 'react';
 import logo from '../../assets/FrancoPerfumeLogo.png';
 import CashPaymentModal from '../../components/features/pos_components/CashPaymentModal';
@@ -10,9 +10,23 @@ import ProductCard from '../../components/features/pos_components/ProductCard';
 import ProductModal from '../../components/features/pos_components/ProductModal';
 import ProfileDropdown from '../../components/shared/ProfileDropdown';
 
-const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
+// Added a simple Dropdown Menu for the Filter Button
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-  const canSwitchAccess = user.trueRole === 'manager';
+const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
+  const canSwitchAccess = user?.trueRole === 'manager';
+
+  // --- STATE ---
+  const [products, setProducts] = useState([]); 
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false); 
 
   const [cart, setCart] = useState([]);
   const [activeType, setActiveType] = useState('ALL'); 
@@ -23,355 +37,317 @@ const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
   // Discount Modal States
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [appliedDiscountRate, setAppliedDiscountRate] = useState(0); 
+  const [appliedDiscountId, setAppliedDiscountId] = useState(0); 
   
   // Confirmation Modal States
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false); // NEW STATE FOR CHECKOUT
-  
-  // Product Modal States
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
-  const [showGCashModal, setShowGCashModal] = useState(false); // ADD THIS
+  const [showGCashModal, setShowGCashModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
+  // --- 1. FETCH INVENTORY ---
   useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentDateTime(now.toISOString().split('T')[0] + ' ' + now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+    const fetchInventory = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`http://localhost:5000/api/Products/branch/${user?.branchId || sessionStorage.getItem('branchId')}/pos`, {
+          headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+        });
+        
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Error fetching POS inventory:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
+
+    fetchInventory();
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      setCurrentDateTime(now.toLocaleString('en-US', { 
+        weekday: 'short', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      }));
+    }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
-  const products = [
-    { id: 1, name: 'Apricot Spray', type: 'PREMIUM', gender: 'MALE', price: 1500 },
-    { id: 2, name: 'Apricot Spray', type: 'PREMIUM', gender: 'FEMALE', price: 1500 },
-    { id: 3, name: 'Apricot Spray', type: 'PREMIUM', gender: 'UNISEX', price: 1500 },
-    { id: 4, name: 'Ocean Breeze', type: 'CLASSIC', gender: 'FEMALE', price: 900 },
-    { id: 5, name: 'Midnight Wood', type: 'CLASSIC', gender: 'MALE', price: 950 },
-    { id: 6, name: 'Citrus Bloom', type: 'CLASSIC', gender: 'MALE', price: 900 },
-  ];
 
-  const handleAddToCart = (product, quantityToAdd) => {
-    const existingItem = cart.find(item => item.id === product.id);
-    if (existingItem) {
-      setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + quantityToAdd } : item));
-    } else {
-      setCart([...cart, { ...product, qty: quantityToAdd }]);
-    }
-    setShowProductModal(false); 
+  // --- CART LOGIC ---
+  const handleAddToCart = (product, quantity) => {
+    const cleanPrice = Number(product.product_price || product.price || 0);
+    const cleanName = product.product_name || product.name || 'Unknown Item';
+
+    setCart(prevCart => {
+      const existing = prevCart.find(item => item.product_id === product.product_id);
+      if (existing) {
+        return prevCart.map(item => 
+          item.product_id === product.product_id 
+            ? { ...item, cartQty: item.cartQty + quantity } 
+            : item
+        );
+      }
+      return [...prevCart, { ...product, name: cleanName, price: cleanPrice, cartQty: quantity }];
+    });
+    setSelectedProduct(null);
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-  const discountAmount = subtotal * appliedDiscountRate; 
+  const handleRemoveFromCart = (productId) => {
+    setCart(prevCart => prevCart.filter(item => item.product_id !== productId));
+  };
+
+
+  // --- COMPUTATIONS ---
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.cartQty), 0);
+  const discountAmount = subtotal * appliedDiscountRate;
   const grandTotal = subtotal - discountAmount;
 
-  const handleRemoveDiscount = () => {
-    setAppliedDiscountRate(0); 
+
+  // --- 2. CHECKOUT SUBMISSION ---
+  const handleFinalCheckout = async (paymentDetails) => {
+    setIsProcessing(true);
+
+    const exactGrandTotal = parseFloat(grandTotal.toFixed(2));
+    const rawReceivedString = String(paymentDetails.received ?? paymentDetails.amount ?? 0).replace(/,/g, '');
+    const exactAmountPaid = paymentDetails.method === 'Cash' 
+        ? parseFloat(rawReceivedString) || 0
+        : exactGrandTotal;
+
+    const posDto = {
+      payment_method: paymentDetails.method.toUpperCase(), 
+      paymentMethod: paymentDetails.method.toUpperCase(), 
+      amount_paid: exactAmountPaid, 
+      amountPaid: exactAmountPaid, 
+      reference_id: paymentDetails.referenceId || null, 
+      referenceId: paymentDetails.referenceId || null, 
+      discount_id: Number(appliedDiscountId) || 0,
+      discountId: Number(appliedDiscountId) || 0,
+      items: cart.map(item => ({
+        product_id: item.product_id,
+        productId: item.product_id,
+        quantity: item.cartQty
+      }))
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/api/POS/checkout', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${user?.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(posDto)
+      });
+
+      if (!response.ok) throw new Error(await response.text());
+      const result = await response.json();
+      
+      const receiptData = result?.receipt || result?.Receipt || result?.data?.receipt;
+
+      if (!receiptData) {
+        const fallbackId = result?.sales_order_display_id || "UNKNOWN";
+        alert(`Transaction Successful!\nReceipt Number: ${fallbackId}`);
+      } else {
+        alert(`Transaction Successful!\nReceipt Number: ${receiptData?.receipt_number || 'N/A'}\nVAT: ₱${receiptData?.vatable_sales || 0}`);
+      }
+      
+      setCart([]);
+      setAppliedDiscountRate(0);
+      setAppliedDiscountId(0);
+      setShowCashModal(false);
+      setShowGCashModal(false);
+      setShowCheckoutModal(false);
+      
+    } catch (error) {
+      alert(`Checkout Failed: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handlePaymentSelect = (method) => {
-    setShowCheckoutModal(false); 
-
-    if (method === 'Cash') {
-      setShowCashModal(true);      
-    } else if (method === 'GCash') {
-      setShowGCashModal(true);     
-    }
+    setShowCheckoutModal(false);
+    if (method === 'Cash') setShowCashModal(true);
+    if (method === 'GCash') setShowGCashModal(true);
   };
 
-  const handleConfirmCashPayment = (paymentDetails) => {
-    // ==========================================
-    // 🔌 API TEMPLATE: PROCESS POS TRANSACTION
-    // ==========================================
-    /*
-      try {
-        await fetch('YOUR_API_URL/transactions/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart,
-            total: grandTotal,
-            discountRate: appliedDiscountRate,
-            paymentMethod: paymentDetails.method,
-            amountReceived: paymentDetails.received,
-            change: paymentDetails.change
-          })
-        });
-      } catch (error) {
-        console.error("Payment processing failed", error);
-      }
-    */
-    
-    console.log('Cash Payment Confirmed:', paymentDetails);
-
-    // Reset the POS system for the next customer
-    setCart([]);
-    setAppliedDiscountRate(0);
-    setShowCashModal(false);
-    
-    // Optional: You could trigger a receipt print modal here
-    alert(`Payment successful! Change: ₱${paymentDetails.change.toFixed(2)}`);
-  };
-
-  const handleConfirmGCashPayment = (paymentDetails) => {
-    // ==========================================
-    // 🔌 API TEMPLATE: PROCESS GCASH TRANSACTION
-    // ==========================================
-    /*
-      try {
-        await fetch('YOUR_API_URL/transactions/process', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cart,
-            total: grandTotal,
-            discountRate: appliedDiscountRate,
-            paymentMethod: paymentDetails.method,
-            referenceId: paymentDetails.referenceId
-          })
-        });
-      } catch (error) {
-        console.error("Payment processing failed", error);
-      }
-    */
-    
-    console.log('GCash Payment Confirmed:', paymentDetails);
-
-    // Reset the POS system for the next customer
-    setCart([]);
-    setAppliedDiscountRate(0);
-    setShowGCashModal(false);
-    
-    alert(`GCash Payment successful! Ref ID: ${paymentDetails.referenceId}`);
-  };
-
+  // --- FILTERING ---
   const filteredProducts = products.filter(p => {
-    const matchesType = activeType === 'ALL' || p.type === activeType;
-    const matchesGender = activeGender === 'ALL' || p.gender === activeGender;
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesType && matchesGender && matchesSearch;
+    const pName = p.product_name || p.name || '';
+    const pType = p.product_type || p.type || '';
+    const pGender = p.product_gender || p.gender || '';
+
+    const matchesSearch = pName.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = activeType === 'ALL' || pType === activeType;
+    const matchesGender = activeGender === 'ALL' || pGender === activeGender;
+    return matchesSearch && matchesType && matchesGender;
   });
 
-  const FilterBtn = ({ label, activeState, setCategory, currentActive }) => (
-    <button 
-      onClick={() => setCategory(currentActive === label ? 'ALL' : label)}
-      className={`px-4 py-1.5 text-xs font-bold border transition-colors rounded-sm ${
-        currentActive === label 
-          ? 'bg-white text-black border-white' 
-          : 'bg-transparent text-gray-300 border-gray-600 hover:border-white hover:text-white'
-      }`}
-    >
-      {label}
-    </button>
-  );
-
   return (
-    <div className="flex flex-col h-screen w-full bg-[#2A2B2A] font-montserrat overflow-hidden relative">
+    <div className="flex h-screen bg-[#0F172A] font-montserrat overflow-hidden relative text-slate-100">
       
-      {/* HEADER */}
-      <header className="flex justify-between items-start px-8 pt-6 pb-4 shrink-0 relative">
-        <div className="flex flex-col gap-4">
-          <span className="text-custom-gray font-bold tracking-widest text-xs uppercase">
-            {canSwitchAccess ? 'MANAGER - CASHIER' : 'CASHIER'}
-          </span>
+      {/* LEFT PANEL: PRODUCT GRID */}
+      <div className="flex-1 flex flex-col h-full pl-6 py-6 pr-4">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Point of Sale</h1>
+            <p className="text-slate-400 text-sm">{currentDateTime}</p>
+          </div>
           <div className="flex items-center gap-4">
-            <div className="relative w-72">
-              <Search className="absolute left-0 top-1/2 -translate-y-1/2 text-white" size={24} />
-              <input 
-                type="text" placeholder="Search a product..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-b border-gray-500 text-white pl-10 py-1 text-lg focus:outline-none focus:border-white transition-colors placeholder-gray-500"
-              />
-            </div>
-            <Button variant="outline">Filter</Button>
+            <ProfileDropdown user={user} onLogout={onLogout} onSwitchAccess={canSwitchAccess ? onSwitchAccess : undefined} />
           </div>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 top-4">
-           <img src={logo} alt="Logo" className="h-12 w-auto object-contain brightness-0 invert opacity-50" />
+        {/* SEARCH AND FILTER BAR */}
+        <div className="flex gap-3 mb-6 items-center">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+            />
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300 gap-2">
+                <Filter size={18} />
+                Filter {(activeType !== 'ALL' || activeGender !== 'ALL') && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-slate-900 border-slate-800 text-slate-200">
+              <DropdownMenuLabel>Product Type</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-800" />
+              {['ALL', 'PERFUME', 'OIL'].map((type) => (
+                <DropdownMenuCheckboxItem
+                  key={type}
+                  checked={activeType === type}
+                  onCheckedChange={() => setActiveType(type)}
+                >
+                  {type}
+                </DropdownMenuCheckboxItem>
+              ))}
+              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuLabel>Gender</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-800" />
+              {['ALL', 'MALE', 'FEMALE', 'UNISEX'].map((gender) => (
+                <DropdownMenuCheckboxItem
+                  key={gender}
+                  checked={activeGender === gender}
+                  onCheckedChange={() => setActiveGender(gender)}
+                >
+                  {gender}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* PROFILEDROPDOWN COMPONENT */}
-        <ProfileDropdown 
-          user={user}
-          onSwitchAccess={onSwitchAccess} 
-          onLogout={onLogout}
-          //theme="dark" 
-        />
-      </header>
-
-      {/* MAIN POS AREA */}
-      <div className="flex-1 flex overflow-hidden">
-        
-        {/* Left: Product Grid */}
-        <div className="flex-1 flex flex-col px-8 pb-6 overflow-hidden">
-          <div className="flex flex-col gap-3 mb-6 mt-2">
-            <div className="flex items-center gap-4 text-white text-sm">
-              <span className="text-gray-400 w-16">Type:</span>
-              <FilterBtn label="PREMIUM" activeState={activeType} setCategory={setActiveType} currentActive={activeType} />
-              <FilterBtn label="CLASSIC" activeState={activeType} setCategory={setActiveType} currentActive={activeType} />
-            </div>
-            <div className="flex items-center gap-4 text-white text-sm">
-              <span className="text-gray-400 w-16">Gender:</span>
-              <FilterBtn label="MALE" activeState={activeGender} setCategory={setActiveGender} currentActive={activeGender} />
-              <FilterBtn label="FEMALE" activeState={activeGender} setCategory={setActiveGender} currentActive={activeGender} />
-              <FilterBtn label="UNISEX" activeState={activeGender} setCategory={setActiveGender} currentActive={activeGender} />
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="flex-1 overflow-y-auto pr-2 pb-20 custom-scrollbar">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-slate-500">Loading products...</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredProducts.map(product => (
                 <ProductCard 
-                  key={product.id} name={product.name} type={product.type} gender={product.gender} price={product.price}
-                  onAddToCart={() => {
-                    setSelectedProduct(product);
-                    setShowProductModal(true);
-                  }}
+                  key={product.product_id}
+                  name={product.product_name || product.name}
+                  type={product.product_type || product.type}
+                  gender={product.product_gender || product.gender}
+                  imageUrl={product.product_image_url || product.imageUrl}
+                  price={product.product_price || product.price}
+                  onAddToCart={() => setSelectedProduct(product)}
+                  isDarkMode={true} // Assuming ProductCard can handle a dark prop
                 />
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* Right: Checkout Sidebar */}
-        <div className="w-[360px] bg-[#F5F5FA] flex flex-col shrink-0 z-10 p-4 border-l border-[#444]">
-          <div className="text-center text-gray-500 text-lg mb-2 font-medium tracking-wide">
-            {currentDateTime}
-          </div>
-
-          <div className="flex-1 bg-white border border-gray-800 flex flex-col overflow-hidden mb-4 shadow-sm">
-            <div className="grid grid-cols-4 px-4 py-3 text-xs font-semibold text-gray-500">
-              <div className="col-span-2">ITEM</div>
-              <div className="text-center">QTY</div>
-              <div className="text-right">PRICE</div>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {cart.map((item, index) => (
-                <div 
-                  key={item.id} 
-                  className={`grid grid-cols-4 px-4 py-3 text-sm items-center border-b border-gray-100 ${
-                    index === cart.length - 1 ? 'bg-[#A3E4F5] border-r-[6px] border-[#008998]' : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="col-span-2 font-bold text-gray-800 leading-tight">
-                    {item.name}<br/>
-                    <span className="text-[10px] text-gray-500 font-normal uppercase">{item.type}</span>
-                  </div>
-                  <div className="text-center font-medium text-gray-700">{item.qty}</div>
-                  <div className="text-right font-medium text-gray-700">P{(item.price * item.qty).toLocaleString()}</div>
-                </div>
-              ))}
-              {cart.length === 0 && <div className="p-8 text-center text-gray-400 text-sm">Cart is empty.</div>}
-            </div>
-
-            <div className="px-5 py-4 border-t border-gray-800">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-[15px] font-bold text-gray-700">SUB TOTAL</span>
-                <span className="font-bold text-[15px] text-gray-800">P{subtotal.toLocaleString()}</span>
-              </div>
-              
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <span className="text-[15px] font-bold text-gray-700 block">DISCOUNT</span>
-                  <Button variant="ghost" size="xs" className="text-custom-green hover:text-custom-green mt-1 px-0" onClick={() => setShowDiscountModal(true)}>
-                    Add Discount {'>'}
-                  </Button>
-                  <Button variant="ghost" size="xs" className="text-custom-red hover:text-custom-red mt-0.5 px-0" onClick={handleRemoveDiscount}>
-                    Remove Discount {'>'}
-                  </Button>
-                </div>
-                <div className="text-right">
-                  <span className="font-bold text-[15px] text-gray-800 block">P{discountAmount.toLocaleString()}</span>
-                  <span className="text-[11px] text-gray-500">({appliedDiscountRate * 100}% discount)</span>
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-extrabold text-gray-800 tracking-wide">GRAND TOTAL</span>
-                <span className="text-xl font-extrabold text-gray-800">P{grandTotal.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <Button variant="destructive" size="lg" className="flex-1 text-lg font-bold tracking-wide" onClick={() => setShowCancelConfirm(true)}>
-              CANCEL
-            </Button>
-            
-            {/* CHECKOUT BUTTON - OPENS NEW MODAL */}
-            <Button 
-              variant="success" 
-              size="lg" 
-              className="flex-1 text-lg font-bold tracking-wide"
-              onClick={() => setShowCheckoutModal(true)}
-              disabled={cart.length === 0} // Prevents opening if nothing is in the cart
-            >
-              CHECKOUT
-            </Button>
-          </div>
+          )}
         </div>
       </div>
 
-      <DiscountModal 
-        isOpen={showDiscountModal} 
-        onClose={() => setShowDiscountModal(false)} 
-        onApply={(rate) => {
-          setAppliedDiscountRate(rate);
-          setShowDiscountModal(false);
-        }} 
-      />
+      {/* RIGHT PANEL: CART */}
+      <div className="w-[400px] bg-[#111827] border-l border-slate-800 shadow-2xl flex flex-col h-full z-10">
+        <div className="p-6 border-b border-slate-800">
+          <h2 className="text-xl font-bold text-white">Current Order</h2>
+          <p className="text-sm text-slate-400">{cart.length} Items</p>
+        </div>
 
-      <ProductModal 
-        product={selectedProduct}
-        isOpen={showProductModal}
-        onClose={() => setShowProductModal(false)}
-        onAdd={handleAddToCart}
-      />
-
-      {/* --- INLINE: CANCEL CONFIRMATION MODAL --- */}
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm transition-all p-4">
-          <div className="bg-white rounded-md shadow-2xl w-full max-w-[400px] overflow-hidden animate-fade-in border border-gray-200 p-8 text-center">
-            
-            <h3 className="text-2xl font-bold text-gray-700 mb-8 leading-tight">
-              Are you sure you want to<br/>cancel the current order?
-            </h3>
-            
-            <div className="flex gap-4 justify-center">
-              <Button variant="success" className="w-32 font-extrabold tracking-widest" onClick={() => { setCart([]); setAppliedDiscountRate(0); setShowCancelConfirm(false); }}>
-                YES
-              </Button>
-              <Button variant="destructive" className="w-32 font-extrabold tracking-widest" onClick={() => setShowCancelConfirm(false)}>
-                NO
-              </Button>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {cart.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-slate-600 opacity-50">
+              <span className="text-6xl mb-4">🛒</span>
+              <p>Cart is empty</p>
             </div>
+          ) : (
+            cart.map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                <div className="flex-1">
+                  <p className="font-bold text-slate-100 text-sm">{item.name}</p>
+                  <p className="text-xs text-slate-400">₱{item.price} x {item.cartQty}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <p className="font-bold text-emerald-400">₱{(item.price * item.cartQty).toLocaleString()}</p>
+                  <button onClick={() => handleRemoveFromCart(item.product_id)} className="text-rose-500 hover:text-rose-400 font-bold transition-colors">×</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
+        <div className="p-6 bg-[#0F172A] border-t border-slate-800">
+          <div className="space-y-2 mb-4">
+            <div className="flex justify-between text-slate-400">
+              <span>Subtotal</span>
+              <span>₱{subtotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+            </div>
+            <div className="flex justify-between text-emerald-500 font-medium">
+              <span>Discount {appliedDiscountRate > 0 && `(${(appliedDiscountRate * 100)}%)`}</span>
+              <span>- ₱{discountAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+            </div>
+            <div className="flex justify-between text-2xl font-black text-white pt-2 border-t border-slate-800">
+              <span>Total</span>
+              <span>₱{grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <Button variant="outline" className="py-6 text-rose-500 border-rose-900/50 bg-rose-950/20 hover:bg-rose-950/40" disabled={cart.length === 0} onClick={() => setShowCancelConfirm(true)}>Cancel</Button>
+            <Button variant="outline" className="py-6 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700" disabled={cart.length === 0} onClick={() => setShowDiscountModal(true)}>Discount</Button>
+          </div>
+          <Button variant="success" className="w-full py-8 text-xl font-bold tracking-widest shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white border-none" disabled={cart.length === 0 || isProcessing} onClick={() => setShowCheckoutModal(true)}>
+            {isProcessing ? "PROCESSING..." : "PAYMENT"}
+          </Button>
+        </div>
+      </div>
+
+      {/* --- MODALS (These will likely need their own internal dark mode logic) --- */}
+      <ProductModal isOpen={!!selectedProduct} product={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={handleAddToCart} />
+      <DiscountModal isOpen={showDiscountModal} onClose={() => setShowDiscountModal(false)} onApply={(rate, id) => { setAppliedDiscountRate(rate); setAppliedDiscountId(id); setShowDiscountModal(false); }} />
+      <CheckoutModal isOpen={showCheckoutModal} onClose={() => setShowCheckoutModal(false)} grandTotal={grandTotal} onPaymentSelect={handlePaymentSelect} />
+      
+      <CashPaymentModal isOpen={showCashModal} onClose={() => setShowCashModal(false)} grandTotal={grandTotal} onConfirmPayment={handleFinalCheckout} />
+      <GCashPaymentModal isOpen={showGCashModal} onClose={() => setShowGCashModal(false)} onConfirmPayment={handleFinalCheckout} />
+
+      {/* Cancel Order Confirm */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-[400px] p-8 text-center">
+            <h3 className="text-xl font-bold text-slate-100 mb-6">Cancel current order?</h3>
+            <div className="flex gap-4 justify-center">
+              <Button className="bg-rose-600 hover:bg-rose-500 text-white px-8" onClick={() => { setCart([]); setAppliedDiscountRate(0); setAppliedDiscountId(0); setShowCancelConfirm(false); }}>Yes</Button>
+              <Button variant="outline" className="bg-slate-800 border-slate-700 text-slate-300" onClick={() => setShowCancelConfirm(false)}>No</Button>
+            </div>
           </div>
         </div>
       )}
-
-      {/* MODAL INJECTION: CHECKOUT */}
-     <CheckoutModal 
-        isOpen={showCheckoutModal}
-        onClose={() => setShowCheckoutModal(false)}
-        grandTotal={grandTotal}
-        onPaymentSelect={handlePaymentSelect}
-      />
-
-      <CashPaymentModal 
-        isOpen={showCashModal}
-        onClose={() => setShowCashModal(false)}
-        grandTotal={grandTotal}
-        onConfirmPayment={handleConfirmCashPayment}
-      />
-
-      <GCashPaymentModal
-        isOpen={showGCashModal}
-        onClose={() => setShowGCashModal(false)}
-        onConfirmPayment={handleConfirmGCashPayment}
-      />
-      
     </div>
   );
 };

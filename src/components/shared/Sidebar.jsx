@@ -24,6 +24,7 @@ const Sidebar = ({ user }) => {
   const isManager = normalizedRole === "manager";
   const isOwner = normalizedRole === "owner";
   const isAdmin = normalizedRole === "admin";
+  const isStaff = normalizedRole === "staff"; // Added staff role recognition
   
   // Access Groups
   const hasManagementAccess = isManager || isOwner;
@@ -72,8 +73,8 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
-        {/* FORECAST - Restricted from Admin */}
-        {!isAdmin && (
+        {/* FORECAST - Restricted from Admin and Staff */}
+        {!isAdmin && !isStaff && (
           <Link to="/home/forecast" className={getTabClass("/home/forecast")}>
             <ChartNoAxesCombined size={24} />
             <p className="text-base">Sales Forecast</p>
@@ -112,8 +113,8 @@ const Sidebar = ({ user }) => {
           </Link>
         )}
 
-        {/* BARCODE - Manager Only */}
-        {isManager && (
+        {/* BARCODE - Staff, Manager, and Owner */}
+        {(isStaff || isManager || isOwner) && (
           <Link to="/home/barcode" className={getTabClass("/home/barcode")}>
             <Barcode size={24} />
             <p className="text-base">Barcode</p>
