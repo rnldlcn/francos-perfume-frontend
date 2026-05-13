@@ -48,7 +48,7 @@ const NavigationManager = ({ user }) => {
       }
     }
   }, [user?.activeRole, path, navigate]);
-
+  
   return null;
 }
 

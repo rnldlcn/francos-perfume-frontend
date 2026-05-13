@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RequestService } from '../../services/RequestService';
 
-export default function CreateTransferRequest() {
+export default function RequestPage() {
     const navigate = useNavigate();
 
     // Dynamically retrieve the branch ID from session storage established during login
