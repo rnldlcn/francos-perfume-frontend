@@ -45,7 +45,7 @@ const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
                 >
                   -
                 </button>
-                <div className="w-16 h-10 flex items-center justify-center border border-gray-400 rounded bg-white font-bold text-[18px]">
+                <div className="w-16 h-10 flex items-center justify-center border border-gray-400 rounded bg-white font-bold text-[18px] text-black">
                   {quantity}
                 </div>
                 <button 

@@ -31,7 +31,7 @@ const DiscountModal = ({ isOpen, onClose, onApply }) => {
             <select 
               value={discountPrefix} 
               onChange={(e) => setDiscountPrefix(e.target.value)}
-              className="border border-gray-400 rounded px-3 py-1.5 text-sm w-36 focus:outline-none focus:border-gray-800 bg-white cursor-pointer"
+              className="border border-gray-400 rounded px-3 py-1.5 text-sm w-36 focus:outline-none focus:border-gray-800 bg-white cursor-pointer text-black"
             >
               <option value="PWD">PWD</option>
               <option value="SENIOR">SENIOR</option>
@@ -44,16 +44,16 @@ const DiscountModal = ({ isOpen, onClose, onApply }) => {
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setRecipients(Math.max(1, recipients - 1))}
-                className="w-10 h-8 flex items-center justify-center bg-[#E5D5C5] text-gray-800 font-bold rounded hover:bg-[#d6c4b2] transition-colors"
+                className="w-10 h-8 flex items-center justify-center bg-[#E5D5C5] text-gray-800 font-bold rounded hover:bg-[#d6c4b2] transition-colors text-black"
               >
                 -
               </button>
-              <div className="w-14 h-8 flex items-center justify-center border border-gray-400 rounded bg-white font-bold text-[15px]">
+              <div className="w-14 h-8 flex items-center justify-center border border-gray-400 rounded bg-white font-bold text-[15px] text-black" >
                 {recipients}
               </div>
               <button 
                 onClick={() => setRecipients(recipients + 1)}
-                className="w-10 h-8 flex items-center justify-center bg-[#E5D5C5] text-gray-800 font-bold rounded hover:bg-[#d6c4b2] transition-colors"
+                className="w-10 h-8 flex items-center justify-center bg-[#E5D5C5] text-gray-800 font-bold rounded hover:bg-[#d6c4b2] transition-colors text-b"
               >
                 +
               </button>

@@ -44,7 +44,7 @@ const CashPaymentModal = ({ isOpen, onClose, grandTotal, onConfirmPayment }) => 
             <span className="text-gray-500 font-medium text-sm tracking-widest uppercase">
               Total Amount:
             </span>
-            <span className="text-[28px] font-extrabold text-gray-800">
+            <span className="text-[28px] font-extrabold text--800 text-black">
               ₱{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
