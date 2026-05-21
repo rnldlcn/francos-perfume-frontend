@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { CheckCircle, Eye, Truck } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RequestService } from '../../services/RequestService';
-import { DeliveryService } from '../../services/DeliveryService'; 
-import { Clock, CheckCircle, Truck, XCircle, Eye } from 'lucide-react';
 import StatusBadge from '../../components/shared/StatusBadge'; // 🔧 NEW: Imported the StatusBadge component
+import { DeliveryService } from '../../services/DeliveryService';
 
 export default function DeliveriesPage() {
     const navigate = useNavigate();
@@ -16,11 +15,10 @@ export default function DeliveriesPage() {
     useEffect(() => {
         loadDeliveries();
     }, []);
-
     const loadDeliveries = async () => {
         setLoading(true);
         try {
-            const response = await RequestService.getAllRequests();
+            const response = await DeliveryService.getAllDeliveries();
             setRequests(response.data || []);
         } catch (error) {
             console.error("Failed to load deliveries", error);
