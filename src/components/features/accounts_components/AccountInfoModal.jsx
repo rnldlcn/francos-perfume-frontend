@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UseAuth } from "../../../services/UseAuth";
+import { useState } from 'react';
+import { UseAuth } from "../../../services/AuthService";
 
 const AccountInfoModal = ({ isOpen, onClose, account, onEditClick, onActionComplete }) => {
   const { user } = UseAuth();

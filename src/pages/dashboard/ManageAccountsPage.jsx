@@ -5,7 +5,7 @@ import CreateAccountModal from "../../components/features/accounts_components/Cr
 import EditAccountModal from "../../components/features/accounts_components/EditAccountModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { UseAuth } from "../../services/UseAuth";
+import { UseAuth } from "../../services/AuthService";
 
 // 🛡️ FALLBACK DATA
 const dummyAccounts = [

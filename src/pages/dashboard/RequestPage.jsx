@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
+import { UseAuth } from "../../services/AuthService";
 import { RequestService } from "../../services/RequestService";
-import { UseAuth } from "../../services/UseAuth";
 
 const statusOptions = [
   { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },

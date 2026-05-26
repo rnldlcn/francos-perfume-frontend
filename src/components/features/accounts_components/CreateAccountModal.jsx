@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { UseAuth } from "../../../services/UseAuth";
+import { useEffect, useState } from 'react';
+import { UseAuth } from "../../../services/AuthService";
 
 const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
   const { user } = UseAuth();

@@ -17,7 +17,7 @@ import ProductsPage from './pages/dashboard/ProductsPage';
 import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
 import PointOfSalePage from './pages/pos/PointOfSalePage';
-import { UseAuth } from './services/UseAuth';
+import { UseAuth } from './services/AuthService';
 
 // ---> DELIVERIES IMPORTS <--- 
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';

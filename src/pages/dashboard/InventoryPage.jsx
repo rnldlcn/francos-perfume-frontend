@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -16,8 +16,8 @@ import EditBatchModal from "../../components/features/inventory_components/EditB
 import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
+import { UseAuth } from "../../services/AuthService";
 import { fetchAllInventory } from "../../services/InventoryService";
-import { UseAuth } from "../../services/UseAuth";
 
 const filterSelections = [
   { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Standard", "Premium", "Signature"] },

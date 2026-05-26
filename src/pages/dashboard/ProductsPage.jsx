@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Barcode, X, Image as ImageIcon, Check, Archive, Search, Filter } from 'lucide-react';
-import { UseAuth } from '../../services/UseAuth';
-import { ProductService } from '../../services/ProductService'; 
+import { Archive, Barcode, Check, Filter, Image as ImageIcon, Plus, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { UseAuth } from '../../services/AuthService';
+import { ProductService } from '../../services/ProductService';
 
 export default function ProductsPage() {
     const { user } = UseAuth();

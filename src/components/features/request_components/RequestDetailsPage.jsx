@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Check, X, Clock, AlertTriangle } from 'lucide-react';
-import { RequestService } from '../../../services/RequestService'; 
-import { UseAuth } from "../../../services/UseAuth";
+import { AlertTriangle, Check, Clock, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { UseAuth } from "../../../services/AuthService";
+import { RequestService } from '../../../services/RequestService';
 
 export default function RequestDetailsPage() {
     const { id } = useParams(); 
