@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { UseAuth } from "../../auth/UseAuth";
 import AccountInfoModal from "../../components/features/accounts_components/AccountInfoModal";
 import CreateAccountModal from "../../components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "../../components/features/accounts_components/EditAccountModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { UseAuth } from "../../services/AuthService";
 
 // 🛡️ FALLBACK DATA
 const dummyAccounts = [

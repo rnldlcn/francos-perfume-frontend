@@ -1,7 +1,7 @@
 import { Download, Printer, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png"; // Fallback image
-import { UseAuth } from "../../services/AuthService";
+import { UseAuth } from "../../auth/UseAuth";
 
 export default function BarcodePage() {
     const { user } = UseAuth();

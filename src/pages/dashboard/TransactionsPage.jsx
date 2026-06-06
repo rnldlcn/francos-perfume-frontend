@@ -1,7 +1,7 @@
 import { ArrowRightLeft, Calendar, Receipt, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { UseAuth } from '../../auth/UseAuth';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
-import { UseAuth } from '../../services/AuthService';
 
 export default function TransactionsPage() {
     const { user } = UseAuth();

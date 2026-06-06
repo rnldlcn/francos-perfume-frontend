@@ -7,7 +7,6 @@ export const login = async (email, password) => {
         body: JSON.stringify({ email, password })
     })
 
-    // 
     if (!response.ok) throw new Error('Invalid Credentials');
     return await response.json();
 }

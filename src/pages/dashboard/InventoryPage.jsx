@@ -1,22 +1,22 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png";
+import { UseAuth } from "../../auth/UseAuth";
 import AddProductModal from "../../components/features/inventory_components/AddProductModal";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
 import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { UseAuth } from "../../services/AuthService";
 import { fetchAllInventory } from "../../services/InventoryService";
 
 const filterSelections = [
@@ -48,7 +48,6 @@ const InventoryPage = ({ role }) => {
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
 
-  // --- PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
@@ -67,7 +66,9 @@ const InventoryPage = ({ role }) => {
           const mappedBatches = backendBatches.map(b => ({
             batchId: b.batch_display_id || b.batchId,
             dateReceived: new Date(b.date_received || b.dateReceived).toLocaleDateString(),
-            targetDate: (b.target_date || b.targetDate) ? new Date(b.target_date || b.targetDate).toLocaleDateString() : "N/A",
+            targetDate: (b.target_date || b.targetDate) 
+            ? new Date(b.target_date || b.targetDate).toLocaleDateString() 
+            : "N/A",
             qty: b.quantity || b.qty
           }));
 
@@ -80,6 +81,7 @@ const InventoryPage = ({ role }) => {
         
         setInventory(dataWithBatches);
       } catch (error) {
+        // TO BE REMOVED: Temporary error handling
         console.error("Inventory fetch failed:", error.message);
       } finally {
         setIsLoading(false);

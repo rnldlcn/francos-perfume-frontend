@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { UseAuth } from "../../../services/AuthService";
+import { UseAuth } from "../../../auth/UseAuth";
 
 const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
   const { user } = UseAuth();

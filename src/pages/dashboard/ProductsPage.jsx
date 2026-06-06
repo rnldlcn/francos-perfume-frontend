@@ -1,6 +1,6 @@
 import { Archive, Barcode, Check, Filter, Image as ImageIcon, Plus, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { UseAuth } from '../../services/AuthService';
+import { UseAuth } from '../../auth/UseAuth';
 import { ProductService } from '../../services/ProductService';
 
 export default function ProductsPage() {

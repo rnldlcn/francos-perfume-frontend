@@ -9,8 +9,8 @@ const Header = ({ user, onLogout, onSwitchAccess }) => {
     try {
       // Set the current date safely
       const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-      const phtDate = new Intl.DateTimeFormat('en-CA', options).format(new Date());
-      setCurrentDate(phtDate.replace(/-/g, '/'));
+      const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(new Date());
+      setCurrentDate(formattedDate.replace(/-/g, '/'));
 
       // Retrieve the predetermined branch ID
       const branchId = sessionStorage.getItem('branchId');

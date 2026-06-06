@@ -4,10 +4,10 @@ import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { UseAuth } from "../../auth/UseAuth";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
-import { UseAuth } from "../../services/AuthService";
 import { RequestService } from "../../services/RequestService";
 
 const statusOptions = [

@@ -1,22 +1,21 @@
 import { Button } from '@/components/ui/button';
-import { Search, Filter, Check } from 'lucide-react'; // Added Filter and Check
+import { Filter, Search } from 'lucide-react'; // Added Filter and Check
 import { useEffect, useState } from 'react';
-import logo from '../../assets/FrancoPerfumeLogo.png';
-import CashPaymentModal from '../../components/features/pos_components/CashPaymentModal';
-import CheckoutModal from '../../components/features/pos_components/CheckoutModal';
-import DiscountModal from '../../components/features/pos_components/DiscountModal';
-import GCashPaymentModal from '../../components/features/pos_components/GCashPaymentModal';
-import ProductCard from '../../components/features/pos_components/ProductCard';
-import ProductModal from '../../components/features/pos_components/ProductModal';
-import ProfileDropdown from '../../components/shared/ProfileDropdown';
+import CashPaymentModal from '../components/features/pos_components/CashPaymentModal';
+import CheckoutModal from '../components/features/pos_components/CheckoutModal';
+import DiscountModal from '../components/features/pos_components/DiscountModal';
+import GCashPaymentModal from '../components/features/pos_components/GCashPaymentModal';
+import ProductCard from '../components/features/pos_components/ProductCard';
+import ProductModal from '../components/features/pos_components/ProductModal';
+import ProfileDropdown from '../components/shared/ProfileDropdown';
 
 // Added a simple Dropdown Menu for the Filter Button
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -46,12 +45,31 @@ const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
   const [showGCashModal, setShowGCashModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // --- 1. FETCH INVENTORY ---
+
+  /*
+  * clock
+  */
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setCurrentDateTime(now.toLocaleString('en-US', { 
+        weekday: 'short', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      }));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  /*
+  * section is for fetching inventory
+  */
+
   useEffect(() => {
     const fetchInventory = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/api/Products/branch/${user?.branchId || sessionStorage.getItem('branchId')}/pos`, {
+        const response = await fetch(`http://localhost:5000/api/Products/branch/${user?.branchId}/pos`, {
           headers: { 'Authorization': `Bearer ${user?.accessToken}` }
         });
         
@@ -64,21 +82,15 @@ const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
         setIsLoading(false);
       }
     };
-
     fetchInventory();
 
-    const interval = setInterval(() => {
-      const now = new Date();
-      setCurrentDateTime(now.toLocaleString('en-US', { 
-        weekday: 'short', month: 'short', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit' 
-      }));
-    }, 1000);
-    return () => clearInterval(interval);
   }, [user]);
 
 
-  // --- CART LOGIC ---
+  /*
+  * section is for handling cart
+  */
+ 
   const handleAddToCart = (product, quantity) => {
     const cleanPrice = Number(product.product_price || product.price || 0);
     const cleanName = product.product_name || product.name || 'Unknown Item';
@@ -188,6 +200,7 @@ const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
     return matchesSearch && matchesType && matchesGender;
   });
 
+  
   return (
     <div className="flex h-screen bg-[#0F172A] font-montserrat overflow-hidden relative text-slate-100">
       

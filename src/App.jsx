@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { UseAuth } from './auth/UseAuth';
+import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 import MobileBlocker from './components/features/pos_components/MobileBlocker';
+import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
 import DashboardLayout from './layouts/DashboardLayout';
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-import LoginPage from './pages/auth/LoginPage';
 import ArchivesPage from './pages/dashboard/ArchivesPage';
 import AuditLogPage from './pages/dashboard/AuditLogPage';
 import BarcodePage from './pages/dashboard/BarcodePage';
 import CreateTransferRequestPage from './pages/dashboard/CreateTransferRequestPage';
+import DeliveriesPage from './pages/dashboard/DeliveriesPage';
 import DiscountPage from './pages/dashboard/DiscountPage';
 import ForecastPage from './pages/dashboard/ForecastPage';
 import HomePage from './pages/dashboard/HomePage';
@@ -16,17 +18,13 @@ import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import ProductsPage from './pages/dashboard/ProductsPage';
 import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
-import PointOfSalePage from './pages/pos/PointOfSalePage';
-import { UseAuth } from './services/AuthService';
-
-// ---> DELIVERIES IMPORTS <--- 
-import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
-import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
-import DeliveriesPage from './pages/dashboard/DeliveriesPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import LoginPage from './pages/LoginPage';
+import PointOfSalePage from './pages/PointOfSalePage';
 
 const ProtectedRoute = ({ user, allowedRoles }) => {
   if (!user) return <Navigate to="/login" />;
-  if (allowedRoles && !allowedRoles.includes(user.activeRole)) { 
+  if (!allowedRoles.includes(user.activeRole)) { 
     return <Navigate to="/home" replace />; 
   }
   return <Outlet />;
@@ -54,12 +52,8 @@ const NavigationManager = ({ user }) => {
 }
 
 const App = () => {
-  const { user, login, logout, switchRole } = UseAuth();
+  const { user, login, logout, handleSwitchAccess } = UseAuth();
 
-  const handleSwitchAccess = () => {
-    const nextRole = user.activeRole === 'manager' ? 'cashier' : 'manager';
-    switchRole(nextRole);
-  };
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -82,7 +76,7 @@ const App = () => {
         />
         <Route path='/home'
           element={
-            user ? <DashboardLayout user={user} onSwitchAccess={handleSwitchAccess} onLogout={logout} /> : <Navigate to='/login' replace /> 
+            user ? <DashboardLayout user={user} onLogout={logout} /> : <Navigate to='/login' replace /> 
           }
         >
           <Route index element={<HomePage role={user?.trueRole} />} />
@@ -123,7 +117,7 @@ const App = () => {
         
         {/* POS SYSTEM */}
         <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'cashier']} />}>
-          <Route path="/pos" element={<PointOfSalePage user={user} onLogout={logout} onSwitchAccess={handleSwitchAccess} />} />
+          <Route path="/pos" element={<PointOfSalePage user={user} onLogout={logout} />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
