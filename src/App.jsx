@@ -41,18 +41,18 @@ const NavigationManager = ({ user }) => {
         navigate('/pos', { replace: true });
       } 
       else if (['manager', 'owner', 'admin', 'staff'].includes(role)) {
-        if (!path.startsWith('/home') && path !== '/pos') {
+        if (!path.startsWith('/home')) {
           navigate('/home', { replace: true });
         }
       }
     }
-  }, [user?.activeRole, path, navigate]);
-  
+  }, [user, path, navigate]);
+
   return null;
-}
+};
 
 const App = () => {
-  const { user, login, logout, handleSwitchAccess } = UseAuth();
+  const { user, login } = UseAuth();
 
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
@@ -76,7 +76,7 @@ const App = () => {
         />
         <Route path='/home'
           element={
-            user ? <DashboardLayout user={user} onLogout={logout} /> : <Navigate to='/login' replace /> 
+            user ? <DashboardLayout user={user} /> : <Navigate to='/login' replace /> 
           }
         >
           <Route index element={<HomePage role={user?.trueRole} />} />
@@ -117,7 +117,7 @@ const App = () => {
         
         {/* POS SYSTEM */}
         <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'cashier']} />}>
-          <Route path="/pos" element={<PointOfSalePage user={user} onLogout={logout} />} />
+          <Route path="/pos" element={<PointOfSalePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

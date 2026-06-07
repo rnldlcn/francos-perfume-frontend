@@ -1,7 +1,10 @@
+import { UseAuth } from '@/auth/UseAuth';
 import { useEffect, useState } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
-const Header = ({ user, onLogout, onSwitchAccess }) => {
+const Header = () => {
+  const { user } = UseAuth();
+
   const [currentDate, setCurrentDate] = useState("");
   const [userLocation, setUserLocation] = useState("Loading...");
   
@@ -50,12 +53,7 @@ const Header = ({ user, onLogout, onSwitchAccess }) => {
            </div>
         </div>
         
-        {/* We now know 'user' exists before rendering the dropdown */}
-        <ProfileDropdown
-          user={user}
-          onLogout={onLogout}
-          onSwitchAccess={onSwitchAccess}
-        />
+        <ProfileDropdown/>
         
       </header>
     </>

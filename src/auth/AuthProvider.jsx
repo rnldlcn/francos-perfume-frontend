@@ -12,7 +12,7 @@ const loadFromSession = () => {
         accessToken: token,
         branchId: sessionStorage.getItem('branchId'),
         trueRole: sessionStorage.getItem('trueRole'),
-        activeRole: sessionStorage.getItem('activeRole') || null, 
+        activeRole: sessionStorage.getItem('activeRole')
     }
 };
 
@@ -43,19 +43,17 @@ export const AuthProvider = ({ children }) => {
             activeRole: newActiveRole
         }));
     }
-
+    
     const handleSwitchAccess = () => {
-        setUser(prev => {
-            const newRole = prev.activeRole === 'manager' 
-            ? 'cashier' 
-            : 'manager';
-            
-            sessionStorage.setItem('activeRole', newRole);
-            return {
-                ...prev,
-                activeRole: newRole
-            };
-        })
+        const newRole = user.activeRole === 'manager' 
+        ? 'cashier' 
+        : 'manager';
+        
+        sessionStorage.setItem('activeRole', newRole);
+        setUser(prev => ({
+            ...prev,
+            activeRole: newRole
+        }));
     };
 
     return (

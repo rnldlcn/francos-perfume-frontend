@@ -10,6 +10,7 @@ import ProductModal from '../components/features/pos_components/ProductModal';
 import ProfileDropdown from '../components/shared/ProfileDropdown';
 
 // Added a simple Dropdown Menu for the Filter Button
+import { UseAuth } from '@/auth/UseAuth';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -19,8 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
-  const canSwitchAccess = user?.trueRole === 'manager';
+const PointOfSalePage = () => {
+  const { user } = UseAuth();
 
   // --- STATE ---
   const [products, setProducts] = useState([]); 
@@ -212,7 +213,7 @@ const PointOfSalePage = ({ user, onLogout, onSwitchAccess }) => {
             <p className="text-slate-400 text-sm">{currentDateTime}</p>
           </div>
           <div className="flex items-center gap-4">
-            <ProfileDropdown user={user} onLogout={onLogout} onSwitchAccess={canSwitchAccess ? onSwitchAccess : undefined} />
+            <ProfileDropdown />
           </div>
         </div>
 
