@@ -1,101 +1,38 @@
+import { CashPaymentModal, CheckoutModal, DiscountModal, GCashPaymentModal, PointOfSaleFilterBar, ProductCard, ProductModal, ProfileDropdown } from '@/components/features/point_of_sale_components';
 import { Button } from '@/components/ui/button';
-import { Filter, Search } from 'lucide-react'; // Added Filter and Check
-import { useEffect, useState } from 'react';
-import CashPaymentModal from '../components/features/pos_components/CashPaymentModal';
-import CheckoutModal from '../components/features/pos_components/CheckoutModal';
-import DiscountModal from '../components/features/pos_components/DiscountModal';
-import GCashPaymentModal from '../components/features/pos_components/GCashPaymentModal';
-import ProductCard from '../components/features/pos_components/ProductCard';
-import ProductModal from '../components/features/pos_components/ProductModal';
-import ProfileDropdown from '../components/shared/ProfileDropdown';
+import { useState } from 'react';
 
-// Added a simple Dropdown Menu for the Filter Button
+
 import { UseAuth } from '@/auth/UseAuth';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useInventory } from '@/hooks/inventory_hooks/useInventory';
+import { useClock } from '@/hooks/useClock';
 
 const PointOfSalePage = () => {
   const { user } = UseAuth();
 
-  // --- STATE ---
-  const [products, setProducts] = useState([]); 
-  const [isLoading, setIsLoading] = useState(true);
+  const { products, isLoading, error, filter, updateFilter } = useInventory(filter);
   const [isProcessing, setIsProcessing] = useState(false); 
 
   const [cart, setCart] = useState([]);
-  const [activeType, setActiveType] = useState('ALL'); 
-  const [activeGender, setActiveGender] = useState('ALL'); 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentDateTime, setCurrentDateTime] = useState('');
-
-  // Discount Modal States
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [appliedDiscountRate, setAppliedDiscountRate] = useState(0); 
   const [appliedDiscountId, setAppliedDiscountId] = useState(0); 
   
-  // Confirmation Modal States
+
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
   const [showGCashModal, setShowGCashModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-
-  /*
-  * clock
-  */
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      setCurrentDateTime(now.toLocaleString('en-US', { 
-        weekday: 'short', month: 'short', day: 'numeric', 
-        hour: '2-digit', minute: '2-digit', second: '2-digit' 
-      }));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  /*
-  * section is for fetching inventory
-  */
-
-  useEffect(() => {
-    const fetchInventory = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`http://localhost:5000/api/Products/branch/${user?.branchId}/pos`, {
-          headers: { 'Authorization': `Bearer ${user?.accessToken}` }
-        });
-        
-        if (!response.ok) throw new Error("Failed to fetch products");
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Error fetching POS inventory:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchInventory();
-
-  }, [user]);
-
+  const currentDateTime = useClock();
 
   /*
   * section is for handling cart
   */
  
   const handleAddToCart = (product, quantity) => {
-    const cleanPrice = Number(product.product_price || product.price || 0);
-    const cleanName = product.product_name || product.name || 'Unknown Item';
-
+    
     setCart(prevCart => {
       const existing = prevCart.find(item => item.product_id === product.product_id);
       if (existing) {
@@ -105,7 +42,7 @@ const PointOfSalePage = () => {
             : item
         );
       }
-      return [...prevCart, { ...product, name: cleanName, price: cleanPrice, cartQty: quantity }];
+      return [...prevCart, { ...product, name: product.product_name || product.name || 'Unknown Item', price: product.product_price || product.price || 0, cartQty: quantity }];
     });
     setSelectedProduct(null);
   };
@@ -189,19 +126,7 @@ const PointOfSalePage = () => {
     if (method === 'GCash') setShowGCashModal(true);
   };
 
-  // --- FILTERING ---
-  const filteredProducts = products.filter(p => {
-    const pName = p.product_name || p.name || '';
-    const pType = p.product_type || p.type || '';
-    const pGender = p.product_gender || p.gender || '';
 
-    const matchesSearch = pName.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = activeType === 'ALL' || pType === activeType;
-    const matchesGender = activeGender === 'ALL' || pGender === activeGender;
-    return matchesSearch && matchesType && matchesGender;
-  });
-
-  
   return (
     <div className="flex h-screen bg-[#0F172A] font-montserrat overflow-hidden relative text-slate-100">
       
@@ -217,60 +142,14 @@ const PointOfSalePage = () => {
           </div>
         </div>
 
-        {/* SEARCH AND FILTER BAR */}
-        <div className="flex gap-3 mb-6 items-center">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-            <input 
-              type="text" 
-              placeholder="Search products..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-            />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-slate-800 border-slate-700 hover:bg-slate-700 hover:text-white text-slate-300 gap-2">
-                <Filter size={18} />
-                Filter {(activeType !== 'ALL' || activeGender !== 'ALL') && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-slate-900 border-slate-800 text-slate-200">
-              <DropdownMenuLabel>Product Type</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-slate-800" />
-              {['ALL', 'PERFUME', 'OIL'].map((type) => (
-                <DropdownMenuCheckboxItem
-                  key={type}
-                  checked={activeType === type}
-                  onCheckedChange={() => setActiveType(type)}
-                >
-                  {type}
-                </DropdownMenuCheckboxItem>
-              ))}
-              <DropdownMenuSeparator className="bg-slate-800" />
-              <DropdownMenuLabel>Gender</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-slate-800" />
-              {['ALL', 'MALE', 'FEMALE', 'UNISEX'].map((gender) => (
-                <DropdownMenuCheckboxItem
-                  key={gender}
-                  checked={activeGender === gender}
-                  onCheckedChange={() => setActiveGender(gender)}
-                >
-                  {gender}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
+        <PointOfSaleFilterBar filter={filter} updateFilter={updateFilter} />
+        
         <div className="flex-1 overflow-y-auto pr-2 pb-20 custom-scrollbar">
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-slate-500">Loading products...</div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map(product => (
+              {products.map(product => (
                 <ProductCard 
                   key={product.product_id}
                   name={product.product_name || product.name}
@@ -279,7 +158,8 @@ const PointOfSalePage = () => {
                   imageUrl={product.product_image_url || product.imageUrl}
                   price={product.product_price || product.price}
                   onAddToCart={() => setSelectedProduct(product)}
-                  isDarkMode={true} // Assuming ProductCard can handle a dark prop
+                  // Assuming ProductCard can handle a dark prop
+                  isDarkMode={true} 
                 />
               ))}
             </div>

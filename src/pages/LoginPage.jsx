@@ -1,4 +1,4 @@
-import { login } from '@/services/LoginService';
+import { login } from '@/services/loginService';
 import { ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

@@ -1,74 +1,114 @@
+import * as React from "react"
+
 import { cn } from "@/lib/utils"
 
-// Root card container — rounded, bordered, white background with subtle shadow.
-// Passes all native div props through so consumers can add onClick, etc.
-function Card({ className, ...props }) {
+function Card({
+  className,
+  size = "default",
+  ...props
+}) {
   return (
     <div
       data-slot="card"
+      data-size={size}
       className={cn(
-        "bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground shadow-xs ring-1 ring-foreground/10 [--card-spacing:--spacing(6)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(4)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
         className
       )}
-      {...props}
-    />
-  )
+      {...props} />
+  );
 }
 
-// Top section of a card — contains the title and description.
-function CardHeader({ className, ...props }) {
+function CardHeader({
+  className,
+  ...props
+}) {
   return (
     <div
       data-slot="card-header"
-      className={cn("flex flex-col gap-1.5 px-6 pt-6 pb-0", className)}
-      {...props}
-    />
-  )
+      className={cn(
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+        className
+      )}
+      {...props} />
+  );
 }
 
-// Bold label at the top of the card.
-function CardTitle({ className, ...props }) {
+function CardTitle({
+  className,
+  ...props
+}) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
-      {...props}
-    />
-  )
+      className={cn(
+        "font-heading text-base leading-normal font-medium group-data-[size=sm]/card:text-sm",
+        className
+      )}
+      {...props} />
+  );
 }
 
-// Muted subtitle rendered below the card title.
-function CardDescription({ className, ...props }) {
+function CardDescription({
+  className,
+  ...props
+}) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-muted-foreground text-sm", className)}
-      {...props}
-    />
-  )
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props} />
+  );
 }
 
-// Main body of the card where the primary content lives.
-function CardContent({ className, ...props }) {
+function CardAction({
+  className,
+  ...props
+}) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props} />
+  );
+}
+
+function CardContent({
+  className,
+  ...props
+}) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6 py-6", className)}
-      {...props}
-    />
-  )
+      className={cn("px-(--card-spacing)", className)}
+      {...props} />
+  );
 }
 
-// Optional footer section — useful for action buttons or meta information.
-function CardFooter({ className, ...props }) {
+function CardFooter({
+  className,
+  ...props
+}) {
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center px-6 pb-6", className)}
-      {...props}
-    />
-  )
+      className={cn(
+        "flex items-center rounded-b-xl px-(--card-spacing) [.border-t]:pt-(--card-spacing)",
+        className
+      )}
+      {...props} />
+  );
 }
 
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
-
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}

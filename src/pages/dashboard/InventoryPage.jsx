@@ -17,7 +17,7 @@ import EditBatchModal from "../../components/features/inventory_components/EditB
 import EditProductModal from "../../components/features/inventory_components/EditProductModal";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { fetchAllInventory } from "../../services/InventoryService";
+import { fetchAllInventory } from "../../services/inventoryService";
 
 const filterSelections = [
   { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Standard", "Premium", "Signature"] },
