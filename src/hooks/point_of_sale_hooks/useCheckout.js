@@ -1,5 +1,6 @@
 import { UseAuth } from "@/auth/UseAuth";
-import { buildPointOfSaleDTO } from "@/utils/computations";
+import { checkout } from "@/services/pointOfSaleService";
+import { buildPointOfSaleDTO, extractReceiptData } from "@/utils/pointOfSaleUtils";
 import { useState } from "react";
 
 export const useCheckout = (cart, grandTotal, appliedDiscountId) => {
@@ -10,8 +11,16 @@ export const useCheckout = (cart, grandTotal, appliedDiscountId) => {
         setIsProcessing(true);
         try {
             const posDto = buildPointOfSaleDTO(paymentDetails, grandTotal, appliedDiscountId, cart);
-        }
+            const result = await checkout(posDto, user?.accessToken);
+            const { receiptNumber, vat } = extractReceiptData(result);
 
+            alert(`Transaction Successful!\nReceipt Number: ${receiptNumber || 'N/A'}\nVAT: ₱${vat|| 0}`);
+            onSuccess();
+        } catch (error) {
+            alert(`Checkout failed: ${error.message}`);
+        } finally {
+            setIsProcessing(false);
+        }
     }
 
     return { handleFinalCheckout, isProcessing}

@@ -3,22 +3,16 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 
-import { UseAuth } from '@/auth/UseAuth';
+import CancelConfirmModal from '@/components/features/point_of_sale_components/CancelConfirmModal';
 import { useInventory } from '@/hooks/inventory_hooks/useInventory';
+import { useCart } from '@/hooks/point_of_sale_hooks/useCart';
+import { useCheckout } from '@/hooks/point_of_sale_hooks/useCheckout';
 import { useClock } from '@/hooks/useClock';
 
 const PointOfSalePage = () => {
-  const { user } = UseAuth();
+  const { products, isLoading, error, filter, updateFilter } = useInventory();
 
-  const { products, isLoading, error, filter, updateFilter } = useInventory(filter);
-  const [isProcessing, setIsProcessing] = useState(false); 
-
-  const [cart, setCart] = useState([]);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [appliedDiscountRate, setAppliedDiscountRate] = useState(0); 
-  const [appliedDiscountId, setAppliedDiscountId] = useState(0); 
-  
-
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
@@ -26,99 +20,9 @@ const PointOfSalePage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const currentDateTime = useClock();
+  const { cart, handleAddToCart, handleRemoveFromCart, handleClearCart, subtotal, discountAmount, grandTotal, appliedDiscountId, appliedDiscountRate, setAppliedDiscountId, setAppliedDiscountRate } = useCart();
 
-  /*
-  * section is for handling cart
-  */
- 
-  const handleAddToCart = (product, quantity) => {
-    
-    setCart(prevCart => {
-      const existing = prevCart.find(item => item.product_id === product.product_id);
-      if (existing) {
-        return prevCart.map(item => 
-          item.product_id === product.product_id 
-            ? { ...item, cartQty: item.cartQty + quantity } 
-            : item
-        );
-      }
-      return [...prevCart, { ...product, name: product.product_name || product.name || 'Unknown Item', price: product.product_price || product.price || 0, cartQty: quantity }];
-    });
-    setSelectedProduct(null);
-  };
-
-  const handleRemoveFromCart = (productId) => {
-    setCart(prevCart => prevCart.filter(item => item.product_id !== productId));
-  };
-
-
-  // --- COMPUTATIONS ---
-  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.cartQty), 0);
-  const discountAmount = subtotal * appliedDiscountRate;
-  const grandTotal = subtotal - discountAmount;
-
-
-  // --- 2. CHECKOUT SUBMISSION ---
-  const handleFinalCheckout = async (paymentDetails) => {
-    setIsProcessing(true);
-
-    const exactGrandTotal = parseFloat(grandTotal.toFixed(2));
-    const rawReceivedString = String(paymentDetails.received ?? paymentDetails.amount ?? 0).replace(/,/g, '');
-    const exactAmountPaid = paymentDetails.method === 'Cash' 
-        ? parseFloat(rawReceivedString) || 0
-        : exactGrandTotal;
-
-    const posDto = {
-      payment_method: paymentDetails.method.toUpperCase(), 
-      paymentMethod: paymentDetails.method.toUpperCase(), 
-      amount_paid: exactAmountPaid, 
-      amountPaid: exactAmountPaid, 
-      reference_id: paymentDetails.referenceId || null, 
-      referenceId: paymentDetails.referenceId || null, 
-      discount_id: Number(appliedDiscountId) || 0,
-      discountId: Number(appliedDiscountId) || 0,
-      items: cart.map(item => ({
-        product_id: item.product_id,
-        productId: item.product_id,
-        quantity: item.cartQty
-      }))
-    };
-
-    try {
-      const response = await fetch('http://localhost:5000/api/POS/checkout', {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(posDto)
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-      const result = await response.json();
-      
-      const receiptData = result?.receipt || result?.Receipt || result?.data?.receipt;
-
-      if (!receiptData) {
-        const fallbackId = result?.sales_order_display_id || "UNKNOWN";
-        alert(`Transaction Successful!\nReceipt Number: ${fallbackId}`);
-      } else {
-        alert(`Transaction Successful!\nReceipt Number: ${receiptData?.receipt_number || 'N/A'}\nVAT: ₱${receiptData?.vatable_sales || 0}`);
-      }
-      
-      setCart([]);
-      setAppliedDiscountRate(0);
-      setAppliedDiscountId(0);
-      setShowCashModal(false);
-      setShowGCashModal(false);
-      setShowCheckoutModal(false);
-      
-    } catch (error) {
-      alert(`Checkout Failed: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  const { handleFinalCheckout, isProcessing } = useCheckout(cart, grandTotal, appliedDiscountId);    
 
   const handlePaymentSelect = (method) => {
     setShowCheckoutModal(false);
@@ -126,10 +30,20 @@ const PointOfSalePage = () => {
     if (method === 'GCash') setShowGCashModal(true);
   };
 
+  const onConfirmPayment= (paymentDetails) => {
+    handleFinalCheckout(paymentDetails, () => {
+      handleClearCart();
+      setAppliedDiscountRate(0);
+      setAppliedDiscountId(0);
+      setShowCashModal(false);
+      setShowGCashModal(false);
+      setShowCheckoutModal(false);
+    });
+  };
+
 
   return (
     <div className="flex h-screen bg-[#0F172A] font-montserrat overflow-hidden relative text-slate-100">
-      
       {/* LEFT PANEL: PRODUCT GRID */}
       <div className="flex-1 flex flex-col h-full pl-6 py-6 pr-4">
         <div className="flex justify-between items-center mb-6">
@@ -226,22 +140,17 @@ const PointOfSalePage = () => {
       <ProductModal isOpen={!!selectedProduct} product={selectedProduct} onClose={() => setSelectedProduct(null)} onAdd={handleAddToCart} />
       <DiscountModal isOpen={showDiscountModal} onClose={() => setShowDiscountModal(false)} onApply={(rate, id) => { setAppliedDiscountRate(rate); setAppliedDiscountId(id); setShowDiscountModal(false); }} />
       <CheckoutModal isOpen={showCheckoutModal} onClose={() => setShowCheckoutModal(false)} grandTotal={grandTotal} onPaymentSelect={handlePaymentSelect} />
-      
-      <CashPaymentModal isOpen={showCashModal} onClose={() => setShowCashModal(false)} grandTotal={grandTotal} onConfirmPayment={handleFinalCheckout} />
-      <GCashPaymentModal isOpen={showGCashModal} onClose={() => setShowGCashModal(false)} onConfirmPayment={handleFinalCheckout} />
+      <CashPaymentModal isOpen={showCashModal} onClose={() => setShowCashModal(false)} grandTotal={grandTotal} onConfirmPayment={onConfirmPayment} />
+      <GCashPaymentModal isOpen={showGCashModal} onClose={() => setShowGCashModal(false)} onConfirmPayment={onConfirmPayment} />
 
-      {/* Cancel Order Confirm */}
-      {showCancelConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-[400px] p-8 text-center">
-            <h3 className="text-xl font-bold text-slate-100 mb-6">Cancel current order?</h3>
-            <div className="flex gap-4 justify-center">
-              <Button className="bg-rose-600 hover:bg-rose-500 text-white px-8" onClick={() => { setCart([]); setAppliedDiscountRate(0); setAppliedDiscountId(0); setShowCancelConfirm(false); }}>Yes</Button>
-              <Button variant="outline" className="bg-slate-800 border-slate-700 text-slate-300" onClick={() => setShowCancelConfirm(false)}>No</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CancelConfirmModal isOpen={showCancelConfirm} 
+        onConfirm={() => {
+          handleClearCart();
+          setAppliedDiscountRate(0);
+          setAppliedDiscountId(0);
+          setShowCancelConfirm(false);
+        }}
+        onClose={()=> setShowCancelConfirm(false) } />
     </div>
   );
 };

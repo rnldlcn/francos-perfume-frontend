@@ -24,4 +24,5 @@ export const usePointOfSale = () => {
     const updateFilter = (key, value) => 
         setFilter(prev => ({...prev, [key]: value }))
     return { products, isLoading, error, filter, updateFilter };
+
 }
