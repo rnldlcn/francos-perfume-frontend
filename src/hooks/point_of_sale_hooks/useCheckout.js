@@ -1,10 +1,10 @@
-import { UseAuth } from "@/auth/UseAuth";
+import { useAuth } from "@/auth/useAuth";
 import { checkout } from "@/services/pointOfSaleService";
 import { buildPointOfSaleDTO, extractReceiptData } from "@/utils/pointOfSaleUtils";
 import { useState } from "react";
 
 export const useCheckout = (cart, grandTotal, appliedDiscountId) => {
-    const { user } = UseAuth();
+    const { user } = useAuth();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleFinalCheckout = async (paymentDetails, onSuccess) => {

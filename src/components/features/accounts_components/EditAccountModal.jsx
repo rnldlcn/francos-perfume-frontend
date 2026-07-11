@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { UseAuth } from "../../../auth/UseAuth";
+import { useAuth } from "../../../auth/useAuth";
 
 const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
 

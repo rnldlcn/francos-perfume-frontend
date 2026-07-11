@@ -1,6 +1,6 @@
-import { useAuth } from "@/context/AuthContext";
 import { getAllProductsPOS } from "@/services/pointOfSaleService";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../auth/useAuth";
 
 export const usePointOfSale = () => {
     const { user } = useAuth();
@@ -21,8 +21,14 @@ export const usePointOfSale = () => {
             .finally(() => setIsLoading(false));
     }, [filter, user]);
 
-    const updateFilter = (key, value) => 
-        setFilter(prev => ({...prev, [key]: value }))
+    const updateFilter = (key, value) =>  {
+        setFilter(prev => {
+            if (key !== 'page') {
+                return { ...prev, [key]: value, page: 1 };
+            }
+            return { ...prev, [key]: value };
+        });
+    };
+        
     return { products, isLoading, error, filter, updateFilter };
-
 }

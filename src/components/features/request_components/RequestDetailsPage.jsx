@@ -1,13 +1,13 @@
 import { AlertTriangle, Check, Clock, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { UseAuth } from "../../../auth/UseAuth";
+import { useAuth } from "../../../auth/useAuth";
 import { RequestService } from '../../../services/RequestService';
 
 export default function RequestDetailsPage() {
     const { id } = useParams(); 
     const navigate = useNavigate();
-    const { user } = UseAuth(); 
+    const { user } = useAuth(); 
 
     // --- STATE ---
     const [request, setRequest] = useState(null);

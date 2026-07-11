@@ -1,11 +1,11 @@
-import { UseAuth } from '@/auth/UseAuth';
+import { useAuth } from '@/auth/useAuth';
 import { ArrowRightLeft, LogOut, Settings, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoutModal from './LogoutModal';
 
 const ProfileDropdown = () => {
-  const { user, handleSwitchAccess } = UseAuth();
+  const { user, handleSwitchAccess } = useAuth();
   const canSwitchAccess = user.trueRole === 'manager';
 
   const navigate = useNavigate();

@@ -1,16 +1,15 @@
-import { CashPaymentModal, CheckoutModal, DiscountModal, GCashPaymentModal, PointOfSaleFilterBar, ProductCard, ProductModal, ProfileDropdown } from '@/components/features/point_of_sale_components';
+import { CancelConfirmModal, CashPaymentModal, CheckoutModal, DiscountModal, GCashPaymentModal, PointOfSaleFilterBar, ProductCard, ProductModal } from '@/components/features/point_of_sale_components';
+import { ProfileDropdown } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
-
-import CancelConfirmModal from '@/components/features/point_of_sale_components/CancelConfirmModal';
-import { useInventory } from '@/hooks/inventory_hooks/useInventory';
 import { useCart } from '@/hooks/point_of_sale_hooks/useCart';
 import { useCheckout } from '@/hooks/point_of_sale_hooks/useCheckout';
+import { usePointOfSale } from '@/hooks/point_of_sale_hooks/usePointOfSale';
 import { useClock } from '@/hooks/useClock';
 
 const PointOfSalePage = () => {
-  const { products, isLoading, error, filter, updateFilter } = useInventory();
+  const { products, isLoading, filter, updateFilter } = usePointOfSale();
 
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -40,7 +39,6 @@ const PointOfSalePage = () => {
       setShowCheckoutModal(false);
     });
   };
-
 
   return (
     <div className="flex h-screen bg-[#0F172A] font-montserrat overflow-hidden relative text-slate-100">

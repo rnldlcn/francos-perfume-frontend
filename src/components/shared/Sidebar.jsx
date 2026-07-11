@@ -1,4 +1,4 @@
-import { UseAuth } from "@/auth/UseAuth";
+import { useAuth } from "@/auth/useAuth";
 import {
   Archive,
   Barcode,
@@ -19,7 +19,7 @@ import logo from "../../assets/FrancoPerfumeLogo.png";
 const Sidebar = () => {
   const location = useLocation();
 
-  const { user } = UseAuth();
+  const { user } = useAuth();
 
   const companyPictureAlt = "Franco's Logo";
   

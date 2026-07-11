@@ -1,9 +1,9 @@
-import { UseAuth } from '@/auth/UseAuth';
+import { useAuth } from '@/auth/useAuth';
 import { useEffect, useState } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
 const Header = () => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
 
   const [currentDate, setCurrentDate] = useState("");
   const [userLocation, setUserLocation] = useState("Loading...");

@@ -1,6 +1,9 @@
+export { default as CancelConfirmModal } from './CancelConfirmModal';
 export { default as CashPaymentModal } from './CashPaymentModal';
+export { default as CheckoutModal } from './CheckoutModal';
 export { default as DiscountModal } from './DiscountModal';
 export { default as GCashPaymentModal } from './GCashPaymentModal';
 export { default as MobileBlocker } from './MobileBlocker';
+export { default as PointOfSaleFilterBar } from './PointOfSaleFilterBar';
 export { default as ProductCard } from './ProductCard';
 export { default as ProductModal } from './ProductModal';

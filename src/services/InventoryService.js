@@ -1,12 +1,12 @@
 import { API_URL } from "../config/index.js";
 
-const BASE_URL = `${API_URL}/inventory`;
+const BASE_URL = `${API_URL}/Inventory`;
 
 export const getAllInventory = async (filter, token) => {
-    //testing to see whether filter returns a string
-    console.log("Fetching inventory with filter:", filter);
-
-    const params = new URLSearchParams(filter);
+    const cleanFilter = Object.fromEntries(
+        Object.entries(filter).filter(([, v]) => v !== '' && v !== null)
+    );
+    const params = new URLSearchParams(cleanFilter);
     const response = await fetch(`${BASE_URL}?${params}`, {
         method: 'GET',
         headers: { 
@@ -19,7 +19,6 @@ export const getAllInventory = async (filter, token) => {
 }
 
 export const getInventoryItemDetails = async (productId, token) => {
-
     const response = await fetch(`${BASE_URL}/${productId}`, {
         method: 'GET',
         headers: { 
@@ -31,8 +30,10 @@ export const getInventoryItemDetails = async (productId, token) => {
     return await response.json();
 }
 
-export const getInventoryBatches = async (productId, token) => {
-    const response = await fetch(`${BASE_URL}/${productId}/batches`, {
+export const getInventoryBatches = async (productId, branch, token) => {
+    const params = new URLSearchParams();
+    params.append('branch', branch);
+    const response = await fetch(`${BASE_URL}/${productId}/batches?${params}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -43,15 +44,14 @@ export const getInventoryBatches = async (productId, token) => {
     return await response.json();
 }
 
-export const updateQuantity = async (productId, quantity, token) => {
-    // testing to see whether productId and quantity are being passed correctly
-    console.log(`Updating product ${productId} with quantity ${quantity}`);
-    const response = await fetch(`${BASE_URL}/${productId}/quantity?inserted_qty=${quantity}`, {
+export const updateBatch = async (batchId, dto, token) => {
+    const response = await fetch(`${BASE_URL}/${batchId}`, {
         method: 'PATCH',
         headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(dto)
     });
     if (!response.ok) throw new Error(await response.text());
     return await response.json();

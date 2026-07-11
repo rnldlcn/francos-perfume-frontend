@@ -4,7 +4,7 @@ import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { UseAuth } from "../../auth/UseAuth";
+import { useAuth } from "../../auth/useAuth";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
@@ -15,7 +15,7 @@ const statusOptions = [
 ];
 
 const RequestPage = () => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
   const navigate = useNavigate(); 
   
   // --- STATE ---

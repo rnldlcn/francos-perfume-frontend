@@ -1,10 +1,10 @@
 import { ArrowRightLeft, Calendar, Receipt, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { UseAuth } from '../../auth/UseAuth';
+import { useAuth } from '../../auth/useAuth';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
 
 export default function TransactionsPage() {
-    const { user } = UseAuth();
+    const { user } = useAuth();
     const userBranchId = parseInt(sessionStorage.getItem('branchId'));
     const isManager = user?.activeRole?.toUpperCase() === 'MANAGER';
 

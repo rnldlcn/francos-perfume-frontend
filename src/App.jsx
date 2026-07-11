@@ -1,23 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { UseAuth } from './auth/UseAuth';
+import { useAuth } from './auth/useAuth';
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
 import DashboardLayout from './layouts/DashboardLayout';
-import ArchivesPage from './pages/dashboard/ArchivesPage';
-import AuditLogPage from './pages/dashboard/AuditLogPage';
-import BarcodePage from './pages/dashboard/BarcodePage';
-import CreateTransferRequestPage from './pages/dashboard/CreateTransferRequestPage';
-import DeliveriesPage from './pages/dashboard/DeliveriesPage';
-import DiscountPage from './pages/dashboard/DiscountPage';
-import ForecastPage from './pages/dashboard/ForecastPage';
-import HomePage from './pages/dashboard/HomePage';
-import InventoryPage from './pages/dashboard/InventoryPage';
+import { ArchivesPage, AuditLogPage, BarcodePage, CreateTransferRequestPage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
-import ProductsPage from './pages/dashboard/ProductsPage';
-import RequestPage from './pages/dashboard/RequestPage';
-import TransactionsPage from './pages/dashboard/TransactionsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
 import PointOfSalePage from './pages/PointOfSalePage';
@@ -52,7 +41,7 @@ const NavigationManager = ({ user }) => {
 };
 
 const App = () => {
-  const { user, login } = UseAuth();
+  const { user, login } = useAuth();
 
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);

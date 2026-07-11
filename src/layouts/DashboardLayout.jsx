@@ -1,10 +1,10 @@
-import { UseAuth } from "@/auth/UseAuth";
+import { useAuth } from "@/auth/useAuth";
 import { Outlet } from "react-router-dom";
 import Header from "../components/shared/Header";
 import Sidebar from "../components/shared/Sidebar";
 
 const DashboardLayout = () => {
-  const { activeRole, email: userEmail } = UseAuth();
+  const { activeRole, email: userEmail } = useAuth();
 
   return (
     <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-montserrat text-[16px]">

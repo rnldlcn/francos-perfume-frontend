@@ -3,7 +3,6 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Filter, Search } from 'lucide-react';
 
 const PointOfSaleFilterBar = ({ filter, updateFilter }) => {
-  
 
     return (
     <div className="flex gap-3 mb-6 items-center">
@@ -27,7 +26,7 @@ const PointOfSaleFilterBar = ({ filter, updateFilter }) => {
             <DropdownMenuContent className="w-56 bg-slate-900 border-slate-800 text-slate-200">
               <DropdownMenuLabel>Product Type</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-800" />
-              {['', 'PERFUME', 'OIL'].map((type) => (
+              {['', 'PREMIUM', 'CLASSIC'].map((type) => (
                 <DropdownMenuCheckboxItem
                   key={type || 'ALL'}
                   checked={filter.product_type === type}
@@ -39,7 +38,7 @@ const PointOfSaleFilterBar = ({ filter, updateFilter }) => {
               <DropdownMenuSeparator className="bg-slate-800" />
               <DropdownMenuLabel>Gender</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-800" />
-              {['ALL', 'MALE', 'FEMALE', 'UNISEX'].map((gender) => (
+              {['ALL', 'MEN', 'WOMEN', 'UNISEX'].map((gender) => (
                 <DropdownMenuCheckboxItem
                   key={gender || 'ALL'}
                   checked={filter.product_gender === gender}

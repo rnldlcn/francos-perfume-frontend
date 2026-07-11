@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const GCashPaymentModal = ({ isOpen, onClose, onConfirmPayment }) => {
   const [referenceId, setReferenceId] = useState("");
@@ -25,11 +25,7 @@ const GCashPaymentModal = ({ isOpen, onClose, onConfirmPayment }) => {
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-white rounded-md shadow-2xl w-full max-w-[500px] overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative p-8">
         
-        {/* This is where we add the X button if we ever decide to include it */}
-
         <div className="flex flex-col gap-8 mt-4 mb-8">
-          
-          {/* REFERENCE ID INPUT ROW */}
           <div className="flex items-center justify-between gap-4">
             <span className="text-gray-500 font-medium text-sm tracking-widest uppercase">
               REFERENCE ID:
@@ -57,8 +53,6 @@ const GCashPaymentModal = ({ isOpen, onClose, onConfirmPayment }) => {
             CONFIRM PAYMENT
           </Button>
         </div>
-
-        {/* Optional: Cancel button to back out, since the mockup didn't show an 'X' */}
         <button 
           onClick={handleClose}
           className="absolute top-2 right-4 text-gray-400 hover:text-gray-600 text-xl font-bold"

@@ -1,8 +1,8 @@
-import { UseAuth } from '@/auth/UseAuth';
+import { useAuth } from '@/auth/useAuth';
 import { Button } from '@/components/ui/button';
 
 const LogoutModal = ({ setShowLogoutModal }) => {
-    const { logout } = UseAuth();
+    const { logout } = useAuth();
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all"
             onClick={() => setShowLogoutModal(false)}

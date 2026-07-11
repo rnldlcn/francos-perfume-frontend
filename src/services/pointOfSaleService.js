@@ -3,8 +3,16 @@ import { API_URL } from "../config/index.js";
 const BASE_URL = `${API_URL}/pos`;
 
 export const getAllProductsPOS = async (filter, token) => {
-    const params = new URLSearchParams(filter);
-    const response = await fetch(`${BASE_URL}/products?${params}`, {
+    const cleanFilter = Object.fromEntries(
+        Object.entries(filter)
+        .filter(([, v]) => v !== '' && v !== null && v !== 'ALL')
+        .map(([k, v]) => [k, typeof v === 'string' 
+            ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
+            : v
+        ])                                                    
+    );
+    const params = new URLSearchParams(cleanFilter);
+    const response = await fetch(`${BASE_URL}?${params}`, {
         method: 'GET',
         headers: { 
             'Authorization': `Bearer ${token}`,
@@ -16,7 +24,7 @@ export const getAllProductsPOS = async (filter, token) => {
 }
 
 export const checkout = async (checkoutData, token) => {
-    const response = await fetch(`${BASE_URL}`, {
+    const response = await fetch(`${BASE_URL}/checkout`, {
         method: 'POST',
         headers: { 
             'Authorization': `Bearer ${token}`,

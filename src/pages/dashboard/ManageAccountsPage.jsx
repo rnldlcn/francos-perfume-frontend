@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { UseAuth } from "../../auth/UseAuth";
+import { useAuth } from "../../auth/useAuth";
 import AccountInfoModal from "../../components/features/accounts_components/AccountInfoModal";
 import CreateAccountModal from "../../components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "../../components/features/accounts_components/EditAccountModal";
@@ -18,7 +18,7 @@ const dummyAccounts = [
 ];
 
 const ManageAccountsPage = () => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
   const canSwitchAccess = user?.trueRole === 'manager';
   
   // 🔧 Lifted activeRole to component level for UI conditional rendering
