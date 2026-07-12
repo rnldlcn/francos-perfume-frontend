@@ -11,6 +11,7 @@ const LoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [trueRole, setTrueRole] = useState('');
   const [branchId, setBranchId] = useState('');
+  const [employeeId, setEmployeeId] = useState(''); // FIXED: Added state for ID
 
   // --- HANDLERS ---
   const handleLogin = async (e) => {
@@ -19,14 +20,15 @@ const LoginPage = ({ onLogin }) => {
     try {
       const result = await login(email, password);
       
-      // FIX: Removed setPassword(result.accessToken)
       setEmail(result.email);
       setTrueRole(result.role);
       setBranchId(result.branch_id);
+      setEmployeeId(result.employee_id); // FIXED: Save the ID
 
-      // Store token securely
+      // Store token and ID securely
       sessionStorage.setItem('accessToken', result.accessToken);
       sessionStorage.setItem('branchId', result.branch_id);
+      sessionStorage.setItem('employee_id', result.employee_id); // FIXED: Store ID for module view
 
       const normalizedRole = result.role.toLowerCase();
 
@@ -38,14 +40,15 @@ const LoginPage = ({ onLogin }) => {
           accessToken: result.accessToken,
           trueRole: normalizedRole,
           activeRole: normalizedRole,
-          branchId: result.branch_id
+          branchId: result.branch_id,
+          employee_id: result.employee_id // FIXED: Passed ID to Auth Context
         });
 
         // Routing based on new roles
         if (normalizedRole === 'cashier') {
           navigate('/pos');
         } else if (normalizedRole === 'owner' || normalizedRole === 'admin') {
-          navigate('/'); // Assuming '/' is the main Dashboard route
+          navigate('/'); 
         } else {
           navigate('/home'); 
         }
@@ -62,7 +65,8 @@ const LoginPage = ({ onLogin }) => {
       accessToken: sessionStorage.getItem('accessToken'),
       trueRole,
       activeRole: module,
-      branchId: sessionStorage.getItem('branchId')
+      branchId: sessionStorage.getItem('branchId'),
+      employee_id: employeeId || sessionStorage.getItem('employee_id') // FIXED: Passed ID to Auth Context
     });
   };
 

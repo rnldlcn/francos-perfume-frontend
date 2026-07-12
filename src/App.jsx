@@ -16,6 +16,7 @@ import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import ProductsPage from './pages/dashboard/ProductsPage';
 import RequestPage from './pages/dashboard/RequestPage';
 import TransactionsPage from './pages/dashboard/TransactionsPage';
+import UserSettingsPage from './pages/dashboard/UserSettingsPage'; // 🔧 Added Import
 import PointOfSalePage from './pages/pos/PointOfSalePage';
 import { UseAuth } from './services/UseAuth';
 
@@ -43,7 +44,8 @@ const NavigationManager = ({ user }) => {
         navigate('/pos', { replace: true });
       } 
       else if (['manager', 'owner', 'admin', 'staff'].includes(role)) {
-        if (!path.startsWith('/home') && path !== '/pos') {
+        // 🔧 FIXED: If a non-cashier is on the POS page, or any path outside /home, kick them to dashboard
+        if (path === '/pos' || (!path.startsWith('/home') && path !== '/login')) {
           navigate('/home', { replace: true });
         }
       }
@@ -87,6 +89,9 @@ const App = () => {
         >
           <Route index element={<HomePage role={user?.trueRole} />} />
 
+          {/* 🔧 NEW: User Settings Route */}
+          <Route path="settings" element={<UserSettingsPage />} />
+
           {/* 1. INVENTORY & DAILY OPS (Manager, Owner, & Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'staff']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
@@ -95,20 +100,17 @@ const App = () => {
             <Route path="requests/:id" element={<RequestDetailsPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
-            {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}
             <Route path="barcode" element={<BarcodePage />} /> 
           </Route>
 
           {/* 2. ANALYTICS & TRANSACTIONS (Manager & Owner Only - Hidden from Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner']} />}>
             <Route path="transactions" element={<TransactionsPage />} />
-            {/* 🔧 Forecast moved here so Staff cannot access it */}
             <Route path="forecast" element={<ForecastPage />} />
           </Route>
 
           {/* 3. BUSINESS CONTROL (Owner Only - Hidden from Managers & Staff) */}
           <Route element={<ProtectedRoute user={user} allowedRoles={['owner']} />}>
-            {/* 🔧 Products and Discount moved here to match Sidebar limits */}
             <Route path="products" element={<ProductsPage />} />
             <Route path="discount" element={<DiscountPage />} />
           </Route>

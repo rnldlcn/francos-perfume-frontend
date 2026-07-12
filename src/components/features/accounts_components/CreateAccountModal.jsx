@@ -5,7 +5,7 @@ const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
   const { user } = UseAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // 🛡️ Get the current user's role to determine what options they see
+  // Safely get the current user's role to determine what options they see
   const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
 
   const [formData, setFormData] = useState({
@@ -36,21 +36,22 @@ const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
     // Map text branch to Branch ID for your database
     const branchId = formData.branch === "Sta. Lucia" ? 2 : formData.branch === "Riverbanks" ? 3 : 1;
 
-const payload = {
-    first_name: formData.firstName,
-    last_name: formData.lastName,
-    middle_name: formData.middleName,
-    contact_number: formData.contactNo,
-    address: formData.address,
-    email: formData.email,
-    branch_id: branchId,
-    employee_role: formData.role,
-    employee_shift: "Morning",
-    employee_profile_picture: ""
-};
+    // Payload mapped exactly to AddEmployeeDTO.cs
+    const payload = {
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      middle_name: formData.middleName || "",
+      contact_number: formData.contactNo,
+      address: formData.address,
+      email: formData.email,
+      branch_id: parseInt(branchId),
+      employee_role: formData.role,
+      employee_shift: "Morning", 
+      employee_image_url: "" 
+    };
 
     try {
-        const response = await fetch('http://localhost:5000/api/Auth/register', { 
+        const response = await fetch('http://localhost:5000/api/Employees/add', { 
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${user?.accessToken}`,
@@ -65,7 +66,7 @@ const payload = {
         }
 
         const savedData = await response.json();
-        onSave(savedData); // Trigger parent refresh
+        onSave(savedData); 
         onClose();
         alert("Account successfully created.");
     } catch (err) { 
@@ -104,15 +105,26 @@ const payload = {
               className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
               value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
             />
+          
             <input 
-              type="text" placeholder="Enter contact no."
+              type="text" 
+              placeholder="Enter contact no. (e.g., 09123456789)" 
+              required
+              maxLength={11}
+              minLength={11}
+              pattern="^09\d{9}$"
+              title="Must be an 11-digit number starting with 09"
               className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.contactNo} onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
+              value={formData.contactNo} 
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                setFormData({...formData, contactNo: val});
+              }}
             />
           </div>
 
           <input 
-            type="text" placeholder="Enter full address"
+            type="text" placeholder="Enter full address" required
             className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
             value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
           />
@@ -129,7 +141,6 @@ const payload = {
               value={formData.branch} onChange={(e) => setFormData({...formData, branch: e.target.value})}
             >
               <option value="" disabled>Select branch</option>
-              {/* If they are a manager, they ideally should only be able to select their own branch, but we'll leave all options open for owners/admins */}
               <option value="Sta. Lucia">Sta. Lucia</option>
               <option value="Riverbanks">Riverbanks</option>
             </select>
@@ -140,7 +151,6 @@ const payload = {
             >
               <option value="STAFF">STAFF</option>
               <option value="CASHIER">CASHIER</option>
-              {/* 🛡️ SECURITY: Only allow Owner or Admin to see the MANAGER option */}
               {(activeRole === 'OWNER' || activeRole === 'ADMIN') && (
                 <option value="MANAGER">MANAGER</option>
               )}

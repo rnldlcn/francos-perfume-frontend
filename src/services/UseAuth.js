@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-const SESSION_KEYS = ['email', 'accessToken', 'branchId', 'trueRole', 'activeRole']
+// FIXED: Added 'employee_id' to the allowed session keys
+const SESSION_KEYS = ['email', 'accessToken', 'branchId', 'trueRole', 'activeRole', 'employee_id']
 
 const loadFromSession = () => {
     const token = sessionStorage.getItem('accessToken');
@@ -12,6 +13,7 @@ const loadFromSession = () => {
         branchId: sessionStorage.getItem('branchId'),
         trueRole: sessionStorage.getItem('trueRole'),
         activeRole: sessionStorage.getItem('activeRole') || null, 
+        employee_id: sessionStorage.getItem('employee_id') // FIXED: Now it actually loads the ID
     }
 }
 

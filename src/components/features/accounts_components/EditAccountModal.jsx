@@ -38,41 +38,66 @@ const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
     setIsSubmitting(true);
     
     const branchId = formData.branch === "Sta. Lucia" ? 2 : formData.branch === "Riverbanks" ? 3 : 1;
-
-    // 🔧 FIXED: Payload keys now match your DB/DTO exactly
-    const payload = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        middle_name: formData.middleName,
-        contact_number: formData.contactNo, // Matches C# AddEmployeeDTO
-        address: formData.address,
-        email: formData.email,
-        branch_id: branchId,
-        employee_role: formData.role,       // Matches C# AddEmployeeDTO
-        employee_shift: "Morning",          // Required field for DTO
-        employee_profile_picture: ""        // Required field for DTO
-    };
+    // Use employee_id from DisplayEmployeeProfileDTO, fallback to id
+    const targetId = account.employee_id || account.id;
 
     try {
-        const response = await fetch(`http://localhost:5000/api/Auth/users/${account.id}`, { 
+        // -------------------------------------------------------------
+        // CALL 1: Update Profile Details (Name, Contact, Address, Branch)
+        // -------------------------------------------------------------
+        const profilePayload = {
+            branch_id: parseInt(branchId), 
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            middle_name: formData.middleName || "",
+            contact_number: formData.contactNo,
+            address: formData.address,
+            employee_shift: "Morning", // Required field for DTO
+            employee_image_url: ""     // Required field for DTO
+        };
+
+        const profileResponse = await fetch(`http://localhost:5000/api/Employees/updateProfile/${targetId}`, { 
             method: 'PUT',
             headers: { 
                 'Authorization': `Bearer ${user?.accessToken}`,
                 'Content-Type': 'application/json' 
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(profilePayload)
         });
 
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(errText);
+        if (!profileResponse.ok) {
+            const errText = await profileResponse.text();
+            throw new Error(`Profile Update Failed: ${errText}`);
+        }
+
+        // -------------------------------------------------------------
+        // CALL 2: Update Authentication Details (Email, Role)
+        // -------------------------------------------------------------
+        const authPayload = {
+            email: formData.email,
+            employee_role: formData.role,
+            password_status: account.password_status || "active" // Must pass existing status
+        };
+
+        const authResponse = await fetch(`http://localhost:5000/api/Employees/updateAuth/${targetId}`, { 
+            method: 'PUT',
+            headers: { 
+                'Authorization': `Bearer ${user?.accessToken}`,
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(authPayload)
+        });
+
+        if (!authResponse.ok) {
+            const errText = await authResponse.text();
+            throw new Error(`Auth Update Failed: ${errText}`);
         }
 
         onSave(); // Refresh parent table
         onClose();
         alert("Account successfully updated.");
     } catch (err) { 
-        alert(`Update failed: ${err.message}`);
+        alert(err.message);
     } finally {
         setIsSubmitting(false);
     }
@@ -107,14 +132,17 @@ const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
               value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
             />
             <input 
-              type="text" placeholder="Contact no."
+              type="text" placeholder="Contact no. (e.g., 09123456789)" required
+              maxLength={11} minLength={11} pattern="^09\d{9}$"
+              title="Must be an 11-digit number starting with 09"
               className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.contactNo} onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
+              value={formData.contactNo} 
+              onChange={(e) => setFormData({...formData, contactNo: e.target.value.replace(/\D/g, '')})}
             />
           </div>
 
           <input 
-            type="text" placeholder="Full address"
+            type="text" placeholder="Full address" required
             className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
             value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
           />
@@ -146,8 +174,8 @@ const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
           </div>
 
           <div className="flex justify-center gap-6 pt-6">
-            <button type="button" onClick={onClose} className="flex items-center gap-2 bg-[#E5D5C1] px-6 py-2 rounded-md font-medium text-sm text-gray-700">✕ Discard Changes</button>
-            <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 bg-[#E5D5C1] px-6 py-2 rounded-md font-medium text-sm text-gray-700 disabled:opacity-50">
+            <button type="button" onClick={onClose} className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm text-gray-700 transition-colors">✕ Discard Changes</button>
+            <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm text-gray-700 transition-colors disabled:opacity-50">
                 ✓ {isSubmitting ? 'Saving...' : 'Save Changes'}
             </button>
           </div>

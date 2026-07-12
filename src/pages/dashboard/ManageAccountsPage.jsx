@@ -47,9 +47,13 @@ const ManageAccountsPage = () => {
     const userBranchId = sessionStorage.getItem('branchId');
 
     try {
-      const response = await fetch('http://localhost:5000/api/Auth/users', { 
-        headers: { 'Authorization': `Bearer ${user?.accessToken}` }
-      });
+      const response = await fetch('http://localhost:5000/api/Employees/displayAll', {
+    method: 'GET',
+    headers: {
+        'Authorization': `Bearer ${user?.accessToken}`,
+        'Content-Type': 'application/json'
+    }
+});
       
       if (!response.ok) throw new Error("Endpoint not found (404)");
       
