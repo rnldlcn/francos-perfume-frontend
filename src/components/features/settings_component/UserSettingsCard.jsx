@@ -153,7 +153,7 @@ const UserSettingsCard = ({ user }) => {
         profileData={profileData} 
         onSave={handleSaveProfile} 
       />
-
+      // FIXED: Added the EditAccountPasswordModal component to allow users to update their password.
       <EditAccountPasswordModal 
         isOpen={isPasswordModalOpen} 
         onClose={() => setIsPasswordModalOpen(false)} 
