@@ -1,7 +1,10 @@
+import { useAuth } from '@/auth/useAuth';
 import { useEffect, useState } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
-const Header = ({ user, onLogout, onSwitchAccess }) => {
+const Header = () => {
+  const { user } = useAuth();
+
   const [currentDate, setCurrentDate] = useState("");
   const [userLocation, setUserLocation] = useState("Loading...");
   
@@ -9,8 +12,8 @@ const Header = ({ user, onLogout, onSwitchAccess }) => {
     try {
       // Set the current date safely
       const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-      const phtDate = new Intl.DateTimeFormat('en-CA', options).format(new Date());
-      setCurrentDate(phtDate.replace(/-/g, '/'));
+      const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(new Date());
+      setCurrentDate(formattedDate.replace(/-/g, '/'));
 
       // Retrieve the predetermined branch ID
       const branchId = sessionStorage.getItem('branchId');
@@ -50,12 +53,7 @@ const Header = ({ user, onLogout, onSwitchAccess }) => {
            </div>
         </div>
         
-        {/* We now know 'user' exists before rendering the dropdown */}
-        <ProfileDropdown
-          user={user}
-          onLogout={onLogout}
-          onSwitchAccess={onSwitchAccess}
-        />
+        <ProfileDropdown/>
         
       </header>
     </>

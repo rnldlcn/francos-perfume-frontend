@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AuthContext } from "./AuthContext";
 
 const SESSION_KEYS = ['email', 'accessToken', 'branchId', 'trueRole', 'activeRole']
 
@@ -11,12 +12,14 @@ const loadFromSession = () => {
         accessToken: token,
         branchId: sessionStorage.getItem('branchId'),
         trueRole: sessionStorage.getItem('trueRole'),
-        activeRole: sessionStorage.getItem('activeRole') || null, 
+        activeRole: sessionStorage.getItem('activeRole')
     }
-}
+};
 
-export const UseAuth = () => {
-    const [user, setUser] = useState(loadFromSession);
+
+
+export const AuthProvider = ({ children }) => {
+     const [user, setUser] = useState(loadFromSession);
 
     const login = (userData) => {
         SESSION_KEYS.forEach(key => {
@@ -40,6 +43,24 @@ export const UseAuth = () => {
             activeRole: newActiveRole
         }));
     }
+    
+    const handleSwitchAccess = () => {
+        const newRole = user.activeRole === 'manager' 
+        ? 'cashier' 
+        : 'manager';
+        
+        sessionStorage.setItem('activeRole', newRole);
+        setUser(prev => ({
+            ...prev,
+            activeRole: newRole
+        }));
+    };
 
-    return { user, login, logout, switchRole };
+    return (
+        <AuthContext.Provider value={{ user, login, logout, switchRole, handleSwitchAccess }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }
+
+

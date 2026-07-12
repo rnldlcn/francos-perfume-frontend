@@ -9,173 +9,89 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import perfumePlaceholder from "../../assets/FrancoPerfumeLogo.png";
-import AddProductModal from "../../components/features/inventory_components/AddProductModal";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
-import EditProductModal from "../../components/features/inventory_components/EditProductModal";
-import FilterBar from "../../components/shared/FilterDropDown";
+import FilterDropDown from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import { fetchAllInventory } from "../../services/InventoryService";
-import { UseAuth } from "../../services/UseAuth";
+import { useInventory } from "../../hooks/inventory_hooks/useInventory";
 
 const filterSelections = [
-  { key: "type", label: "Perfume Type", options: ["All Perfume Types", "Standard", "Premium", "Signature"] },
-  { key: "branch", label: "Branch", options: ["All Branches", "Sta. Lucia", "Riverbanks", "Warehouse"] },
-  { key: "gender", label: "Gender", options: ["All Genders", "Unisex", "Men", "Women"] },
+  { key: "product_type", label: "Perfume Type", 
+    options: 
+    [ 
+      { label: "All Perfume Types", value:''}, 
+      { label: "Classic", value: "Classic" },
+      { label: "Premium", value: "Premium" }
+    ]
+  },
+  { key: "branch", label: "Branch", options: 
+    [
+      { label: "All Branches", value: ''},
+      { label: "Sta. Lucia", value: "2" },
+      { label: "Riverbanks", value: "3" },
+      { label: "Warehouse", value: "1" }
+    ] 
+  },
+  { key: "product_gender", label: "Gender", options: 
+    [ { label: "All Genders", value: ''}, 
+     { label: "Unisex", value: "Unisex" },
+     { label: "Men", value: "Men" },
+     { label: "Women", value: "Women" }
+    ] 
+  },
 ];
 
-const InventoryPage = ({ role }) => {
-  const { user } = UseAuth();
-  const isManager = role === "manager";
+const InventoryPage = () => {
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({
-    type: "All Perfume Types",
-    branch: "All Branches",
-    gender: "All Genders",
-  });
+  const [searchQuery, setSearchQuery] = useState(""); 
+  // can add error here
+  const { inventory, isLoading, filter, totalPages, totalEntries, fetchBatchesForProduct, handleSaveBatchEdit, updateFilter } = useInventory();
 
-  const [inventory, setInventory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState({});
-
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
 
-  // --- PAGINATION STATE ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
-
-  useEffect(() => {
-    const getInventoryData = async (token) => {
-      try {
-        setIsLoading(true);
-        const response = await fetchAllInventory(token);
-        
-        const inventoryArray = response.data || []; 
-        
-        const dataWithBatches = inventoryArray.map(item => {
-          // Read both lowercase 'batches' and uppercase 'Batches'
-          const backendBatches = item.batches || item.Batches || []; 
-          
-          const mappedBatches = backendBatches.map(b => ({
-            batchId: b.batch_display_id || b.batchId,
-            dateReceived: new Date(b.date_received || b.dateReceived).toLocaleDateString(),
-            targetDate: (b.target_date || b.targetDate) ? new Date(b.target_date || b.targetDate).toLocaleDateString() : "N/A",
-            qty: b.quantity || b.qty
-          }));
-
-          return {
-            ...item,
-            totalUnits: item.total_units || 0, 
-            batches: mappedBatches
-          };
-        });
-        
-        setInventory(dataWithBatches);
-      } catch (error) {
-        console.error("Inventory fetch failed:", error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getInventoryData(user.accessToken);
-  }, [user.accessToken]);
+  const [batchMap, setBatchMap] = useState([]);
 
   const toggleRow = (rowKey) => {
     setExpandedRows((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }));
   };
 
-  const handleOpenEditBatchModal = (batch, product) => {
+  const handleToggleRow = async(productId, branchId, rowKey) => {
+    toggleRow(rowKey);
+    if (!batchMap[productId]) {
+      updateFilter()
+      const batches = await fetchBatchesForProduct(productId, branchId);
+
+      const mapped = (batches?.batches || []).map(b => ({
+        batchId: b.batch_id,
+        //batchItemId: b.batch_item_id,
+        dateReceived: b.created_at,
+        targetDate: b.expiry_date
+                ? new Date(b.expiry_date).toLocaleDateString()
+                : 'N/A',
+        qty: b.quantity
+      }))
+      setBatchMap(prev => ({...prev, [`${productId}-${branchId}`]: mapped}))
+    }
+  }
+
+  // make it accept batch or product id i dont care
+  const handleOpenEditBatchModal = () => {
     setEditingBatch({ 
-      ...batch, 
-      perfumeName: product.product_name, 
-      productId: product.product_display_id,
-      branchName: product.branch_name 
+      //batch
     });
     setIsEditBatchModalOpen(true);
   };
 
-  const handleSaveBatchEdit = (updatedBatch) => {
-    setInventory((prev) =>
-      prev.map((product) => {
-        if (product.product_display_id === updatedBatch.productId && product.branch_name === updatedBatch.branchName) {
-          const updatedBatches = product.batches.map(b =>
-            b.batchId === updatedBatch.batchId 
-              ? { ...b, qty: updatedBatch.qty, targetDate: updatedBatch.targetDate } 
-              : b
-          );
-          const newTotal = updatedBatches.reduce((sum, b) => sum + parseInt(b.qty || 0), 0);
-          return { ...product, batches: updatedBatches, totalUnits: newTotal };
-        }
-        return product;
-      })
-    );
-    setIsEditBatchModalOpen(false);
-  };
-
-  const handleAddProduct = (newProduct) => {
-    const productWithId = {
-      ...newProduct,
-      id: Math.floor(Math.random() * 1000).toString(),
-      batches: [],
-      totalUnits: 0 
-    };
-    setInventory([productWithId, ...inventory]);
-  };
-
-  const handleOpenEditModal = (id) => {
-    const productToEdit = inventory.find((item) => item.product_display_id === id);
-    setEditingProduct(productToEdit);
-    setIsEditModalOpen(true);
-  };
-
-  const handleSaveEdit = async (updatedProduct) => {
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.product_display_id === updatedProduct.product_display_id ? updatedProduct : item
-      )
-    );
-    setIsEditModalOpen(false);
-  };
-
-  // --- FILTERING ---
-  const filteredInventory = inventory.filter((item) => {
-    const name = item.product_name || "";
-    const id = item.product_display_id?.toString() || "";
-    const type = item.product_type || "";
-    const branch = item.branch_name || "";
-    const gender = item.product_gender || "";
-
-    const matchesSearch =
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      id.includes(searchQuery);
-      
-    const matchesType = filters.type === "All Perfume Types" || type.toLowerCase() === filters.type.toLowerCase();
-    const matchesBranch = filters.branch === "All Branches" || branch.toLowerCase() === filters.branch.toLowerCase();
-    const matchesGender = filters.gender === "All Genders" || gender.toLowerCase() === filters.gender.toLowerCase();
-
-    return matchesSearch && matchesType && matchesBranch && matchesGender;
-  });
-
-  // --- PAGINATION LOGIC ---
-  useEffect(() => {
-    // Reset to page 1 if user changes search or filters
-    setCurrentPage(1);
-  }, [searchQuery, filters]);
-
-  const totalPages = Math.ceil(filteredInventory.length / ITEMS_PER_PAGE);
-  const currentInventory = filteredInventory.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
+  const handleSearchChange = (value) => {
+    const query = value?.target ? value.target.value : value;
+    setSearchQuery(query);
+    updateFilter('search', query);
+  }
+  
   return (
     <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
       <div className="flex justify-between items-end mb-6">
@@ -187,28 +103,16 @@ const InventoryPage = ({ role }) => {
             Overview of all available parfum products
           </p>
         </div>
-
-        <div className="flex gap-3">
-          <Button variant="outline">
-            <span className="text-lg mr-2">▤</span> Scan barcode
-          </Button>
-
-          {isManager && (
-            <Button variant="primary" onClick={() => setIsAddModalOpen(true)}>
-              + ADD PRODUCT
-            </Button>
-          )}
-        </div>
       </div>
 
       <div className="flex items-center gap-4 mb-6">
         <SearchBar
           value={searchQuery}
-          onChange={(value) => setSearchQuery(value?.target ? value.target.value : value)}
+          onChange={handleSearchChange}
         />
-        <FilterBar
-          filters={filters}
-          setFilters={setFilters}
+        <FilterDropDown
+          filter={filter}
+          updateFilter={updateFilter}
           filterSelections={filterSelections}
         />
       </div>
@@ -216,24 +120,24 @@ const InventoryPage = ({ role }) => {
       <div className="flex flex-col gap-4 pb-4 flex-1">
         {isLoading ? (
           <div className="text-center py-10 text-gray-400">Loading inventory data...</div>
-        ) : filteredInventory.length === 0 ? (
+        ) : inventory.length === 0 ? (
           <div className="text-center py-10 text-gray-400">No products found.</div>
         ) : (
-          currentInventory.map((product) => {
+          inventory.map((product) => {
             const rowKey = `${product.product_display_id}-${product.branch_name}`;
             const isExpanded = expandedRows[rowKey];
-            
-            const batches = product.batches || [];
-            const displayUnits = product.totalUnits || 0;
-            const totalBatches = batches.length;
+            const displayUnits = product.product_qty || 0;
+            const totalBatches = product.product_batch_count || 0;
             const isLowStock = displayUnits > 0 && displayUnits < 10;
 
             return (
+              
               <div key={rowKey} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden transition-all shrink-0">
                 
                 <div 
                   className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-                  onClick={() => toggleRow(rowKey)}
+                  onClick={() => handleToggleRow(product.product_id, product.branch_id, rowKey)}
+                  
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-gray-400 p-2">
@@ -265,6 +169,7 @@ const InventoryPage = ({ role }) => {
                   </div>
                 </div>
 
+                {/* make this shit a table NOTE TO SELF*/}
                 {isExpanded && (
                   <div className="border-t border-gray-100 bg-gray-50/50 p-4">
                     {totalBatches === 0 ? (
@@ -284,24 +189,23 @@ const InventoryPage = ({ role }) => {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {batches.map((batch, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell className="font-medium text-gray-700">{batch.batchId}</TableCell>
-                                <TableCell className="text-gray-600">{batch.dateReceived}</TableCell>
-                                <TableCell className="text-gray-600">{batch.targetDate}</TableCell>
-                                <TableCell className="text-center text-gray-700">{batch.qty}</TableCell>
+                            {(batchMap[`${product.product_id}-${product.branch_id}`] || []).map((batch) => (
+                              <TableRow key={batch.batchId}>
+                                <TableCell className="font-medium text-gray-700">{batch.batchId || 0}</TableCell>
+                                <TableCell className="text-gray-600">{batch.dateReceived || 0}</TableCell>
+                                <TableCell className="text-gray-600">{batch.targetDate || 0}</TableCell>
+                                <TableCell className="text-center text-gray-700">{batch.qty || 0}</TableCell>
                                 <TableCell className="text-right pr-4">
                                   <Button 
                                     variant="outline" 
                                     size="sm" 
                                     className="h-7 text-xs flex items-center gap-1.5 ml-auto"
-                                    onClick={() => handleOpenEditBatchModal(batch, product)}
-                                  >
+                                    onClick={() => handleOpenEditBatchModal(batch, product)}>
                                     <Edit size={12} /> Edit Batch
                                   </Button>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                              ))}
                           </TableBody>
                         </Table>
                       </div>
@@ -315,49 +219,34 @@ const InventoryPage = ({ role }) => {
       </div>
 
       {/* --- PAGINATION CONTROLS --- */}
-      {filteredInventory.length > 0 && !isLoading && (
+      {inventory.length > 0 && !isLoading && (
         <div className="flex justify-between items-center mt-auto pt-6 pb-2 text-sm text-gray-400">
           <p>
-            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredInventory.length)} of {filteredInventory.length} entries
+            Showing {((filter.page - 1) * filter.pageSize) + 1} to {Math.min(filter.page * filter.pageSize, totalEntries)} of {totalEntries} entries
           </p>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-              disabled={currentPage === 1}
-              className={`text-2xl transition-colors ${currentPage === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
+              onClick={() => updateFilter('page', Math.max(1, filter.page - 1))}
+              disabled={filter.page === 1}
+              className={`text-2xl transition-colors ${filter.page === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
             >
               ‹
             </button>
-            <span className="text-gray-500 font-medium">{currentPage} / {totalPages || 1}</span>
+            <span className="text-gray-500 font-medium">{filter.page} / {totalPages|| 1}</span>
             <button
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-              disabled={currentPage === totalPages || totalPages === 0}
-              className={`text-2xl transition-colors ${currentPage === totalPages || totalPages === 0 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
-            >
-              ›
+              onClick={() => updateFilter('page', Math.min(filter.page + 1))}
+              disabled={filter.page === totalPages}
+              className={`text-2xl transition-colors ${filter.page === filter.totalPages ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}>
+            ›
             </button>
           </div>
         </div>
       )}
 
-      <EditProductModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        product={editingProduct}
-        onSave={handleSaveEdit}
-      />
-
-      <AddProductModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSave={handleAddProduct}
-      />
-
       <EditBatchModal
         isOpen={isEditBatchModalOpen}
         onClose={() => setIsEditBatchModalOpen(false)}
         batch={editingBatch}
-        onSave={handleSaveBatchEdit}
       />
     </div>
   );

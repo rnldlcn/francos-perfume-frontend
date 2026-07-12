@@ -1,29 +1,30 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-const FilterBar = ({ filters, setFilters, filterSelections }) => {
-  
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  }
-
+const FilterDropDown = ({ filter, updateFilter, filterSelections }) => {  
     return (
       <div className="flex items-center gap-6">
         {filterSelections?.map((option) => (
-          <Select value={
-            filters[option.key]}
-            onValueChange={(val) => handleFilterChange(option.key, val)}>
+          <Select
+            key={option.key}
+            value={filter[option.key] || '__all__'}
+            onValueChange={(val) => updateFilter(option.key, val === '__all__' ? '' : val)}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder={option.label} />
+                <SelectValue placeholder={option.label} />
             </SelectTrigger>
-              <SelectContent>
+            <SelectContent>
                 {option.options.map((opt) => (
-                <SelectItem value={opt}>{opt}</SelectItem>
+                    <SelectItem
+                        key={opt.label}
+                        value={opt.value || '__all__'}
+                    >
+                        {opt.label}
+                    </SelectItem>
                 ))}
-              </SelectContent>
-          </Select>
+            </SelectContent>
+        </Select>
         ))}
     </div>
     )
 }
 
-export default FilterBar;
+export default FilterDropDown;

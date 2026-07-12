@@ -1,3 +1,4 @@
+import { useAuth } from "@/auth/useAuth";
 import {
   Archive,
   Barcode,
@@ -15,19 +16,19 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
 
-const Sidebar = ({ user }) => {
+const Sidebar = () => {
   const location = useLocation();
+
+  const { user } = useAuth();
 
   const companyPictureAlt = "Franco's Logo";
   
-  // --- ROLE BASED ACCESS LOGIC ---
   const normalizedRole = user?.trueRole?.toLowerCase() || "";
   const isManager = normalizedRole === "manager";
   const isOwner = normalizedRole === "owner";
   const isAdmin = normalizedRole === "admin";
-  const isStaff = normalizedRole === "staff"; // Added staff role recognition
-  
-  // Access Groups
+  const isStaff = normalizedRole === "staff";
+
   const hasManagementAccess = isManager || isOwner;
   const hasFullAccess = isManager || isOwner || isAdmin;
 
@@ -35,13 +36,14 @@ const Sidebar = ({ user }) => {
     const isActive = location.pathname.startsWith(path); 
     
     // Exact match for home, startsWith for others
-    const isActuallyActive = path === "/home" ? location.pathname === "/home" : isActive;
+    const isActuallyActive = path === "/home" 
+    ? location.pathname === "/home" 
+    : isActive;
 
     return `flex items-center w-full gap-2 cursor-pointer p-5 transition-colors duration-300
-    ${
-      isActuallyActive
-        ? "bg-custom-primary/20 text-custom-white border-r-4 border-custom-primary"
-        : "hover:bg-white/10 text-custom-gray"
+    ${isActuallyActive
+      ? "bg-custom-primary/20 text-custom-white border-r-4 border-custom-primary"
+      : "hover:bg-white/10 text-custom-gray"
     }`;
   };
 

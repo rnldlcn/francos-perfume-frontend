@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { UseAuth } from "../../../services/UseAuth";
+import { useState } from 'react';
+import { useAuth } from "../../../auth/useAuth";
 
 const AccountInfoModal = ({ isOpen, onClose, account, onEditClick, onActionComplete }) => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

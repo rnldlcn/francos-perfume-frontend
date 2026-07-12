@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { UseAuth } from "../../../services/UseAuth";
+import { useEffect, useState } from 'react';
+import { useAuth } from "../../../auth/useAuth";
 
 const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
-  const { user } = UseAuth();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // 🛡️ Get the current user's role to determine what options they see

@@ -1,8 +1,8 @@
-import { login } from '@/services/LoginService';
+import { login } from '@/services/loginService';
 import { ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../../assets/FrancoPerfumeLogo.png';
+import logo from '../assets/FrancoPerfumeLogo.png';
 
 const LoginPage = ({ onLogin }) => {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
   const [quantity, setQuantity] = useState(1);
@@ -7,7 +7,7 @@ const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
   // Every time the modal opens for a new product, reset the quantity to 1
   useEffect(() => {
     if (isOpen) setQuantity(1);
-  }, [isOpen, product]);
+  }, [isOpen]);
 
   // If the modal shouldn't be open, or there's no product selected, render nothing
   if (!isOpen || !product) return null;

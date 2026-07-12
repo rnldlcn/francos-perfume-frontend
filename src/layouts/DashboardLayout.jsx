@@ -1,24 +1,16 @@
+import { useAuth } from "@/auth/useAuth";
 import { Outlet } from "react-router-dom";
 import Header from "../components/shared/Header";
 import Sidebar from "../components/shared/Sidebar";
 
-const DashboardLayout = ({ user, onSwitchAccess, onLogout }) => {
-  
-  const { activeRole, email: userEmail } = user;
+const DashboardLayout = () => {
+  const { activeRole, email: userEmail } = useAuth();
 
   return (
     <div className="flex h-screen bg-[#F7F7F9] text-[#333] font-montserrat text-[16px]">
-      <Sidebar
-        user={user}
-      />
-
+      <Sidebar/>
       <div className="flex-1 flex flex-col overflow-hidden relative">
-        <Header
-          user={user}
-          onLogout={onLogout}
-          onSwitchAccess={onSwitchAccess}
-        />
-
+        <Header/>
         <main className="flex-1 p-8 overflow-auto bg-[#F7F7F9]">
           <Outlet context={{ activeRole, userEmail }} />
         </main>

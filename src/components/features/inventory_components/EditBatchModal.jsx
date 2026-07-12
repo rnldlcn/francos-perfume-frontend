@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Minus, X, Check } from "lucide-react";
+import { Check, Minus, Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
+const EditBatchModal = ({ isOpen, onClose, batch }) => {
   const [qty, setQty] = useState(0);
   const [targetDate, setTargetDate] = useState("");
   const [reason, setReason] = useState("Restock");
@@ -18,7 +18,6 @@ const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
     }
   }, [batch]);
 
-  // Prevent rendering if no batch is selected
   if (!batch) return null;
 
   const handleSave = () => {
@@ -106,7 +105,7 @@ const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
           <Button variant="ghost" className="gap-2 text-[#D47B7B] hover:text-red-700 hover:bg-red-50 bg-[#EAE7DF]/40" onClick={onClose}>
             <X size={16} /> Cancel
           </Button>
-          <Button variant="primary" className="gap-2 px-8 shadow-sm" onClick={handleSave}>
+          <Button variant="primary" className="gap-2 px-8 shadow-sm" onClick={handleSaveBatchEdit}>
             <Check size={16} /> Save
           </Button>
         </DialogFooter>

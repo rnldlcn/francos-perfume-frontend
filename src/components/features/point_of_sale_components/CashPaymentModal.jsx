@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
+import { useState } from "react";
 
 const CashPaymentModal = ({ isOpen, onClose, grandTotal, onConfirmPayment }) => {
   const [amountReceived, setAmountReceived] = useState("");
