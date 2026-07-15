@@ -1,5 +1,5 @@
 import { getAllInventory, getInventoryBatches, updateBatch } from "@/services/inventoryService";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../../auth/useAuth";
 
 export const useInventory = () => {
@@ -10,38 +10,39 @@ export const useInventory = () => {
     const [error, setError] = useState(null);
     const [totalPages, setTotalPages] = useState(1);
     const [totalEntries, setTotalEntries] = useState(1);
+    const isFirstLoad = useRef(true);
     
     // can add the page and page size here
     const [filter, setFilter] = useState({
         search: '',
         fromDate: '',
         toDate: '',
-        product_type: '',
-        product_gender: '',
+        productType: '',
+        productGender: '',
         branch: '',
-        page: 1,
+        pageCount: 1,
         pageSize: 10,
     })
 
     const fetchInventory = useCallback(() => {
-      if (totalEntries == 0) {
+      if (isFirstLoad.current) {
         setIsLoading(true);
       } else {
         setIsFetching(true);
       }
 
       getAllInventory(filter, user?.accessToken)
-          .then(data => {
-            setInventory(data.data);
-            setTotalPages(data?.totalInventoriesPages || 1);
-            setTotalEntries(data?.totalInventories || 0);
-          })
-          .catch(setError)
-          .finally(() => {
-            setIsLoading(false);
-            setIsFetching(false);
-          });
-    }, [filter, user?.accessToken, totalEntries]);
+        .then(data => {
+          setInventory(data.data);
+          setTotalPages(data?.totalInventoriesPages || 1);
+          setTotalEntries(data?.totalInventories || 0);
+        })
+        .catch(setError)
+        .finally(() => {
+          setIsLoading(false);
+          setIsFetching(false);
+        });
+    }, [filter, user?.accessToken]);
 
     useEffect(() => {
       if (user?.accessToken) {
@@ -54,9 +55,9 @@ export const useInventory = () => {
     const handleSaveBatchEdit = async (updatedBatch) => {
       try {
         await updateBatch(updatedBatch.batchId, {
-          product_id: updatedBatch.productId,
-          quantity: updatedBatch.qty,
-          expiry_date: updatedBatch.targetDate,
+          productId: updatedBatch.productId,
+          quantity: updatedBatch.quantity,
+          expiryDate: updatedBatch.targetDate,
           reason: updatedBatch.reason
         }, user?.accessToken);
         refresh();
@@ -68,7 +69,7 @@ export const useInventory = () => {
     const fetchBatchesForProduct = async (productId, branchId) => {
       try {
         const data = await getInventoryBatches(productId, branchId, user?.accessToken);
-        return data;
+        return data.batches;
       } catch (err) {
         setError(err);
         return null;
@@ -78,10 +79,8 @@ export const useInventory = () => {
     const updateFilter = (key, value) =>  {
         setFilter(prev => {
             if (key !== 'page') {
-              refresh();
               return { ...prev, [key]: value, page: 1 };
             }
-            refresh();
             return { ...prev, [key]: value };
         });
     };

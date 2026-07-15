@@ -78,8 +78,8 @@ const PointOfSalePage = () => {
           )}
         </div>
       </div>
-
-      {/* RIGHT PANEL: CART */}
+      
+      {/* RIGHT PANEL: CART probably change this too  */}
       <div className="w-[400px] bg-[#111827] border-l border-slate-800 shadow-2xl flex flex-col h-full z-10">
         <div className="p-6 border-b border-slate-800">
           <h2 className="text-xl font-bold text-white">Current Order</h2>

@@ -2,7 +2,7 @@ import { CheckCircle, Eye, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from '../../components/shared/StatusBadge'; // 🔧 NEW: Imported the StatusBadge component
-import { DeliveryService } from '../../services/DeliveryService';
+import { DeliveryService } from '../../services/deliveryService';
 
 export default function DeliveriesPage() {
     const navigate = useNavigate();

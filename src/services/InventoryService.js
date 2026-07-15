@@ -1,12 +1,14 @@
+import { cleanFilters } from "@/utils/filterUtils.js";
 import { API_URL } from "../config/index.js";
+
+
 
 const BASE_URL = `${API_URL}/Inventory`;
 
 export const getAllInventory = async (filter, token) => {
-    const cleanFilter = Object.fromEntries(
-        Object.entries(filter).filter(([, v]) => v !== '' && v !== null)
-    );
-    const params = new URLSearchParams(cleanFilter);
+    const cleanedFilter = cleanFilters(filter);
+
+    const params = new URLSearchParams(cleanedFilter);
     const response = await fetch(`${BASE_URL}?${params}`, {
         method: 'GET',
         headers: { 
@@ -30,10 +32,11 @@ export const getInventoryItemDetails = async (productId, token) => {
     return await response.json();
 }
 
-export const getInventoryBatches = async (productId, branch, token) => {
+export const getInventoryBatches = async (productId, branchId, token) => {
     const params = new URLSearchParams();
-    params.append('branch', branch);
-    const response = await fetch(`${BASE_URL}/${productId}/batches?${params}`, {
+    params.append('branchId', branchId);
+    params.append('productId', productId);
+    const response = await fetch(`${BASE_URL}/batch?${params}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -45,7 +48,7 @@ export const getInventoryBatches = async (productId, branch, token) => {
 }
 
 export const updateBatch = async (batchId, dto, token) => {
-    const response = await fetch(`${BASE_URL}/${batchId}`, {
+    const response = await fetch(`${BASE_URL}/batch/${batchId}`, {
         method: 'PATCH',
         headers: {
             'Authorization': `Bearer ${token}`,

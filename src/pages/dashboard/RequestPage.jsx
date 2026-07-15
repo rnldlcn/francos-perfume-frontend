@@ -8,7 +8,7 @@ import { useAuth } from "../../auth/useAuth";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
-import { RequestService } from "../../services/RequestService";
+import { RequestService } from "../../services/requestService";
 
 const statusOptions = [
   { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },

@@ -5,9 +5,6 @@ import ExportTransactionModal from "../../components/features/transactions_compo
 
 export default function TransactionsPage() {
     const { user } = useAuth();
-    const userBranchId = parseInt(sessionStorage.getItem('branchId'));
-    const isManager = user?.activeRole?.toUpperCase() === 'MANAGER';
-
     // --- STATE ---
     const [activeTab, setActiveTab] = useState('SALES'); 
     const [searchQuery, setSearchQuery] = useState('');
