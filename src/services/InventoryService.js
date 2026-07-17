@@ -1,8 +1,6 @@
 import { cleanFilters } from "@/utils/filterUtils.js";
 import { API_URL } from "../config/index.js";
 
-
-
 const BASE_URL = `${API_URL}/Inventory`;
 
 export const getAllInventory = async (filter, token) => {
@@ -54,9 +52,15 @@ export const updateBatch = async (batchId, dto, token) => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(dto)
+        body: JSON.stringify({
+            product_id: dto.productId,
+            quantity: dto.quantity,
+            expiry_date: dto.targetDate,
+            reason: dto.reason
+        })
     });
     if (!response.ok) throw new Error(await response.text());
+    console.log(await response.json());
     return await response.json();
 }
 

@@ -47,8 +47,11 @@ const InventoryPage = () => {
     const formattedTargetDate = date ? formatDateForInput(date) : null;
         setEditingBatch({ 
           ...batch,
-          targetDate: formattedTargetDate,
-          qty: batch.quantity
+          branchId: batch.branchId,
+          batchDisplayId: batch.batchDisplayId,
+          productName: product.productName,
+          quantity: batch.quantity,
+          targetDate: formattedTargetDate
         });
         setIsEditBatchModalOpen(true);
     };
@@ -101,13 +104,12 @@ const InventoryPage = () => {
       </div>
 
       <EditBatchModal
+        key={editingBatch?.batchId || "empty"}
         isOpen={isEditBatchModalOpen}
         onClose={() => setIsEditBatchModalOpen(false)}
         batch={editingBatch}
-        productName={productName}
-        
         onSave={async (submittedBatchData) => {
-          await handleOpenEditBatchModal(submittedBatchData);
+          await handleSaveBatchEdit(submittedBatchData);
           setIsEditBatchModalOpen(false)
           setBatchMap(prev => {
             const next = {...prev};

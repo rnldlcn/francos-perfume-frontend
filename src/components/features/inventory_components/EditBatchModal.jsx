@@ -3,23 +3,26 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Minus, Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
-  const [quantity, setQuantity] = useState(0);
-  const [targetDate, setTargetDate] = useState("");
+  
+  const [batchId, setBatchId] = useState(batch?.batchId || 0);
+  const [batchDisplayId, setBatchDisplayId] = useState(batch?.batchDisplayId || "");
+  const [productName, setProductName] = useState(batch?.productName || "")
+  const [quantity, setQuantity] = useState(batch?.quantity || 0);
+  const [targetDate, setTargetDate] = useState(batch?.targetDate || "");
   const [reason, setReason] = useState("Restock");
 
-  useEffect(() => {
-    if (batch) {
-      setQuantity(batch.quantity || 0);
-      setTargetDate(batch.targetDate || "");
-      setReason("Restock");
-    }
-  }, [batch]);
-
   const handleSave = () => {
-    onSave({...batch, quantity, targetDate, reason})
+    onSave({
+      batchId,  
+      batchDisplayId,
+      productName,
+      quantity,
+      targetDate,
+      reason,
+    });
   }
   
   return (
@@ -27,7 +30,7 @@ const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
       <DialogContent className="max-w-md font-montserrat p-8" showCloseButton={true}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[#333]">
-            Edit Batch: {batch.batchDisplayId}
+            Edit Batch: {batchDisplayId}
           </DialogTitle>
         </DialogHeader>
 
@@ -35,7 +38,7 @@ const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
           {/* Selected Perfume */}
           <div className="flex items-center justify-between gap-4">
             <span className="w-1/3 text-sm text-gray-400 font-medium">Selected Perfume:</span>
-            <span className="w-2/3 font-bold text-[#333] text-base">{batch.perfumeName}</span>
+            <span className="w-2/3 font-bold text-[#333] text-base">{productName}</span>
           </div>
 
           {/* Target Date */}

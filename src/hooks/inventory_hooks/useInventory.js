@@ -50,17 +50,19 @@ export const useInventory = () => {
       }
     }, [fetchInventory]);
 
-    const refresh = () => fetchInventory();
+    const refreshInventory = () => fetchInventory();
 
-    const handleSaveBatchEdit = async (updatedBatch) => {
+    //const refreshBatch = () => fetchBatchesForProduct(productId, branchId);
+
+    const handleSaveBatchEdit = async (submittedBatchData) => {
       try {
-        await updateBatch(updatedBatch.batchId, {
-          productId: updatedBatch.productId,
-          quantity: updatedBatch.quantity,
-          expiryDate: updatedBatch.targetDate,
-          reason: updatedBatch.reason
-        }, user?.accessToken);
-        refresh();
+        await updateBatch(submittedBatchData.batchId, 
+          {
+          productId: submittedBatchData.productId,
+          quantity: submittedBatchData.quantity,
+          expiryDate: submittedBatchData.targetDate,
+          reason: submittedBatchData.reason
+          }, user?.accessToken);
       } catch (error) {
         setError(error);
       }
@@ -69,6 +71,7 @@ export const useInventory = () => {
     const fetchBatchesForProduct = async (productId, branchId) => {
       try {
         const data = await getInventoryBatches(productId, branchId, user?.accessToken);
+        //refreshBatch(productId, branchId);
         return data.batches;
       } catch (err) {
         setError(err);

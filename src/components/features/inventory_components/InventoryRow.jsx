@@ -22,12 +22,13 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
         setExpandedRows((prev) => ({ ...prev, [rowKey]: !prev[rowKey] }));
     };
 
+    // batchmap formats the thing from the service basically, if one field is missing then just add here.
     const handleToggleRow = async(productId, branchId, rowKey) => {
     toggleRow(rowKey);        
         if (!batchMap[rowKey]) {
         const batches = await fetchBatchesForProduct(productId, branchId);
-        console.log(batches);
         const mapped = (batches || []).map(b => ({
+            batchDisplayId: b.batchDisplayId,
             batchId: b.batchId,
             dateReceived: b.createdAt,
             targetDate: b.expiryDate
@@ -38,7 +39,6 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
         setBatchMap(prev => ({...prev, [rowKey]: mapped}))
         }
     }
-
 
     return (
         <>
