@@ -35,7 +35,7 @@ const filterSelections = [
 const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState(""); 
   // can add error here
-  const { inventory, isLoading, totalPages, totalEntries, fetchBatchesForProduct, handleSaveBatchEdit, filter, updateFilter } = useInventory();
+  const { inventory, isLoading, totalPages, totalEntries, fetchBatchesForProduct, saveBatchEdit, filter, updateFilter } = useInventory();
 
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
@@ -96,7 +96,7 @@ const InventoryPage = () => {
           batchMap={batchMap}
           setBatchMap={setBatchMap}
           fetchBatchesForProduct={fetchBatchesForProduct}
-          handleSaveBatchEdit={handleSaveBatchEdit}
+          handleSaveBatchEdit={saveBatchEdit}
           filter={filter}
           updateFilter={updateFilter}
           handleOpenEditBatchModal={handleOpenEditBatchModal}
@@ -109,7 +109,7 @@ const InventoryPage = () => {
         onClose={() => setIsEditBatchModalOpen(false)}
         batch={editingBatch}
         onSave={async (submittedBatchData) => {
-          await handleSaveBatchEdit(submittedBatchData);
+          await saveBatchEdit(submittedBatchData);
           setIsEditBatchModalOpen(false)
           setBatchMap(prev => {
             const next = {...prev};

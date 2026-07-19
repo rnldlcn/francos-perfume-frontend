@@ -17,7 +17,6 @@ const loadFromSession = () => {
 };
 
 
-
 export const AuthProvider = ({ children }) => {
      const [user, setUser] = useState(loadFromSession);
 

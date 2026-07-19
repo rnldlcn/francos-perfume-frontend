@@ -142,20 +142,20 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
       {inventory.length > 0 && !isLoading && (
         <div className="flex justify-between items-center mt-auto pt-6 pb-2 text-sm text-gray-400">
           <p>
-            Showing {((filter.page - 1) * filter.pageSize) + 1} to {Math.min(filter.page * filter.pageSize, totalEntries)} of {totalEntries} entries
+            Showing {((filter.pageCount - 1) * filter.pageSize) + 1} to {Math.min(filter.pageCount * filter.pageSize, totalEntries)} of {totalEntries} entries
           </p>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => updateFilter('page', Math.max(1, filter.page - 1))}
-              disabled={filter.page === 1}
+              onClick={() => updateFilter('pageCount', Math.max(1, filter.pageCount - 1))}
+              disabled={filter.pageCount === 1}
               className={`text-2xl transition-colors ${filter.page === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
             >
               ‹
             </button>
-            <span className="text-gray-500 font-medium">{filter.page} / {totalPages|| 1}</span>
+            <span className="text-gray-500 font-medium">{filter.pageCount} / {totalPages|| 1}</span>
             <button
-              onClick={() => updateFilter('page', Math.min(filter.page + 1))}
-              disabled={filter.page === totalPages}
+              onClick={() => updateFilter('pageCount', Math.min(filter.page + 1))}
+              disabled={filter.pageCount === totalPages}
               className={`text-2xl transition-colors ${filter.page === filter.totalPages ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}>
             ›
             </button>

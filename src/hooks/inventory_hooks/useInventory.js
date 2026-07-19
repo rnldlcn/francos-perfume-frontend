@@ -1,6 +1,6 @@
+import { useAuth } from "@/auth/UseAuth";
 import { getAllInventory, getInventoryBatches, updateBatch } from "@/services/inventoryService";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "../../auth/useAuth";
 
 export const useInventory = () => {
     const { user } = useAuth();
@@ -45,16 +45,20 @@ export const useInventory = () => {
     }, [filter, user?.accessToken]);
 
     useEffect(() => {
-      if (user?.accessToken) {
-        fetchInventory();
+      if (!user?.accessToken) {
+        return;
       }
+      const timer = setTimeout(() => {
+        fetchInventory();
+      }, 0);
+      return () => clearTimeout(timer);
     }, [fetchInventory]);
 
     const refreshInventory = () => fetchInventory();
 
     //const refreshBatch = () => fetchBatchesForProduct(productId, branchId);
 
-    const handleSaveBatchEdit = async (submittedBatchData) => {
+    const saveBatchEdit = async (submittedBatchData) => {
       try {
         await updateBatch(submittedBatchData.batchId, 
           {
@@ -87,5 +91,5 @@ export const useInventory = () => {
             return { ...prev, [key]: value };
         });
     };
-    return { inventory, isLoading, filter, totalPages, totalEntries, error, fetchBatchesForProduct, handleSaveBatchEdit, updateFilter};
+    return { inventory, isLoading, filter, totalPages, totalEntries, error, fetchBatchesForProduct, saveBatchEdit, updateFilter};
 };
