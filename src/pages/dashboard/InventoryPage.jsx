@@ -6,6 +6,8 @@ import FilterDropDown from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import { useInventory } from "../../hooks/inventory_hooks/useInventory";
 
+
+// to change
 const filterSelections = [
   { key: "product_type", label: "Perfume Type", 
     options: 

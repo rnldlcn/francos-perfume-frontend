@@ -1,13 +1,13 @@
 import { cleanFilters } from "@/utils/filterUtils.js";
 import { API_URL } from "../config/index.js";
 
-const BASE_URL = `${API_URL}/account`;
+const BASE_URL = `${API_URL}/AuditLog`;
 
-export const getAllAccounts = async (filter, token) => {
+export const getAllAuditLogs = async (filter, token) => {
     const cleanedFilter = cleanFilters(filter);
 
     const params = new URLSearchParams(cleanedFilter);
-    const response = await fetch(`${BASE_URL}/account?${params}`, {
+    const response = await fetch(`${BASE_URL}?${params}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -16,9 +16,4 @@ export const getAllAccounts = async (filter, token) => {
     });
     if (!response.ok) throw new Error(await response.text());
     return await response.json();
-}
-
-
-export const getAccount = async (id, token) => {
-    
 }

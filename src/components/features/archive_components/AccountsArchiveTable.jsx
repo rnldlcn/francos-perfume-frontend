@@ -1,73 +1,65 @@
-import { useState, useEffect } from "react";
-import { Eye, ArchiveRestore, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 import { Button } from "@/components/ui/button";
-import ViewArchiveModal from "./ViewArchiveModal"; // Import the modal
+import { useAccountArchive } from "@/hooks/archive_hooks/useAccountArchive";
+import { formatDateTimeForTable } from "@/utils/dateFormatUtils";
+import { ArchiveRestore, Eye } from "lucide-react";
+import { useState } from "react";
 
 const AccountsArchiveTable = () => {
-  const [archives, setArchives] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal State
+  
+  const { archivedAccounts, isLoading, filter, totalPages, totalEntries, fetchArchivedAccounts, updateFilter } = useAccountArchive();
 
-  // ==========================================
-  // 🔌 DATABASE / API CONNECTION TEMPLATE
-  // ==========================================
-  useEffect(() => {
-    const fetchAccountArchives = async () => {
-      try {
-        setIsLoading(true);
-        // TODO: Replace with actual fetch call
-        // const response = await fetch('YOUR_BACKEND_URL/api/archives/accounts');
-        // setArchives(await response.json());
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
-        // Dummy Data
-        const dummyData = [
-          { id: "ACT-001", name: "John Smith", email: "johnsmith@gmail.com", role: "Staff", branch: "Sta. Lucia", dateArchived: "2026/04/10 - 12:00 PM" },
-          { id: "ACT-002", name: "Jane Doe", email: "janedoe@gmail.com", role: "Manager", branch: "Riverbanks", dateArchived: "2026/04/11 - 01:30 PM" },
-          { id: "ACT-003", name: "Mark Lee", email: "marklee@gmail.com", role: "Staff", branch: "Sta. Lucia", dateArchived: "2026/04/12 - 09:15 AM" },
-        ];
-        setArchives([...dummyData, ...dummyData, ...dummyData]); 
-      } catch (error) {
-        console.error("Failed to fetch account archives:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchAccountArchives();
-  }, []);
-
-  // Shared row rendering function used by both the main table and the modal
-  const renderRow = (acc, idx) => (
-    <tr key={`${acc.id}-${idx}`} className={idx % 2 === 0 ? "bg-[#EAE7DF]/30" : "bg-white"}>
-      <td className="px-6 py-4 text-gray-600">{acc.id}</td>
-      <td className="px-6 py-4 font-medium text-gray-800">{acc.name}</td>
-      <td className="px-6 py-4 text-gray-600">{acc.email}</td>
-      <td className="px-6 py-4 text-gray-600">{acc.role}</td>
-      <td className="px-6 py-4 text-gray-600">{acc.branch}</td>
-      <td className="px-6 py-4 text-gray-500">{acc.dateArchived}</td>
-    </tr>
-  );
+  /*
+    TO BE DECIDED: WHETHER OR NOT THE MODAL SHOULD BE ADDED
+      <ViewArchiveModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Inventory Archives List"
+        columns={["ID", "Perfume Name", "Perfume Type", "Note", "Gender", "Branch", "Date and Time Archived"]}
+        data={archives}
+        renderRow={renderRow}
+      />
+  */
 
   return (
-    <section>
+    <section className="mb-12">
       <h2 className="text-2xl font-bold text-[#333] mb-6">Accounts Archives</h2>
       
       <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm min-h-[200px] mb-4">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-[#F8F9FB] text-gray-500 font-medium border-b border-gray-200">
-            <tr>
-              {["ID", "Name", "Email", "Role", "Branch", "Date and Time Archived"].map((col, i) => (
-                <th key={i} className="px-6 py-4">{col} <span className="text-xs">▼</span></th>
+        <Table>
+          <TableHeader>
+          <TableRow className="bg-gray-50/80">
+              <TableHead className="font-semibold text-gray-600">Employee ID</TableHead>
+              <TableHead className="font-semibold text-gray-600">Branch</TableHead>
+              <TableHead className="font-semibold text-gray-600">Email</TableHead>
+              <TableHead className="font-semibold text-gray-600">Role</TableHead>
+              <TableHead className="font-semibold text-gray-600 text-center">Date Archived</TableHead>
+              <TableHead className="font-semibold text-gray-600 text-center">Archived By</TableHead>
+          </TableRow>
+          </TableHeader>
+          <TableBody>
+          {(archivedAccounts || []).map((account) => (
+              <TableRow key={account.accountArchiveId}>
+              <TableCell className="text-gray-600">account.employeeDisplayId</TableCell>
+              <TableCell className="font-medium text-gray-700">{account.branchId}</TableCell>
+              <TableCell className="text-gray-600">{account.email}</TableCell>
+              <TableCell className="text-center text-gray-700">{account.employeeRole}</TableCell>
+              <TableCell className="text-center text-gray-700">{formatDateTimeForTable(account.dateArchived) || 'Unknown'}</TableCell>
+              <TableCell className="text-center text-gray-700">{account.archivedBy}</TableCell>
+              </TableRow>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-400">Loading archives...</td></tr>
-            ) : (
-              archives.slice(0, 5).map(renderRow) // Show only 5 items on the main page
-            )}
-          </tbody>
-        </table>
+          </TableBody>
+      </Table>
       </div>
 
       <div className="flex justify-between items-center">
@@ -81,16 +73,7 @@ const AccountsArchiveTable = () => {
           </Button>
         </div>
       </div>
-
-      {/* RENDER THE REUSABLE MODAL */}
-      <ViewArchiveModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Accounts Archives List"
-        columns={["ID", "Name", "Email", "Role", "Branch", "Date and Time Archived"]}
-        data={archives}
-        renderRow={renderRow}
-      />
+      
     </section>
   );
 };

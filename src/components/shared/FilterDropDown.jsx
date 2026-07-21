@@ -2,7 +2,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 const FilterDropDown = ({ filter, updateFilter, filterSelections }) => {  
     return (
-      <div className="flex items-center gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap items-center gap-3 sm:gap-4 w-full">
         {filterSelections?.map((option) => (
           <Select
             key={option.key}

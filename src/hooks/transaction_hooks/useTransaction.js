@@ -1,6 +1,6 @@
 import { useAuth } from "@/auth/useAuth";
 import { getAllTransactions } from "@/services/transactionService";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 
 export const useTransaction = () => {
@@ -9,6 +9,8 @@ export const useTransaction = () => {
     const [isFetching, setIsFetching] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
     const [totalEntries, setTotalEntries] = useState(1);
+    const [error, setError] = useState(null);
+    const isFirstLoad = useRef(true);
 
     const [transactions, setTransaction] = useState([]);
 
@@ -22,7 +24,7 @@ export const useTransaction = () => {
     })
 
     const fetchTransactions = useCallback(() => {
-        if (totalEntries == 0) {
+        if (isFirstLoad.current) {
             setIsLoading(true);
         } else {
             setIsFetching(true);
@@ -30,22 +32,33 @@ export const useTransaction = () => {
 
         getAllTransactions(filter, user?.accessToken)
             .then(data => {
+                isFirstLoad.current = false;
+                console.log(data.data);
                 setTransaction(data.data);
-                setIsLoading(false);
-                setIsFetching(false);
-            });
-    }, [filter, user?.accessToken, totalEntries])
+                setTotalPages(data.totalTransactionPages);
+                setTotalEntries(data.totalTransactions);
+            })
+        .catch(setError)
+        .finally(() => {
+          setIsLoading(false);
+          setIsFetching(false);
+        });
+    }, [filter, user?.accessToken])
 
     useEffect(() => {
-          if (user?.accessToken) {
-            fetchTransactions();
-          }
-    }, [user?.accessToken, filter, totalEntries]);
+      if (!user?.accessToken) {
+        return;
+      }
+      const timer = setTimeout(() => {
+        fetchTransactions();
+      }, 0);
+      return () => clearTimeout(timer);
+    }, [fetchTransactions, user?.accessToken]);
 
     const updateFilter = (key, value) => {
         setFilter(prev => {
             if (key !== 'page') {
-              return { ...prev, [key]: value, page: 1 };
+              return { ...prev, [key]: value, pageCount: 1 };
             }
             return { ...prev, [key]: value };
         });

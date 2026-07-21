@@ -13,6 +13,7 @@ const TransactionsTable = ({ transactions, filter, isLoading, updateFilter, tota
 
     /*
     this template can be used for "void" function
+
         <TableCell className="text-right pr-4">
             <Button 
             variant="outline" 
@@ -35,6 +36,7 @@ const TransactionsTable = ({ transactions, filter, isLoading, updateFilter, tota
                         <TableHead className="font-semibold text-gray-600">Perfume Sold</TableHead>
                         <TableHead className="font-semibold text-gray-600">Processed By</TableHead>
                         <TableHead className="font-semibold text-gray-600 text-center">Payment Method</TableHead>
+                        <TableHead className="font-semibold text-gray-600 text-center">Discount Applied</TableHead>
                         <TableHead className="font-semibold text-gray-600 text-right pr-6">Total Amount</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -49,8 +51,9 @@ const TransactionsTable = ({ transactions, filter, isLoading, updateFilter, tota
                                 : 'No products'
                             }
                         </TableCell>
-                        <TableCell className="text-center text-gray-700">{transaction.processedBy || 'Unknown'}</TableCell>
-                        <TableCell className="text-center text-gray-700">{transaction.paymentMethod || 'Cash'}</TableCell>
+                        <TableCell className="text-center text-gray-700">{transaction.processedBy}</TableCell>
+                        <TableCell className="text-center text-gray-700">{transaction.paymentMethod}</TableCell>
+                        <TableCell className="text-center text-gray-700">{transaction.discountName}</TableCell>
                         <TableCell className="text-center text-gray-700"><span className="text-green-700">+ ₱ {transaction.amount}</span></TableCell>
                         </TableRow>
                         ))}
@@ -66,17 +69,17 @@ const TransactionsTable = ({ transactions, filter, isLoading, updateFilter, tota
                     </p>
                     <div className="flex items-center gap-4">
                         <button
-                        onClick={() => updateFilter('pageCount', Math.max(1, filter.page - 1))}
+                        onClick={() => updateFilter('pageCount', Math.max(1, filter.pageCount - 1))}
                         disabled={filter.pageCount === 1}
-                        className={`text-2xl transition-colors ${filter.page === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
+                        className={`text-2xl transition-colors ${filter.pageCount === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
                         >
                         ‹
                         </button>
                         <span className="text-gray-500 font-medium">{filter.pageCount} / {totalPages|| 1}</span>
                         <button
-                        onClick={() => updateFilter('pageCount', Math.min(filter.page + 1))}
+                        onClick={() => updateFilter('pageCount', Math.min(filter.pageCount + 1))}
                         disabled={filter.pageCount === totalPages}
-                        className={`text-2xl transition-colors ${filter.page === filter.totalPages ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}>
+                        className={`text-2xl transition-colors ${filter.pageCount === filter.totalPages ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}>
                         ›
                         </button>
                     </div>

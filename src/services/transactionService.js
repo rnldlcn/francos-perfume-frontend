@@ -6,7 +6,7 @@ export const getAllTransactions = async (filter, token) => {
     const cleanFilter = Object.fromEntries(
         Object.entries(filter).filter(([, v]) => v !== '' && v !== null)
     );
-    
+
     const params = new URLSearchParams(cleanFilter);
     const response = await fetch(`${BASE_URL}?${params}`, {
         method: 'GET',

@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }) => {
     const login = (userData) => {
         SESSION_KEYS.forEach(key => {
             if (userData[key]) {
-                console.log(`Storing ${key} in sessionStorage:`, userData[key]);
                 sessionStorage.setItem(key, userData[key]);
             }
         });

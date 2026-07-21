@@ -33,6 +33,7 @@ export const useInventory = () => {
 
       getAllInventory(filter, user?.accessToken)
         .then(data => {
+          isFirstLoad.current = false;
           setInventory(data.data);
           setTotalPages(data?.totalInventoriesPages || 1);
           setTotalEntries(data?.totalInventories || 0);
@@ -52,9 +53,9 @@ export const useInventory = () => {
         fetchInventory();
       }, 0);
       return () => clearTimeout(timer);
-    }, [fetchInventory]);
+    }, [fetchInventory, user?.accessToken]);
 
-    const refreshInventory = () => fetchInventory();
+    //const refreshInventory = () => fetchInventory();
 
     //const refreshBatch = () => fetchBatchesForProduct(productId, branchId);
 
@@ -86,7 +87,7 @@ export const useInventory = () => {
     const updateFilter = (key, value) =>  {
         setFilter(prev => {
             if (key !== 'page') {
-              return { ...prev, [key]: value, page: 1 };
+              return { ...prev, [key]: value, pageCount: 1 };
             }
             return { ...prev, [key]: value };
         });

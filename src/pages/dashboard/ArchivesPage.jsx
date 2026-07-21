@@ -1,5 +1,5 @@
-import InventoryArchiveTable from "../../components/features/archive_components/InventoryArchiveTable";
 import AccountsArchiveTable from "../../components/features/archive_components/AccountsArchiveTable";
+import ProductsArchiveTable from "../../components/features/archive_components/ProductsArchiveTable";
 
 const ArchivesPage = () => {
   return (
@@ -11,8 +11,9 @@ const ArchivesPage = () => {
         </p>
       </header>
 
-      <InventoryArchiveTable />
+      <ProductsArchiveTable />
       <AccountsArchiveTable />
+
     </div>
   );
 };
