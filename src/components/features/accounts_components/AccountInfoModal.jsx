@@ -1,77 +1,11 @@
-import { useState } from 'react';
 import { useAuth } from "../../../auth/useAuth";
 
 const AccountInfoModal = ({ isOpen, onClose, account, onEditClick, onActionComplete }) => {
   const { user } = useAuth();
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  if (!isOpen || !account) {
-    if (showResetConfirm) setShowResetConfirm(false);
-    if (showDeactivateConfirm) setShowDeactivateConfirm(false);
-    return null;
-  }
-
-  // --- ROLE BASED ACCESS LOGIC ---
-  // Safely grab the role from the context or session storage
   const currentRole = user?.trueRole?.toUpperCase() || user?.activeRole?.toUpperCase() || sessionStorage.getItem('activeRole')?.toUpperCase() || '';
   const canModify = currentRole === 'OWNER' || currentRole === 'ADMIN';
 
-  // --- ACTUAL API HANDLERS ---
-  const handleResetConfirm = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await fetch(`http://localhost:5000/api/Auth/users/${account.id}/reset-password`, {
-          method: 'PATCH',
-          headers: { 
-              'Authorization': `Bearer ${user?.accessToken}`,
-              'Content-Type': 'application/json' 
-          }
-      });
-      if (!response.ok) throw new Error(await response.text());
-      
-      alert(`Password successfully reset for ${account.email}. The default password is now ZFranco123!`);
-      
-      // 🔧 WIRING FIX: Reset local state and close everything
-      setShowResetConfirm(false);
-      onClose(); 
-    } catch (err) {
-      alert(`Error resetting password: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleDeactivateConfirm = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await fetch(`http://localhost:5000/api/Auth/users/${account.id}/status`, {
-          method: 'PATCH',
-          headers: { 
-              'Authorization': `Bearer ${user?.accessToken}`,
-              'Content-Type': 'application/json' 
-          },
-          body: JSON.stringify({ status: "INACTIVE" })
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-      
-      alert("Account successfully deactivated.");
-
-      // 🔧 WIRING FIX: Reset confirmation state, close modal, and trigger table refresh
-      setShowDeactivateConfirm(false);
-      onClose();
-      if(onActionComplete) onActionComplete(); 
-      
-    } catch (err) {
-      alert(`Error: ${err.message}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // --- NESTED CONFIRMATION VIEWS ---
   if (showResetConfirm) {
     return (
       <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 font-montserrat">

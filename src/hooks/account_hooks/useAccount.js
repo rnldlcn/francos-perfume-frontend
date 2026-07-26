@@ -1,6 +1,6 @@
 import { useAuth } from "@/auth/UseAuth";
-import { getAllAccounts } from "@/services/accountService";
-import { useCallback, useRef, useState } from "react";
+import { addNewAccount, getAccount, getAllAccounts, updateAccountDetails } from "@/services/accountService";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useAccount = () => {
     const { user } = useAuth();
@@ -21,7 +21,7 @@ export const useAccount = () => {
         role: '',
         pageCount: 1,
         pageSize: 10,
-    })
+    });
 
     const fetchAllAccounts = useCallback(() => {
         if (isFirstLoad.current) {
@@ -33,7 +33,6 @@ export const useAccount = () => {
         getAllAccounts(filter, user?.accessToken)
             .then(data => {
                 isFirstLoad.current = false;
-                console.log(data.data);
                 setAccounts(data.data);
                 setTotalPages(data.totalAuditPages);
                 setTotalEntries(data.totalAuditLogs);
@@ -44,8 +43,62 @@ export const useAccount = () => {
                 setIsFetching(false);
             });
 
+    }, [filter, user?.accessToken]);
+
+    useEffect(() => {
+        if (!user?.accessToken) {
+            return;
+        }
+        const timer = setTimeout(() => {
+            fetchAllAccounts();
+        }, 0);
+        return () => clearTimeout(timer); 
     }, [fetchAllAccounts, user?.accessToken])
 
+    const fetchAccount = useCallback(async (employeeId, token) => {
+        try {
+            const data = getAccount(employeeId, token);
+            return data;
+        } catch (error) {
+            setError(error);
+        }
+    }, [])
+
+    const updateDetails = async (dto, token) => {
+        try {
+            const data = updateAccountDetails(dto, token);
+            fetchAllAccounts();
+            return data;
+        } catch (error) {
+            setError(error);
+        }
+    };
+
+    const addAccount = async (dto, token) => {
+        try {
+            const data = addNewAccount(dto, token);
+            fetchAllAccounts();
+            return data;
+        } catch (error) {
+            setError(error);
+        }
+    };
+
+    const updatePassword = async (employeeId) => {
+
+    };
+
+    const resetPassword = async (employeeId) => {
+
+    };
+
+    const updateAuth = () => {
+
+    };
+
+    const deactivate = () => {
+
+    };
 
     const updateFilter = (key, value) =>  {
         setFilter(prev => {
@@ -56,5 +109,5 @@ export const useAccount = () => {
         });
     };
 
-    return { accounts,  };
+    return { accounts, isLoading, filter, error, totalPages, totalEntries, fetchAccount, fetchAllAccounts };
 }

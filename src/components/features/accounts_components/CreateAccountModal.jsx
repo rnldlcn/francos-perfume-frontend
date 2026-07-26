@@ -1,81 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from "../../../auth/useAuth";
 
 const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // 🛡️ Get the current user's role to determine what options they see
-  const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
-
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    middleName: '',
-    contactNo: '',
-    address: '',
-    email: '',
-    branch: '',
-    role: 'STAFF' 
-  });
-
-  // Reset form when opened
-  useEffect(() => {
-    if (isOpen) {
-        setFormData({
-            firstName: '', lastName: '', middleName: '', contactNo: '', 
-            address: '', email: '', branch: '', role: 'STAFF'
-        });
-    }
-  }, [isOpen]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Map text branch to Branch ID for your database
-    const branchId = formData.branch === "Sta. Lucia" ? 2 : formData.branch === "Riverbanks" ? 3 : 1;
-
-const payload = {
-    first_name: formData.firstName,
-    last_name: formData.lastName,
-    middle_name: formData.middleName,
-    contact_number: formData.contactNo,
-    address: formData.address,
-    email: formData.email,
-    branch_id: branchId,
-    employee_role: formData.role,
-    employee_shift: "Morning",
-    employee_profile_picture: ""
-};
-
-    try {
-        const response = await fetch('http://localhost:5000/api/Auth/register', { 
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${user?.accessToken}`,
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(errText);
-        }
-
-        const savedData = await response.json();
-        onSave(savedData); // Trigger parent refresh
-        onClose();
-        alert("Account successfully created.");
-    } catch (err) { 
-        alert(`Creation failed: ${err.message}`);
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
 
   if (!isOpen) return null;
+
+  const role = user.trueRole.toUpperCase();
 
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 animate-fade-in font-montserrat">
@@ -141,7 +73,7 @@ const payload = {
               <option value="STAFF">STAFF</option>
               <option value="CASHIER">CASHIER</option>
               {/* 🛡️ SECURITY: Only allow Owner or Admin to see the MANAGER option */}
-              {(activeRole === 'OWNER' || activeRole === 'ADMIN') && (
+              {(role === 'OWNER' || role === 'ADMIN') && (
                 <option value="MANAGER">MANAGER</option>
               )}
             </select>

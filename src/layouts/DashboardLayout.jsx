@@ -1,4 +1,4 @@
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/auth/UseAuth";
 import { Outlet } from "react-router-dom";
 import Header from "../components/shared/Header";
 import Sidebar from "../components/shared/Sidebar";

@@ -35,7 +35,7 @@ const AccountsArchiveTable = () => {
     <section className="mb-12">
       <h2 className="text-2xl font-bold text-[#333] mb-6">Accounts Archives</h2>
       
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm min-h-[200px] mb-4">
+      <div className="bg-white rounded-md border border-gray-200 overflow-hidden shadow-sm min-h-[50] mb-4">
         <Table>
           <TableHeader>
           <TableRow className="bg-gray-50/80">

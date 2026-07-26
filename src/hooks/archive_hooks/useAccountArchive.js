@@ -20,7 +20,7 @@ export const useAccountArchive = () => {
         branch: '',
         pageCount: 1,
         pageSize: 10,
-    })
+    });
 
     const fetchArchivedAccounts = useCallback(() => {
         if (isFirstLoad.current) {
