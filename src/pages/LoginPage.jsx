@@ -1,73 +1,18 @@
-import { login } from '@/services/loginService';
+import { useLogin } from '@/hooks/useLogin';
 import { ChevronLeft } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import logo from '../assets/FrancoPerfumeLogo.png';
 
-const LoginPage = ({ onLogin }) => {
-  const navigate = useNavigate();
-  const [view, setView] = useState('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [trueRole, setTrueRole] = useState('');
-  const [branchId, setBranchId] = useState('');
-
-  // --- HANDLERS ---
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    try {
-      const result = await login(email, password);
-      
-      // FIX: Removed setPassword(result.accessToken)
-      setEmail(result.email);
-      setTrueRole(result.role);
-      setBranchId(result.branch_id);
-
-      // Store token securely
-      sessionStorage.setItem('accessToken', result.accessToken);
-      sessionStorage.setItem('branchId', result.branch_id);
-
-      const normalizedRole = result.role.toLowerCase();
-
-      if (normalizedRole === 'manager') {
-        setView('module');
-      } else {
-        onLogin({
-          email: result.email,
-          accessToken: result.accessToken,
-          trueRole: normalizedRole,
-          activeRole: normalizedRole,
-          branchId: result.branch_id
-        });
-
-        // Routing based on new roles
-        if (normalizedRole === 'cashier') {
-          navigate('/pos');
-        } else if (normalizedRole === 'owner' || normalizedRole === 'admin') {
-          navigate('/'); // Assuming '/' is the main Dashboard route
-        } else {
-          navigate('/home'); 
-        }
-      } 
-
-    } catch (error) {
-      alert("Login failed: " + error.message);
-    }
-  };
-
-  const handleModuleSelect = (module) => {
-    onLogin({
-      email,
-      accessToken: sessionStorage.getItem('accessToken'),
-      trueRole,
-      activeRole: module,
-      branchId: sessionStorage.getItem('branchId')
-    });
-  };
-
-  const displayName = email ? email.split('@')[0] : 'User';
-
+const LoginPage = () => {
+  const {
+    error,
+    isLoading,
+    displayName, 
+    handleLogin, handleModuleSelect,
+    view, setView, 
+    password, setPassword,
+    email, setEmail, 
+  } = useLogin();
+  
   if (view === 'module') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#F7F7F9] font-montserrat p-4 relative">
@@ -91,11 +36,9 @@ const LoginPage = ({ onLogin }) => {
           </button>
           
           <button 
-  onClick={() => handleModuleSelect('manager')}
-  className="w-full bg-[#D4C4B0] text-[#333] rounded py-3 font-medium hover:bg-[#c2b09a] transition-colors text-sm shadow-sm"
->
-  Access Dashboard
-</button>
+              onClick={() => handleModuleSelect('manager')} className="w-full bg-[#D4C4B0] text-[#333] rounded py-3 font-medium hover:bg-[#c2b09a] transition-colors text-sm shadow-sm">
+            Access Dashboard
+          </button>
         </div>
       </div>
     )

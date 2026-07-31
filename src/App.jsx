@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from './auth/useAuth';
+import { useAuth } from './auth/UseAuth';
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
@@ -41,8 +41,7 @@ const NavigationManager = ({ user }) => {
 };
 
 const App = () => {
-  const { user, login } = useAuth();
-
+  const { user } = useAuth();
 
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -60,7 +59,7 @@ const App = () => {
         <Route path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route path='/login' 
           element={
-            !user ? <LoginPage onLogin={login} /> : <Navigate to={user.activeRole === 'cashier' ? '/pos' : '/home'} replace />
+            !user ? <LoginPage /> : <Navigate to={user.activeRole === 'cashier' ? '/pos' : '/home'} replace />
           }
         />
         <Route path='/home'

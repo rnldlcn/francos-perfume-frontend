@@ -1,14 +1,15 @@
-import DataTable from "@/components/data_components/DataTable";
+
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../auth/useAuth";
+import DataTable from "@/components/shared/DataTable";
+import { useAuth } from "../../auth/UseAuth";
 import FilterBar from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
-import StatusBadge from "../../components/shared/StatusBadge"; // <-- IMPORTED YOUR NEW COMPONENT
-import { RequestService } from "../../services/RequestService";
+import StatusBadge from "../../components/shared/StatusBadge";
+import { RequestService } from "../../services/requestService";
 
 const statusOptions = [
   { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },
@@ -154,7 +155,7 @@ const RequestPage = () => {
         {isLoading ? (
            <div className="p-10 text-center text-gray-400">Loading requests from database...</div>
         ) : (
-          <DataTable 
+          <DataTable
             data={filteredData}
             columns={columns}
           />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RequestService } from '../../services/RequestService';
+import { RequestService } from '../../services/requestService';
 
 export default function CreateTransferRequestPage() {
     const navigate = useNavigate();

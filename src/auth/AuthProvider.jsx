@@ -4,6 +4,7 @@ import { AuthContext } from "./AuthContext";
 const SESSION_KEYS = ['email', 'accessToken', 'branchId', 'trueRole', 'activeRole']
 
 const loadFromSession = () => {
+    // can add localStorage instead of sessionStorage
     const token = sessionStorage.getItem('accessToken');
     if (!token) return null;
 
@@ -17,14 +18,12 @@ const loadFromSession = () => {
 };
 
 
-
 export const AuthProvider = ({ children }) => {
      const [user, setUser] = useState(loadFromSession);
 
     const login = (userData) => {
         SESSION_KEYS.forEach(key => {
             if (userData[key]) {
-                console.log(`Storing ${key} in sessionStorage:`, userData[key]);
                 sessionStorage.setItem(key, userData[key]);
             }
         });

@@ -1,37 +1,17 @@
-import { API_URL } from "../config/index.js";
+import { cleanFilters } from "@/utils/filterUtils.js";
+import apiClient from "./apiClient";
 
-const BASE_URL = `${API_URL}/pos`;
+const PATH = "/pos";
 
-export const getAllProductsPOS = async (filter, token) => {
-    const cleanFilter = Object.fromEntries(
-        Object.entries(filter)
-        .filter(([, v]) => v !== '' && v !== null && v !== 'ALL')
-        .map(([k, v]) => [k, typeof v === 'string' 
-            ? v.charAt(0).toUpperCase() + v.slice(1).toLowerCase()
-            : v
-        ])                                                    
-    );
-    const params = new URLSearchParams(cleanFilter);
-    const response = await fetch(`${BASE_URL}?${params}`, {
-        method: 'GET',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const getAllProductsPOS = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
 
-export const checkout = async (checkoutData, token) => {
-    const response = await fetch(`${BASE_URL}/checkout`, {
-        method: 'POST',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(checkoutData)
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const checkout = async (checkoutData) => {
+  const response = await apiClient.post(`${PATH}/checkout`, checkoutData);
+  return response.data;
+};

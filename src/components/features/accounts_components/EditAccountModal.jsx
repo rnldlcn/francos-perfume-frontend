@@ -1,159 +1,113 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from "../../../auth/useAuth";
+import FormField from '@/components/shared/FormField';
+import FormSelect from '@/components/shared/FormSelect';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { useAuth } from "../../../auth/UseAuth";
 
-const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
+const EditAccountModal = ({ isOpen, onClose, selectedAccount, }) => {
+  
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
-
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    middleName: '',
-    contactNo: '',
-    address: '',
-    email: '',
-    branch: '',
-    role: ''
-  });
-
-  // Pre-fill the form using the actual database keys fetched from backend
-  useEffect(() => {
-    if (account && isOpen) {
-      setFormData({
-        firstName: account.first_name || '',
-        lastName: account.last_name || '',
-        middleName: account.middle_name || '',
-        contactNo: account.contact_no || account.contact_number || '',
-        address: account.address || '',
-        email: account.email || '',
-        branch: account.branch || 'Sta. Lucia',
-        role: account.role?.toUpperCase() || 'STAFF'
-      });
-    }
-  }, [account, isOpen]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const branchId = formData.branch === "Sta. Lucia" ? 2 : formData.branch === "Riverbanks" ? 3 : 1;
-
-    // 🔧 FIXED: Payload keys now match your DB/DTO exactly
-    const payload = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        middle_name: formData.middleName,
-        contact_number: formData.contactNo, // Matches C# AddEmployeeDTO
-        address: formData.address,
-        email: formData.email,
-        branch_id: branchId,
-        employee_role: formData.role,       // Matches C# AddEmployeeDTO
-        employee_shift: "Morning",          // Required field for DTO
-        employee_profile_picture: ""        // Required field for DTO
-    };
-
-    try {
-        const response = await fetch(`http://localhost:5000/api/Auth/users/${account.id}`, { 
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${user?.accessToken}`,
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(errText);
-        }
-
-        onSave(); // Refresh parent table
-        onClose();
-        alert("Account successfully updated.");
-    } catch (err) { 
-        alert(`Update failed: ${err.message}`);
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
 
   if (!isOpen) return null;
 
+  const [data, setData] = useState({
+    firstName: "",
+    lastName: "",
+    middleName: "",
+    contactNumber: "",
+    address: "",
+    email: "",
+    branchLocation: "",
+    employeeRole: "",
+    //can add employeeShift
+  }) 
+
+  const handleSave = () => {
+
+  }
+
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-[60] animate-fade-in font-montserrat">
-      <div className="bg-[#F8F9FB] rounded-2xl shadow-xl w-full max-w-[650px] p-10 relative">
-        <button onClick={onClose} className="absolute top-4 right-6 text-gray-400 hover:text-gray-700 text-2xl">✕</button>
-        <h2 className="text-4xl font-extrabold text-[#333] text-center mb-10 tracking-tight">Edit Account Details</h2>
+    <Dialog open={isOpen} onOpenChange={(open) => !isOpen && onClose()}>
+      <DialogContent>
+        
+        <DialogHeader>
+          <DialogTitle>Edit Account</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="First name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+        <div className='grid grid-cols-3 gap-4 py-4'>
+          <div className="flex flex-col gap-2">
+            <FormField 
+              label="First Name"
+              value={data.firstName}
+              onChange={e => setData(prev => ({...prev, firstName: e.target.value }))}
+              placeholder="Enter first name here..."
             />
-            <input 
-              type="text" placeholder="Last name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+
+            <FormField 
+              label="Middle Name"
+              value={data.middleName}
+              onChange={e => setData(prev => ({...prev, middleName: e.target.value }))}
+              placeholder="Enter middle name here..."
+            />
+
+            <FormField 
+              label="Last Name"
+              value={data.lastName}
+              onChange={e => setData(prev => ({...prev, lastName: e.target.value }))}
+              placeholder="Enter last name here..."
             />
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="Middle name"
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-            />
-            <input 
-              type="text" placeholder="Contact no."
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.contactNo} onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
-            />
-          </div>
-
-          <input 
-            type="text" placeholder="Full address"
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
+        <div className='mb-6'>
+          <FormField 
+            label="Address"
+            value={data.address}
+            onChange={e => setData(prev => ({...prev, address: e.target.value }))}
+            placeholder="Enter address here..."
           />
+        </div>
 
-          <input 
-            type="email" placeholder="Email" required
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+        <div className="grid grid-cols-2 gap-6 mb-6">
+          <FormField 
+            label="Email"
+            value={data.email}
+            onChange={e => setData(prev => ({...prev, email: e.target.value }))}
+            placeholder="Enter email here..."
           />
+          <FormField 
+            label="Contact Number"
+            value={data.contactNumber}
+            onChange={e => setData(prev => ({...prev, contactNumber: e.target.value }))}
+            placeholder="Enter contact number here..."
+          />
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <select 
-              required className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.branch} onChange={(e) => setFormData({...formData, branch: e.target.value})}
-            >
-              <option value="Sta. Lucia">Sta. Lucia</option>
-              <option value="Riverbanks">Riverbanks</option>
-            </select>
-            <select 
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
-            >
-              <option value="STAFF">STAFF</option>
-              <option value="CASHIER">CASHIER</option>
-              {(activeRole === 'OWNER' || activeRole === 'ADMIN' || account?.role?.toUpperCase() === 'MANAGER') && (
-                <option value="MANAGER">MANAGER</option>
-              )}
-            </select>
-          </div>
-
-          <div className="flex justify-center gap-6 pt-6">
-            <button type="button" onClick={onClose} className="flex items-center gap-2 bg-[#E5D5C1] px-6 py-2 rounded-md font-medium text-sm text-gray-700">✕ Discard Changes</button>
-            <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 bg-[#E5D5C1] px-6 py-2 rounded-md font-medium text-sm text-gray-700 disabled:opacity-50">
-                ✓ {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          <FormSelect
+            label="Branch"
+            value={data.branchLocation}
+            onChange={e => setData(prev => ({...prev, branchLocation: e.target.value }))}
+            placeholder="Enter branch here..."
+          />
+          <FormField 
+            label="Email"
+            value={data.email}
+            onChange={e => setData(prev => ({...prev, email: e.target.value }))}
+            placeholder="Enter email here..."
+          />
+          <FormField 
+            label="Contact Number"
+            value={data.contactNumber}
+            onChange={e => setData(prev => ({...prev, contactNumber: e.target.value }))}
+            placeholder="Enter contact number here..."
+          />
+        </div>
+        
+      </DialogContent>
+    </Dialog>
   );
 };
 

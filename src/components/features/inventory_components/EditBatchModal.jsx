@@ -3,33 +3,34 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Minus, Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const EditBatchModal = ({ isOpen, onClose, batch }) => {
-  const [qty, setQty] = useState(0);
-  const [targetDate, setTargetDate] = useState("");
+const EditBatchModal = ({ isOpen, onClose, batch, onSave }) => {
+  
+  const [batchId, setBatchId] = useState(batch?.batchId || 0);
+  const [batchDisplayId, setBatchDisplayId] = useState(batch?.batchDisplayId || "");
+  const [productName, setProductName] = useState(batch?.productName || "")
+  const [quantity, setQuantity] = useState(batch?.quantity || 0);
+  const [targetDate, setTargetDate] = useState(batch?.targetDate || "");
   const [reason, setReason] = useState("Restock");
 
-  useEffect(() => {
-    if (batch) {
-      setQty(batch.qty || 0);
-      setTargetDate(batch.targetDate || "");
-      setReason("Restock");
-    }
-  }, [batch]);
-
-  if (!batch) return null;
-
   const handleSave = () => {
-    onSave({ ...batch, qty, targetDate, reason });
-  };
-
+    onSave({
+      batchId,  
+      batchDisplayId,
+      productName,
+      quantity,
+      targetDate,
+      reason,
+    });
+  }
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md font-montserrat p-8" showCloseButton={true}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-[#333]">
-            Edit Batch: {batch.batchId}
+            Edit Batch: {batchDisplayId}
           </DialogTitle>
         </DialogHeader>
 
@@ -37,7 +38,7 @@ const EditBatchModal = ({ isOpen, onClose, batch }) => {
           {/* Selected Perfume */}
           <div className="flex items-center justify-between gap-4">
             <span className="w-1/3 text-sm text-gray-400 font-medium">Selected Perfume:</span>
-            <span className="w-2/3 font-bold text-[#333] text-base">{batch.perfumeName}</span>
+            <span className="w-2/3 font-bold text-[#333] text-base">{productName}</span>
           </div>
 
           {/* Target Date */}
@@ -61,21 +62,21 @@ const EditBatchModal = ({ isOpen, onClose, batch }) => {
                 variant="primary" 
                 size="icon-sm" 
                 className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333]" 
-                onClick={() => setQty(q => q + 1)}
+                onClick={() => setQuantity(q => q + 1)}
               >
                 <Plus size={16} />
               </Button>
               <Input
                 type="number"
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
+                value={quantity}
+                onChange={(e) => setQuantity(Number(e.target.value))}
                 className="w-24 text-center font-bold text-lg focus:ring-[#E5D5C1]"
               />
               <Button 
                 variant="primary" 
                 size="icon-sm" 
                 className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333]" 
-                onClick={() => setQty(q => Math.max(0, q - 1))}
+                onClick={() => setQuantity(q => Math.max(0, q - 1))}
               >
                 <Minus size={16} />
               </Button>
@@ -105,7 +106,7 @@ const EditBatchModal = ({ isOpen, onClose, batch }) => {
           <Button variant="ghost" className="gap-2 text-[#D47B7B] hover:text-red-700 hover:bg-red-50 bg-[#EAE7DF]/40" onClick={onClose}>
             <X size={16} /> Cancel
           </Button>
-          <Button variant="primary" className="gap-2 px-8 shadow-sm" onClick={handleSaveBatchEdit}>
+          <Button variant="primary" className="gap-2 px-8 shadow-sm" onClick={handleSave}>
             <Check size={16} /> Save
           </Button>
         </DialogFooter>
