@@ -1,48 +1,61 @@
 import { useAuth } from "@/auth/UseAuth";
 import { getAllInventory, getInventoryBatches, updateBatch } from "@/services/inventoryService";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFilter } from "../useFilter";
 
 export const useInventory = () => {
     const { user } = useAuth();
     const [inventory, setInventory] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false); 
-    const [error, setError] = useState(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalEntries, setTotalEntries] = useState(1);
     const isFirstLoad = useRef(true);
     
     // can add the page and page size here
-    const [filter, setFilter] = useState({
+    const [asyncState, setAsyncState] = useState({
+        isLoading: true,
+        isFetching: false,
+        error: null,
+    });
+
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        totalEntries: 0,
+    });
+
+    const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
+        branch: '',
         productType: '',
         productGender: '',
-        branch: '',
         pageCount: 1,
         pageSize: 10,
-    })
+    });
 
     const fetchInventory = useCallback(() => {
       if (isFirstLoad.current) {
-        setIsLoading(true);
+        setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
       } else {
-        setIsFetching(true);
+        setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
       }
 
       getAllInventory(filter, user?.accessToken)
         .then(data => {
           isFirstLoad.current = false;
+
           setInventory(data.data);
-          setTotalPages(data?.totalInventoriesPages || 1);
-          setTotalEntries(data?.totalInventories || 0);
+
+          setPagination({
+              totalPages: data.totalInventoriesPages || 0,
+              totalEntries: data.totalInventories || 0,
+          });
         })
-        .catch(setError)
+        .catch((err) => {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+        })
         .finally(() => {
-          setIsLoading(false);
-          setIsFetching(false);
+            setAsyncState((prev) => ({ ...prev, isLoading: false, isFetching: false}));
         });
+
     }, [filter, user?.accessToken]);
 
     useEffect(() => {
@@ -55,10 +68,6 @@ export const useInventory = () => {
       return () => clearTimeout(timer);
     }, [fetchInventory, user?.accessToken]);
 
-    //const refreshInventory = () => fetchInventory();
-
-    //const refreshBatch = () => fetchBatchesForProduct(productId, branchId);
-
     const saveBatchEdit = async (submittedBatchData) => {
       try {
         await updateBatch(submittedBatchData.batchId, 
@@ -68,29 +77,29 @@ export const useInventory = () => {
           expiryDate: submittedBatchData.targetDate,
           reason: submittedBatchData.reason
           }, user?.accessToken);
-      } catch (error) {
-        setError(error);
+      } catch (err) {
+       setAsyncState((prev) => ({ ...prev, error: err }));
       }
     }
 
     const fetchBatchesForProduct = async (productId, branchId) => {
       try {
         const data = await getInventoryBatches(productId, branchId, user?.accessToken);
-        //refreshBatch(productId, branchId);
         return data.batches;
       } catch (err) {
-        setError(err);
+        setAsyncState((prev) => ({ ...prev, error: err }));;
         return null;
       }
     };
 
-    const updateFilter = (key, value) =>  {
-        setFilter(prev => {
-            if (key !== 'page') {
-              return { ...prev, [key]: value, pageCount: 1 };
-            }
-            return { ...prev, [key]: value };
-        });
+
+    return { 
+      inventory, 
+      asyncState,
+      pagination,
+      filter, 
+      fetchBatchesForProduct, 
+      saveBatchEdit, 
+      updateFilter
     };
-    return { inventory, isLoading, filter, totalPages, totalEntries, error, fetchBatchesForProduct, saveBatchEdit, updateFilter};
 };

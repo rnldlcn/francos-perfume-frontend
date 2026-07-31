@@ -1,4 +1,4 @@
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/auth/UseAuth";
 import {
   Archive,
   Barcode,
@@ -16,7 +16,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
 
-const Sidebar = () => {
+const SideBar = () => {
   const location = useLocation();
 
   const { user } = useAuth();
@@ -162,4 +162,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default SideBar;

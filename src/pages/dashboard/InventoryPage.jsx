@@ -1,4 +1,4 @@
-import InventoryRow from "@/components/features/inventory_components/InventoryRow";
+import InventoryTable from "@/components/features/inventory_components/InventoryTable";
 import { formatDateForInput } from "@/utils/dateFormatUtils";
 import { useState } from "react";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
@@ -7,14 +7,14 @@ import SearchBar from "../../components/shared/SearchBar";
 import { useInventory } from "../../hooks/inventory_hooks/useInventory";
 
 
-// to change
+// to change into dynamic
 const filterSelections = [
-  { key: "product_type", label: "Perfume Type", 
+  { key: "productType", label: "Perfume Type", 
     options: 
     [ 
       { label: "All Perfume Types", value:''}, 
-      { label: "Classic", value: "Classic" },
-      { label: "Premium", value: "Premium" }
+      { label: "Classic", value: 'Classic' },
+      { label: "Premium", value: 'Premium' }
     ]
   },
   { key: "branch", label: "Branch", options: 
@@ -25,19 +25,19 @@ const filterSelections = [
       { label: "Warehouse", value: "1" }
     ] 
   },
-  { key: "product_gender", label: "Gender", options: 
+  { key: "productGender", label: "Gender", options: 
     [ { label: "All Genders", value: ''}, 
-     { label: "Unisex", value: "Unisex" },
-     { label: "Men", value: "Men" },
-     { label: "Women", value: "Women" }
+     { label: "Unisex", value: 'Unisex' },
+     { label: "Men", value: 'Men' },
+     { label: "Women", value: 'Women' }
     ] 
   },
 ];
 
 const InventoryPage = () => {
   const [searchQuery, setSearchQuery] = useState(""); 
-  // can add error here
-  const { inventory, isLoading, totalPages, totalEntries, fetchBatchesForProduct, saveBatchEdit, filter, updateFilter } = useInventory();
+  
+  const { inventory, asyncState, pagination, filter, updateFilter, fetchBatchesForProduct, saveBatchEdit } = useInventory();
 
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
@@ -90,11 +90,10 @@ const InventoryPage = () => {
       </div>
 
       <div className="flex flex-col gap-4 pb-4 flex-1">
-        <InventoryRow 
+        <InventoryTable
           inventory={inventory}
-          isLoading={isLoading}
-          totalPages={totalPages}
-          totalEntries={totalEntries}
+          asyncState={asyncState}
+          pagination={pagination}
           batchMap={batchMap}
           setBatchMap={setBatchMap}
           fetchBatchesForProduct={fetchBatchesForProduct}

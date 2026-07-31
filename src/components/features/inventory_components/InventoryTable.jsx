@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+import PaginationBar from "@/components/shared/PaginationBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
@@ -14,7 +15,7 @@ import { useState } from "react";
 import perfumePlaceholder from "../../../assets/FrancoPerfumeLogo.png";
 import { formatDateForInput, formatDateForTable } from '../../../utils/dateFormatUtils';
 
-const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatchesForProduct, batchMap, setBatchMap, filter, updateFilter, handleOpenEditBatchModal}) => {
+const InventoryTable = ({inventory, asyncState, pagination, fetchBatchesForProduct, batchMap, setBatchMap, filter, updateFilter, handleOpenEditBatchModal}) => {
 
     const [expandedRows, setExpandedRows] = useState({});
     
@@ -32,8 +33,8 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
             batchId: b.batchId,
             dateReceived: b.createdAt,
             targetDate: b.expiryDate
-                    ? formatDateForInput(b.expiryDate)  
-                    : 'N/A',
+              ? formatDateForInput(b.expiryDate)  
+              : 'N/A',
             quantity: b.quantity
         }))
         setBatchMap(prev => ({...prev, [rowKey]: mapped}))
@@ -43,7 +44,7 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
     return (
         <>
         <div className="flex flex-col gap-4 pb-4 flex-1">
-        {isLoading ? (
+        {asyncState.isLoading ? (
           <div className="text-center py-10 text-gray-400">Loading inventory data...</div>
         ) : inventory.length === 0 ? (
           <div className="text-center py-10 text-gray-400">No products found.</div>
@@ -138,33 +139,18 @@ const InventoryRow = ({inventory, isLoading, totalPages, totalEntries, fetchBatc
         )}
       </div>
 
-      {/* --- PAGINATION CONTROLS --- */}
-      {inventory.length > 0 && !isLoading && (
-        <div className="flex justify-between items-center mt-auto pt-6 pb-2 text-sm text-gray-400">
-          <p>
-            Showing {((filter.pageCount - 1) * filter.pageSize) + 1} to {Math.min(filter.pageCount * filter.pageSize, totalEntries)} of {totalEntries} entries
-          </p>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => updateFilter('pageCount', Math.max(1, filter.pageCount - 1))}
-              disabled={filter.pageCount === 1}
-              className={`text-2xl transition-colors ${filter.page === 1 ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}
-            >
-              ‹
-            </button>
-            <span className="text-gray-500 font-medium">{filter.pageCount} / {totalPages|| 1}</span>
-            <button
-              onClick={() => updateFilter('pageCount', Math.min(filter.page + 1))}
-              disabled={filter.pageCount === totalPages}
-              className={`text-2xl transition-colors ${filter.page === filter.totalPages ? "text-gray-200 cursor-not-allowed" : "text-gray-500 hover:text-gray-800"}`}>
-            ›
-            </button>
-          </div>
-        </div>
+      {inventory.length > 0 && !asyncState.isLoading && (
+        <PaginationBar
+          pageCount={filter.pageCount}
+          pageSize={filter.pageSize}
+          totalPages={pagination.totalPages}
+          totalEntries={pagination.totalEntries}
+          updateFilter={updateFilter}
+        />
       )}
       </>
         
     )
 }
 
-export default InventoryRow;
+export default InventoryTable;

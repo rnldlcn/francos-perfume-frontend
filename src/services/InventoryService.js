@@ -1,73 +1,41 @@
 import { cleanFilters } from "@/utils/filterUtils.js";
-import { API_URL } from "../config/index.js";
+import apiClient from "./apiClient";
 
-const BASE_URL = `${API_URL}/Inventory`;
+const PATH = "/Inventory";
 
-export const getAllInventory = async (filter, token) => {
-    const cleanedFilter = cleanFilters(filter);
+export const getAllInventory = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
 
-    const params = new URLSearchParams(cleanedFilter);
-    const response = await fetch(`${BASE_URL}?${params}`, {
-        method: 'GET',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const getInventoryItemDetails = async (productId) => {
+  const response = await apiClient.get(`${PATH}/${productId}`);
+  return response.data;
+};
 
-export const getInventoryItemDetails = async (productId, token) => {
-    const response = await fetch(`${BASE_URL}/${productId}`, {
-        method: 'GET',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const getInventoryBatches = async (productId, branchId) => {
+  const response = await apiClient.get(`${PATH}/batch`, {
+    params: { branchId, productId },
+  });
+  return response.data;
+};
 
-export const getInventoryBatches = async (productId, branchId, token) => {
-    const params = new URLSearchParams();
-    params.append('branchId', branchId);
-    params.append('productId', productId);
-    const response = await fetch(`${BASE_URL}/batch?${params}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
-
-export const updateBatch = async (batchId, dto, token) => {
-    const response = await fetch(`${BASE_URL}/batch/${batchId}`, {
-        method: 'PATCH',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            product_id: dto.productId,
-            quantity: dto.quantity,
-            expiry_date: dto.targetDate,
-            reason: dto.reason
-        })
-    });
-    if (!response.ok) throw new Error(await response.text());
-    console.log(await response.json());
-    return await response.json();
-}
-
+export const updateBatch = async (batchId, dto) => {
+  const response = await apiClient.patch(`${PATH}/batch/${batchId}`, {
+    product_id: dto.productId,
+    quantity: dto.quantity,
+    expiry_date: dto.targetDate,
+    reason: dto.reason,
+  });
+  return response.data;
+};
 
 /*
  *  I don't know what is this for to be honest, but it's one of the controllers in the backend.
  */ 
 export const addInventoryItem = async () => {
     
-}
+};

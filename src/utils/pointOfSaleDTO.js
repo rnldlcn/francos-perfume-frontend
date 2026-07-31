@@ -1,3 +1,4 @@
+// change name from build to something else because it sounds confusing as hell
 export const buildPointOfSaleDTO = (paymentDetails, grandTotal, appliedDiscountId, cart) => {
     const received = String(paymentDetails.received ?? paymentDetails.amount ?? 0).replace(/,/g, '');
     const exactAmountPaid = paymentDetails.method === 'Cash'

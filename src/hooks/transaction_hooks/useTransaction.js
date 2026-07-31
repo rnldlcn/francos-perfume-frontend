@@ -1,20 +1,28 @@
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/auth/UseAuth";
 import { getAllTransactions } from "@/services/transactionService";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFilter } from "../useFilter";
 
 
 export const useTransaction = () => {
     const { user } = useAuth();
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalEntries, setTotalEntries] = useState(1);
-    const [error, setError] = useState(null);
     const isFirstLoad = useRef(true);
 
     const [transactions, setTransaction] = useState([]);
 
-    const [filter, setFilter] = useState({
+    const [asyncState, setAsyncState] = useState({
+        isLoading: true,
+        isFetching: false,
+        error: null,
+    });
+
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        totalEntries: 0,
+    });
+
+
+    const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
@@ -25,23 +33,26 @@ export const useTransaction = () => {
 
     const fetchTransactions = useCallback(() => {
         if (isFirstLoad.current) {
-            setIsLoading(true);
+            setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         } else {
-            setIsFetching(true);
+            setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
         }
 
         getAllTransactions(filter, user?.accessToken)
             .then(data => {
                 isFirstLoad.current = false;
-                console.log(data.data);
                 setTransaction(data.data);
-                setTotalPages(data.totalTransactionPages);
-                setTotalEntries(data.totalTransactions);
+
+                setPagination({
+                    totalPages: data.totalTransactionPages || 0,
+                    totalEntries: data.totalTransactions || 0,
+                })
             })
-        .catch(setError)
+        .catch((err) => {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+        })
         .finally(() => {
-          setIsLoading(false);
-          setIsFetching(false);
+            setAsyncState((prev) => ({ ...prev, isLoading: false, isFetching: false}));
         });
     }, [filter, user?.accessToken])
 
@@ -55,14 +66,12 @@ export const useTransaction = () => {
       return () => clearTimeout(timer);
     }, [fetchTransactions, user?.accessToken]);
 
-    const updateFilter = (key, value) => {
-        setFilter(prev => {
-            if (key !== 'page') {
-              return { ...prev, [key]: value, pageCount: 1 };
-            }
-            return { ...prev, [key]: value };
-        });
+    return { 
+        transactions, 
+        asyncState, 
+        pagination, 
+        filter,
+        fetchTransactions, 
+        updateFilter
     }
-
-    return { transactions, filter, isLoading, totalEntries, totalPages, fetchTransactions, updateFilter}
 }

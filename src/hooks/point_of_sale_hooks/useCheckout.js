@@ -1,6 +1,6 @@
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/auth/UseAuth";
 import { checkout } from "@/services/pointOfSaleService";
-import { buildPointOfSaleDTO, extractReceiptData } from "@/utils/pointOfSaleUtils";
+import { buildPointOfSaleDTO, extractReceiptData } from "@/utils/pointOfSaleDTO";
 import { useState } from "react";
 
 export const useCheckout = (cart, grandTotal, appliedDiscountId) => {

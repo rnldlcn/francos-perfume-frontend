@@ -1,32 +1,55 @@
 import AccountInfoModal from "@/components/features/accounts_components/AccountInfoModal";
-import AccountsTable from "@/components/features/accounts_components/AccountsTable";
 import CreateAccountModal from "@/components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "@/components/features/accounts_components/EditAccountModal";
+import { FilterDropDown } from "@/components/shared";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/hooks/account_hooks/useAccount";
-import { Eye } from "lucide-react";
+import { accountColumns } from "@/utils/columns";
+import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../auth/UseAuth";
 import SearchBar from "../../components/shared/SearchBar";
 
 const ManageAccountsPage = () => {
   const { user } = useAuth();
-  const { accounts, isLoading, filter, updateFilter, fetchAccount } = useAccount();
+  const { 
+    accounts, 
+    asyncState,
+    pagination,
+    filter,
+    updateFilter,
+    fetchAccount,
+    archive,
+    toggleStatus,
+    resetPassword,
+    filterOptions,
+  } = useAccount();
   
   const [searchQuery, setSearchQuery] = useState(""); 
   const [selectedAccount, setSelectedAccount] = useState(null);
   
   const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] = useState(false);
-  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   const [isAccountInfoModalOpen, setIsAccountInfoModalOpen] = useState(false);
+  const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
 
   const role = user.trueRole.toUpperCase();
 
+
   const handleRowClick = async (row) => {
-    setSelectedAccount(prev => prev?.employeeId === row.employeeId ? null : row);
+    
+    if (selectedAccount?.employeeId === row.employeeId) {
+      setSelectedAccount(null);
+      return;
+    }
+
+    setSelectedAccount(row);    
 
     const profile = await fetchAccount(row.employeeId, user?.accessToken);
-    setSelectedAccount(profile);
+    if (profile) {
+      setSelectedAccount(prev => prev ? { ...prev, ...profile }: profile);
+    }
   }
 
   const handleSearchChange = (value) => {
@@ -35,26 +58,9 @@ const ManageAccountsPage = () => {
     updateFilter('search', query);
   }
 
-  /*
-
-  <FilterDropDown
-            filters={filter}
-            setFilters={updateFilter}
-            filterSelections={[
-              { key: "role", label: "Filter: Role", options: ["All Roles", "Staff", "Cashier", "Manager"] },
-              { key: "status", label: "Filter: Status", options: ["All Status", "Active", "Inactive"] },
-            ]}
-          />
-
-    
-    />
-  */
-
   return (
-    <div className="flex flex-col h-full animate-fade-in font-montserrat"
-      onClick={() => setSelectedAccount(null)}
-    >
-      <h1 className="text-[32px] font-bold text-[#333] mb-1 tracking-tight leading-none">
+    <div className="flex flex-col h-full animate-fade-in font-montserrat">
+      <h1 className="text-3xl font-bold text-custom-black mb-1 tracking-tight leading-none">
         Manage Accounts
       </h1>
       <p className="text-gray-400 text-sm mb-8">
@@ -68,61 +74,79 @@ const ManageAccountsPage = () => {
             onChange={handleSearchChange}
           />
           {/* add filter bar here */}
-          
+          <FilterDropDown 
+            filter={filter}
+            updateFilter={updateFilter}
+            filterOptions={filterOptions}
+          />
         </div>
 
         {/* 🔧 HIDDEN FOR MANAGERS */}
         {role !== 'MANAGER' && (
-          <Button variant="primary" onClick={() => setIsCreateAccountModalOpen(true)}>
-            <span className="text-xl leading-none">+</span> Create New Account
+          <Button
+          className="bg-custom-primary text-custom-black gap-2 hover:bg-custom-primary-50-opacity cursor-pointer disabled:bg-gray-200 disabled:text-custom-gray disabled:cursor-not-allowed disabled:opacity-60"
+          variant="primary" 
+          onClick={() => setIsCreateAccountModalOpen(true)}
+          >
+            <Plus className="h-8 w-8"/>
+            Create New Account
           </Button>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold text-[#333] mb-6">Accounts List</h2>
+      <h2 className="text-2xl font-bold text-custom-black mb-6">Accounts List</h2>
 
-      <div className="overflow-hidden min-h-112.5"
-        onClick={(e) => e.stopPropagation()}>
-       <AccountsTable
-          selectedAccount={selectedAccount}
-          handleRowClick={handleRowClick}
-          accounts={accounts}
-          isEditAccountModalOpen={isEditAccountModalOpen}
-       />
-      </div>
+    <div className="overflow-hidden min-h-100"
+      onClick={(e) => e.stopPropagation()}>
+      <DataTable 
+        columns={accountColumns}
+        data={accounts}
+        keyField="employeeId"
+        asyncState={asyncState}
+        pagination={pagination}
+        filter={filter}
+        updateFilter={updateFilter}
+        selectedItem={selectedAccount}
+        onRowClick={handleRowClick}
+        onRowDoubleClick={() => setIsAccountInfoModalOpen(true)}
+      />
+    </div>
 
     <CreateAccountModal 
       isOpen={isCreateAccountModalOpen} 
-      onClose={() => isCreateAccountModalOpen(false)}  
+      onClose={() => setIsCreateAccountModalOpen(false)}  
     />
 
     <AccountInfoModal
       isOpen={isAccountInfoModalOpen}
       onClose={() => setIsAccountInfoModalOpen(false)}
       selectedAccount={selectedAccount}
-      onEditClick={() => {
-        isAccountInfoModalOpen(false); 
-        setTimeout(() => isEditAccountModalOpen(true), 150);  
-      }}
+      setSelectedAccount={setSelectedAccount}
+      archive={archive}
+      toggleStatus={toggleStatus}
+      resetPassword={resetPassword}
+      setIsEditAccountModalOpen={setIsEditAccountModalOpen}
     />
 
-    <EditAccountModal
-      isOpen={isEditAccountModalOpen} 
-      onClose={() => setIsEditAccountModalOpen(false)} 
-      account={selectedAccount}
+    <EditAccountModal 
+      isOpen={isEditAccountModalOpen}
+        
     />
 
     <div className="flex justify-end">
-          <Button
-            className=
-            "bg-custom-primary text-custom-black gap-2 hover:bg-custom-primary-50-opacity cursor-pointer disabled:bg-gray-200 disabled:text-custom-gray disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!selectedAccount}
-            onClick={() => setIsAccountInfoModalOpen(true)}
-            >
-            View Account
-            <Eye className="h-8 w-8"/>
-          </Button>
+      <Button
+        variant={selectedAccount ? "default" : "ghost"}
+        disabled={!selectedAccount}
+        onClick={() => setIsAccountInfoModalOpen(true)}
+        >
+        <Eye className="h-8 w-8"/>
+        View Account
+      </Button>
     </div>
+
+    <ConfirmDialog 
+      
+    />
 
     </div>
   );

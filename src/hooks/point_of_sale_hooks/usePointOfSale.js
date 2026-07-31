@@ -1,6 +1,6 @@
 import { getAllProductsPOS } from "@/services/pointOfSaleService";
 import { useEffect, useState } from "react";
-import { useAuth } from "../../auth/useAuth";
+import { useAuth } from "../../auth/UseAuth";
 
 export const usePointOfSale = () => {
     const { user } = useAuth();

@@ -4,6 +4,7 @@ import { AuthContext } from "./AuthContext";
 const SESSION_KEYS = ['email', 'accessToken', 'branchId', 'trueRole', 'activeRole']
 
 const loadFromSession = () => {
+    // can add localStorage instead of sessionStorage
     const token = sessionStorage.getItem('accessToken');
     if (!token) return null;
 

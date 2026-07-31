@@ -1,34 +1,31 @@
 import { cleanFilters } from "@/utils/filterUtils.js";
-import { API_URL } from "../config/index.js";
 
-const BASE_URL = `${API_URL}/Archiving`;
+import apiClient from "./apiClient";
 
-export const getAllArchivedAccounts = async (filter, token) => {
-    const cleanedFilter = cleanFilters(filter);
+const PATH = "/Archiving";
 
-    const params = new URLSearchParams(cleanedFilter);
-    const response = await fetch(`${BASE_URL}/account?${params}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const getAllArchivedAccounts = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}/account`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
 
-export const getAllArchivedProducts = async (filter, token) => {
-    const cleanedFilter = cleanFilters(filter);
+export const getAllArchivedProducts = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}/product`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
 
-    const params = new URLSearchParams(cleanedFilter);
-    const response = await fetch(`${BASE_URL}/product?${params}`,{
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const archiveAccount = async (id) => {
+  const response = await apiClient.patch(`${PATH}/account/${id}`);
+  return response.data;
+};
+
+export const archiveProduct = async (id) => {
+  const response = await apiClient.patch(`${PATH}/product/${id}`);
+  return response.data;
+};

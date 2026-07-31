@@ -1,14 +1,8 @@
-import { API_URL } from "../config/index.js";
+import apiClient from "./apiClient";
 
-const BASE_URL = `${API_URL}/auth`;
+const PATH = "/auth";
 
 export const login = async (email, password) => {
-    const response = await fetch(`${BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    })
-
-    if (!response.ok) throw new Error('Invalid Credentials');
-    return await response.json();
-}
+  const response = await apiClient.post(`${PATH}/login`, { email, password });
+  return response.data;
+};

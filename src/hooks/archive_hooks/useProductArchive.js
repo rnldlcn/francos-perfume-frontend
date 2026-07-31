@@ -1,22 +1,28 @@
 import { useAuth } from "@/auth/UseAuth";
 import { getAllArchivedProducts } from "@/services/archiveService";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFilter } from "../useFilter";
 
 export const useProductArchive = () => {
     const { user } = useAuth();
     const [archivedProducts, setArchivedProducts] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false); 
-    const [error, setError] = useState(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalEntries, setTotalEntries] = useState(1);
     const isFirstLoad = useRef(true);
 
-    const [filter, setFilter] = useState({
+    const [asyncState, setAsyncState] = useState({
+        isLoading: true,
+        isFetching: false,
+        error: null,
+    });
+
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        totalEntries: 0,
+    });
+
+    const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
-        role: '',
         branch: '',
         pageCount: 1,
         pageSize: 10,
@@ -24,24 +30,26 @@ export const useProductArchive = () => {
 
     const fetchArchivedProducts = useCallback(() => {
         if (isFirstLoad.current) {
-            setIsLoading(true);
+            setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         } else {
-            setIsFetching(true);
+            setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
         }
 
         getAllArchivedProducts(filter, user?.accessToken)
             .then(data => {
                 isFirstLoad.current = false;
-                console.log(data);
-                console.log(data.data);
                 setArchivedProducts(data.data);
-                setTotalPages(data.totalAccountsPages);
-                setTotalEntries(data.totalAccounts);
+
+                setPagination({
+                    totalPages: data.totalProductsPages || 0,
+                    totalEntries: data.totalProducts || 0,
+                })
             })
-            .catch(setError)
+            .catch((err) => {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+            })
             .finally(() => {
-                setIsLoading(false);
-                setIsFetching(false);
+                setAsyncState((prev) => ({ ...prev, isLoading: false, isFetching: false}));
             });
     }, [filter, user?.accessToken]);
 
@@ -55,14 +63,13 @@ export const useProductArchive = () => {
         return () => clearTimeout(timer); 
     }, [fetchArchivedProducts, user?.accessToken])
 
-    const updateFilter = (key, value) =>  {
-        setFilter(prev => {
-            if (key !== 'page') {
-              return { ...prev, [key]: value, pageCount: 1 };
-            }
-            return { ...prev, [key]: value };
-        });
-    };
 
-    return { archivedProducts, isLoading, filter, totalPages, totalEntries, fetchArchivedProducts, updateFilter };
+    return { 
+        archivedProducts, 
+        asyncState, 
+        pagination, 
+        filter,
+        updateFilter,
+        fetchArchivedProducts, 
+    };
 }

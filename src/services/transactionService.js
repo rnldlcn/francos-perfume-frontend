@@ -1,20 +1,12 @@
-import { API_URL } from "../config/index.js";
+import { cleanFilters } from "@/utils/filterUtils.js";
+import apiClient from "./apiClient";
 
-const BASE_URL = `${API_URL}/Transaction`;
+const PATH = "/Transaction";
 
-export const getAllTransactions = async (filter, token) => {
-    const cleanFilter = Object.fromEntries(
-        Object.entries(filter).filter(([, v]) => v !== '' && v !== null)
-    );
-
-    const params = new URLSearchParams(cleanFilter);
-    const response = await fetch(`${BASE_URL}?${params}`, {
-        method: 'GET',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
-    return await response.json();
-}
+export const getAllTransactions = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};

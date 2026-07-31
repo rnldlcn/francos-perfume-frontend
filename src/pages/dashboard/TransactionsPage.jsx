@@ -1,11 +1,14 @@
+
+import DataTable from '@/components/shared/DataTable';
+import { Button } from '@/components/ui/button';
 import { useTransaction } from '@/hooks/transaction_hooks/useTransaction';
-import { Search } from 'lucide-react';
+import { transactionColumns } from '@/utils/columns';
+import { FileDown, RefreshCcw, Search } from 'lucide-react';
 import { useState } from 'react';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
-import TransactionsTable from '../../components/features/transactions_components/TransactionsTable';
 
 export default function TransactionsPage() {
-    const { transactions, filter, isLoading, totalPages, totalEntries, fetchTransactions, updateFilter } = useTransaction();
+    const { transactions, asyncState, pagination, filter, fetchTransactions, updateFilter } = useTransaction();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -21,40 +24,47 @@ export default function TransactionsPage() {
             
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-[32px] font-bold text-gray-800 leading-none mb-2">Transaction History</h1>
-                    <p className="text-gray-500 text-sm">View all POS sales.</p>
+                    <h1 className="text-[32px] font-bold text-custom-black leading-none mb-2">Transaction History</h1>
+                    <p className="text-custom-gray text-sm">View all POS sales.</p>
                 </div>
-                <button 
-                    onClick={fetchTransactions}
-                    className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 shadow-sm"
-                >
-                    🔄 Refresh Status
-                </button>
             </div>
 
+            {/* add filter and search here */}
             <div className="relative w-full md:w-96 shrink-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+
+                <Search className="relative left-3 top-1/2 -translate-y-1/2 text-gray-400" 
                     value={searchQuery}
                     onChange={handleSearchChange}
                 />
-            </div>`
 
-            <TransactionsTable
-                transactions={transactions}
+
+            </div>
+
+            <DataTable
+                columns={transactionColumns}
+                data={transactions}
+                keyField="salesOrderId"
+                asyncState={asyncState}
+                pagination={pagination}
                 filter={filter}
-                isLoading={isLoading}
                 updateFilter={updateFilter}
-                totalEntries={totalEntries}
-                totalPages={totalPages}
             />
 
-            {/* ACTIONS */}
-            <div className="flex gap-3 mt-4">
-                <button 
+            <div className="relative flex justify-between gap-6 mt-4">
+                <Button
                     onClick={() => setIsExportModalOpen(true)}
-                    className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] text-gray-800 px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm">
-                    📊 Export
-                </button>
+                    >
+                    <FileDown className='h-8 w-8'/>
+                    Export
+                </Button>
+
+                <Button
+                    onClick={fetchTransactions}
+                    className='justify-end'
+                >
+                    <RefreshCcw className='w-4 h-4'/>
+                    Refresh Status
+                </Button>
             </div>
             <ExportTransactionModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} />
         </div>

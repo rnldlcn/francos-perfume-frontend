@@ -1,9 +1,13 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-const FilterDropDown = ({ filter, updateFilter, filterSelections }) => {  
+const FilterDropDown = ({ filter, updateFilter, filterOptions }) => {  
+    if (!Array.isArray(filterOptions) || filterOptions.length === 0) {
+        return null;
+    }
+    
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap items-center gap-3 sm:gap-4 w-full">
-        {filterSelections?.map((option) => (
+        {filterOptions?.map((option) => (
           <Select
             key={option.key}
             value={filter[option.key] || '__all__'}

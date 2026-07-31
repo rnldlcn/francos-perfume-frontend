@@ -1,7 +1,7 @@
 import { useAuth } from "@/auth/UseAuth";
 import { Outlet } from "react-router-dom";
 import Header from "../components/shared/Header";
-import Sidebar from "../components/shared/Sidebar";
+import Sidebar from "../components/shared/SideBar";
 
 const DashboardLayout = () => {
   const { activeRole, email: userEmail } = useAuth();

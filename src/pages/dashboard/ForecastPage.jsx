@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import StatusCard from "../../components/data_components/StatusCard";
+import StatusCard from "../../components/shared/StatusCard";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SALES FORECAST — HOW THE DATA WORKS

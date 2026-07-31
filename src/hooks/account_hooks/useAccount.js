@@ -1,113 +1,184 @@
-import { useAuth } from "@/auth/UseAuth";
-import { addNewAccount, getAccount, getAllAccounts, updateAccountDetails } from "@/services/accountService";
+import { addNewAccount, getAccount, getAccountFilters, getAllAccounts, resetAccountPassword, toggleAccountStatus, updateAccountDetails } from "@/services/accountService";
+import { archiveAccount } from "@/services/archiveService";
+import { buildFilterOptions } from "@/utils/filterUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFilter } from "../useFilter";
 
 export const useAccount = () => {
-    const { user } = useAuth();
     const [accounts, setAccounts] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isFetching, setIsFetching] = useState(false); 
-    const [error, setError] = useState(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalEntries, setTotalEntries] = useState(1);
     const isFirstLoad = useRef(true);
 
-    const [filter, setFilter] = useState({
+    const [asyncState, setAsyncState] = useState({
+        isLoading: true,
+        isFetching: false,
+        error: null,
+    });
+
+    const [pagination, setPagination] = useState({
+        totalPages: 1,
+        totalEntries: 0,
+    });
+
+    const [filterOptions, setFilterOptions] = useState({
+        accountStatus: [],
+        employeeRole: [],
+        branchLocation: [],
+    });
+
+    const { filter, updateFilter, resetFilter, setFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
-        branch: '',
-        status: '',
-        role: '',
+        branchLocation: '',
+        accountStatus: '',
+        employeeRole: '',
         pageCount: 1,
         pageSize: 10,
     });
 
+    const ACCOUNT_FILTER_SCHEMA = [
+        { key: "employeeRole", label: "Filter: Role", allLabel: "All Roles" },
+        { key: "accountStatus", label: "Filter: Status", allLabel: "All Statuses" },
+        { key: "branchLocation", label: "Filter: Branch", allLabel: "All Branches" },
+    ]
+
     const fetchAllAccounts = useCallback(() => {
         if (isFirstLoad.current) {
-            setIsLoading(true);
+            setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         } else {
-            setIsFetching(true);
+            setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
         }
 
-        getAllAccounts(filter, user?.accessToken)
+        getAllAccounts(filter)
             .then(data => {
                 isFirstLoad.current = false;
                 setAccounts(data.data);
-                setTotalPages(data.totalAuditPages);
-                setTotalEntries(data.totalAuditLogs);
+                console.log(data.data);
+                setPagination({
+                    totalPages: data.totalEmployeesPages || 0,
+                    totalEntries: data.totalEmployees || 0,
+                });
             })
-            .catch(setError)
+            .catch((err) => {
+                setAsyncState((prev) => ({ ...prev, error: err }));
+            })
             .finally(() => {
-                setIsLoading(false);
-                setIsFetching(false);
+                setAsyncState((prev) => ({ ...prev, isLoading: false, isFetching: false}));
             });
 
-    }, [filter, user?.accessToken]);
+    }, [filter]);
 
     useEffect(() => {
-        if (!user?.accessToken) {
-            return;
-        }
         const timer = setTimeout(() => {
             fetchAllAccounts();
         }, 0);
         return () => clearTimeout(timer); 
-    }, [fetchAllAccounts, user?.accessToken])
+    }, [fetchAllAccounts])
 
-    const fetchAccount = useCallback(async (employeeId, token) => {
+    const fetchAccount = useCallback(async (employeeId) => {
         try {
-            const data = getAccount(employeeId, token);
+            const data = await getAccount(employeeId);
             return data;
-        } catch (error) {
-            setError(error);
+        } catch (err) {
+            setAsyncState({  error: err });
         }
     }, [])
 
-    const updateDetails = async (dto, token) => {
+    const updateDetails = async (id, dto) => {
         try {
-            const data = updateAccountDetails(dto, token);
+            const data = updateAccountDetails(id, dto);
             fetchAllAccounts();
             return data;
-        } catch (error) {
-            setError(error);
+        } catch (err) {
+            setAsyncState({  error: err });
         }
     };
 
-    const addAccount = async (dto, token) => {
+    const addAccount = async (dto) => {
         try {
-            const data = addNewAccount(dto, token);
+            const data = addNewAccount(dto);
             fetchAllAccounts();
             return data;
-        } catch (error) {
-            setError(error);
+        } catch (err) {
+            setAsyncState({  error: err });
         }
     };
 
-    const updatePassword = async (employeeId) => {
-
+    const updatePassword = async (id) => {
+        // TO BE ADDED
     };
 
-    const resetPassword = async (employeeId) => {
+    const resetPassword = useCallback(async (id) => {
+        try {
+            await resetAccountPassword(id);
+            fetchAllAccounts();
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: null }));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, [fetchAllAccounts]);
 
+
+
+    const updateAuth = (id) => {
+        // TO BE ADDED
     };
 
-    const updateAuth = () => {
+    const toggleStatus = useCallback(async (id) => {
+        try {
+            await toggleAccountStatus(id);
+            fetchAllAccounts();
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: null }));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, [fetchAllAccounts]);
 
+    const archive = useCallback(async (id) => {
+        setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+        try {
+            await archiveAccount(id);
+            fetchAllAccounts();
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: null }));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, [fetchAllAccounts]);
+
+    const fetchFilters = useCallback(async () => {
+        setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
+        
+        try {
+            const data = await getAccountFilters();
+            setFilterOptions(buildFilterOptions(data, ACCOUNT_FILTER_SCHEMA));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchFilters();
+    }, [fetchFilters]);
+
+    return { 
+        accounts, 
+        asyncState,
+        pagination,
+        filter,
+        updateFilter,
+        fetchAccount,
+        archive,
+        toggleStatus,
+        resetPassword,
+        filterOptions,
     };
-
-    const deactivate = () => {
-
-    };
-
-    const updateFilter = (key, value) =>  {
-        setFilter(prev => {
-            if (key !== 'page') {
-                return { ...prev, [key]: value, pageCount: 1 };
-            }
-            return { ...prev, [key]: value };
-        });
-    };
-
-    return { accounts, isLoading, filter, error, totalPages, totalEntries, fetchAccount, fetchAllAccounts };
 }
