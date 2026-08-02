@@ -53,7 +53,6 @@ export const useAccount = () => {
             .then(data => {
                 isFirstLoad.current = false;
                 setAccounts(data.data);
-                console.log(data.data);
                 setPagination({
                     totalPages: data.totalEmployeesPages || 0,
                     totalEntries: data.totalEmployees || 0,
@@ -180,5 +179,6 @@ export const useAccount = () => {
         toggleStatus,
         resetPassword,
         filterOptions,
+        updateDetails,
     };
 }

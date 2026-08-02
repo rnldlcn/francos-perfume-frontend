@@ -1,11 +1,11 @@
 import { useAuth } from "@/auth/UseAuth";
-import CloseButton from "@/components/shared/CloseButton";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Archive, Edit, KeyRound, MinusSquareIcon, PlusSquareIcon } from "lucide-react";
 import { useState } from "react";
 
-const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount, archive, toggleStatus, resetPassword, }) => {
+const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount, archive, toggleStatus, resetPassword, setIsEditAccountModalOpen, }) => {
   
   const { user } = useAuth();
   const [config, setConfig] = useState(null);
@@ -39,7 +39,8 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
   const isActive = accountStatus === "active";
 
   const handleEditAccount = () => {
-      
+      setIsEditAccountModalOpen(true);
+      onClose();
   }
 
   const handleResetPassword = () => {
@@ -48,7 +49,7 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
       description: "The user of this account will be logged out and an email will be sent including their one-time generated password.",
       confirmText: "Reset Password",
       onConfirm: async () => {
-        await resetPassword(accountId, user?.accessToken);
+        await resetPassword(accountId);
         setSelectedAccount(null);
         onClose();
       } 
@@ -65,7 +66,7 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
         : "This account will regain access to the system.",
       confirmText: `${isActive ? "Deactivate" : "Activate"} Account`,
       onConfirm: async () => {
-        await toggleStatus(accountId, user?.accessToken);
+        await toggleStatus(accountId);
         setSelectedAccount(null);
         onClose();
       } 
@@ -78,7 +79,7 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
       description: "This account will no longer exist in the accounts table.",
       confirmText: "Archive Account",
       onConfirm: async () => {
-        await archive(accountId, user?.accessToken);
+        await archive(accountId);
         setSelectedAccount(null);
         onClose();
       } 
@@ -89,15 +90,13 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 font-montserrat">
-        <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl overflow-hidden">
-          
-          <div className="relative flex justify-center items-center p-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-foreground">Account Information</h2>
-            <CloseButton
-              onClose={onClose}
-            />
-          </div>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent
+          className="sm:max-w-2xl"
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Account</DialogTitle>
+          </DialogHeader>
 
           <div className="p-8">
 
@@ -181,9 +180,9 @@ const AccountInfoModal = ({ isOpen, onClose, selectedAccount, setSelectedAccount
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-
+        </DialogContent>
+      </Dialog>
+      
       <ConfirmDialog 
         isOpen={!!config}
         onClose={() => setConfig(null)}

@@ -1,15 +1,18 @@
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-const FormSelect = ({ label, value, onChange, options = [], placeholder}) => {
+const FormSelect = ({ label, value, onChange, options = [], placeholder, disabled}) => {
     return (
         <div className="flex flex-col gap-2">
       {label && <Label>{label}</Label>}
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger className="w-full bg-white">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent
+          position="popper"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
           {options.map((option) => {
             const optValue = typeof option === "object" ? option.value : option;
             const optLabel = typeof option === "object" ? option.label : option;

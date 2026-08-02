@@ -2,7 +2,6 @@ import AccountInfoModal from "@/components/features/accounts_components/AccountI
 import CreateAccountModal from "@/components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "@/components/features/accounts_components/EditAccountModal";
 import { FilterDropDown } from "@/components/shared";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/hooks/account_hooks/useAccount";
@@ -25,6 +24,7 @@ const ManageAccountsPage = () => {
     toggleStatus,
     resetPassword,
     filterOptions,
+    updateDetails,
   } = useAccount();
   
   const [searchQuery, setSearchQuery] = useState(""); 
@@ -84,7 +84,6 @@ const ManageAccountsPage = () => {
         {/* 🔧 HIDDEN FOR MANAGERS */}
         {role !== 'MANAGER' && (
           <Button
-          className="bg-custom-primary text-custom-black gap-2 hover:bg-custom-primary-50-opacity cursor-pointer disabled:bg-gray-200 disabled:text-custom-gray disabled:cursor-not-allowed disabled:opacity-60"
           variant="primary" 
           onClick={() => setIsCreateAccountModalOpen(true)}
           >
@@ -130,7 +129,10 @@ const ManageAccountsPage = () => {
 
     <EditAccountModal 
       isOpen={isEditAccountModalOpen}
-        
+      onClose={() => setIsEditAccountModalOpen(false)}
+      selectedAccount={selectedAccount}
+      filterOptions={filterOptions}
+      updateDetails={updateDetails}
     />
 
     <div className="flex justify-end">
@@ -143,10 +145,6 @@ const ManageAccountsPage = () => {
         View Account
       </Button>
     </div>
-
-    <ConfirmDialog 
-      
-    />
 
     </div>
   );
