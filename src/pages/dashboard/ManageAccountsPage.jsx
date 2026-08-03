@@ -73,7 +73,6 @@ const ManageAccountsPage = () => {
             value={searchQuery}
             onChange={handleSearchChange}
           />
-          {/* add filter bar here */}
           <FilterDropDown 
             filter={filter}
             updateFilter={updateFilter}
