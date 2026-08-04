@@ -10,3 +10,17 @@ export const getAllTransactions = async (filter) => {
   });
   return response.data;
 };
+
+export const getExcel = async () => {
+  const response = await apiClient.get(`${PATH}/excel`, {
+    responseType: "blob",
+  });
+  return response;
+}
+
+export const getPdf = async () => {
+  const response = await apiClient.get(`${PATH}/pdf`, {
+    responseType: "blob",
+  });
+  return response;
+}
