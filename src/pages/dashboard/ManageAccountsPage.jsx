@@ -59,42 +59,47 @@ const ManageAccountsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full animate-fade-in font-montserrat">
+    <div className="flex flex-col animate-fade-in font-montserrat h-screen overflow-y-auto">
       <h1 className="text-3xl font-bold text-custom-black mb-1 tracking-tight leading-none">
         Manage Accounts
       </h1>
-      <p className="text-gray-400 text-sm mb-8">
+      <p className="text-foreground text-sm mb-8">
         Manage, create, and modify accounts of each user
       </p>
 
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4 flex-1 max-w-2xl">
-          <SearchBar
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-          <FilterDropDown 
-            filter={filter}
-            updateFilter={updateFilter}
-            filterOptions={filterOptions}
-          />
-        </div>
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="w-full sm:max-w-xl">
+            <SearchBar
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
 
-        {/* 🔧 HIDDEN FOR MANAGERS */}
         {role !== 'MANAGER' && (
           <Button
-          variant="primary" 
-          onClick={() => setIsCreateAccountModalOpen(true)}
+            variant="primary" 
+            onClick={() => setIsCreateAccountModalOpen(true)}
+            className="w-full sm:w-auto shrink-0"
           >
-            <Plus className="h-8 w-8"/>
+            <Plus className="h-5 w-5 mr-2" />
             Create New Account
           </Button>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold text-custom-black mb-6">Accounts List</h2>
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterDropDown 
+          filter={filter}
+          updateFilter={updateFilter}
+          filterOptions={filterOptions}
+        />
+      </div>
+    </div>
 
-    <div className="overflow-hidden min-h-100"
+    <h2 className="text-2xl font-bold text-custom-black mb-6">Accounts List</h2>
+
+    <div className="overflow-y-auto h-screen min-h-100"
       onClick={(e) => e.stopPropagation()}>
       <DataTable 
         columns={accountColumns}

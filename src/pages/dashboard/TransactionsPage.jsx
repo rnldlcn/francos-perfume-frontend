@@ -8,7 +8,14 @@ import { useState } from 'react';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
 
 export default function TransactionsPage() {
-    const { transactions, asyncState, pagination, filter, fetchTransactions, updateFilter } = useTransaction();
+    const { 
+        transactions,
+        asyncState, 
+        pagination, 
+        filter, 
+        fetchTransactions, 
+        updateFilter,
+    } = useTransaction();
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -66,7 +73,11 @@ export default function TransactionsPage() {
                     Refresh Status
                 </Button>
             </div>
-            <ExportTransactionModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} />
+            <ExportTransactionModal 
+                isOpen={isExportModalOpen} 
+                onClose={() => setIsExportModalOpen(false)}
+            />
+
         </div>
     );
 }

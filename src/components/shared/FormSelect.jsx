@@ -12,7 +12,7 @@ const FormSelect = ({ label, value, onChange, options = [], placeholder, disable
         <SelectContent
           position="popper"
           onCloseAutoFocus={(e) => e.preventDefault()}
-        >
+        > 
           {options.map((option) => {
             const optValue = typeof option === "object" ? option.value : option;
             const optLabel = typeof option === "object" ? option.label : option;

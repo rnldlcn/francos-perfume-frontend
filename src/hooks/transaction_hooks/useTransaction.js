@@ -72,6 +72,6 @@ export const useTransaction = () => {
         pagination, 
         filter,
         fetchTransactions, 
-        updateFilter
+        updateFilter,
     }
 }

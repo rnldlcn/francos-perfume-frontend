@@ -19,12 +19,6 @@ export const useAccount = () => {
         totalEntries: 0,
     });
 
-    const [filterOptions, setFilterOptions] = useState({
-        accountStatus: [],
-        employeeRole: [],
-        branchLocation: [],
-    });
-
     const { filter, updateFilter, resetFilter, setFilter } = useFilter({
         search: '',
         fromDate: '',
@@ -34,6 +28,12 @@ export const useAccount = () => {
         employeeRole: '',
         pageCount: 1,
         pageSize: 10,
+    });
+
+    const [filterOptions, setFilterOptions] = useState({
+        accountStatus: [],
+        employeeRole: [],
+        branchLocation: [],
     });
 
     const ACCOUNT_FILTER_SCHEMA = [

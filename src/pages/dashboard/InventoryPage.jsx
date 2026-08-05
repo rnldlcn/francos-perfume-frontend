@@ -1,44 +1,21 @@
+import { useAuth } from "@/auth/UseAuth";
 import InventoryTable from "@/components/features/inventory_components/InventoryTable";
+import { Button } from "@/components/ui/button";
 import { formatDateForInput } from "@/utils/dateFormatUtils";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
 import FilterDropDown from "../../components/shared/FilterDropDown";
 import SearchBar from "../../components/shared/SearchBar";
 import { useInventory } from "../../hooks/inventory_hooks/useInventory";
 
-
-// to change into dynamic
-const filterSelections = [
-  { key: "productType", label: "Perfume Type", 
-    options: 
-    [ 
-      { label: "All Perfume Types", value:''}, 
-      { label: "Classic", value: 'Classic' },
-      { label: "Premium", value: 'Premium' }
-    ]
-  },
-  { key: "branch", label: "Branch", options: 
-    [
-      { label: "All Branches", value: ''},
-      { label: "Sta. Lucia", value: "2" },
-      { label: "Riverbanks", value: "3" },
-      { label: "Warehouse", value: "1" }
-    ] 
-  },
-  { key: "productGender", label: "Gender", options: 
-    [ { label: "All Genders", value: ''}, 
-     { label: "Unisex", value: 'Unisex' },
-     { label: "Men", value: 'Men' },
-     { label: "Women", value: 'Women' }
-    ] 
-  },
-];
-
 const InventoryPage = () => {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState(""); 
   
-  const { inventory, asyncState, pagination, filter, updateFilter, fetchBatchesForProduct, saveBatchEdit } = useInventory();
+  const { inventory, asyncState, pagination, filter, updateFilter, fetchBatchesForProduct, saveBatchEdit, filterOptions } = useInventory();
 
+  const [isCreateNewProductModalOpen, setIsCreateNewProductModalOpen] = useState(false);
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
 
@@ -65,29 +42,47 @@ const InventoryPage = () => {
   }
   
   return (
-    <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
+    <div className="flex flex-col h-screen overflow-auto-y animate-fade-in relative font-montserrat">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-[32px] font-bold text-[#333] tracking-tight leading-none mb-2">
+          <h1 className="text-3xl font-bold text-custom-black tracking-tight leading-none mb-2">
             Inventory
           </h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-foreground text-sm">
             Overview of all available parfum products
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
-        <SearchBar
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-        <FilterDropDown
+      <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="w-full sm:max-w-xl">
+            <SearchBar
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+
+        {user.trueRole !== 'MANAGER' && (
+          <Button
+            variant="primary" 
+            onClick={() => setIsCreateNewProductModalOpen(true)}
+            className="w-full sm:w-auto shrink-0"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create New Perfume
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <FilterDropDown 
           filter={filter}
           updateFilter={updateFilter}
-          filterSelections={filterSelections}
+          filterOptions={filterOptions}
         />
       </div>
+    </div>
 
       <div className="flex flex-col gap-4 pb-4 flex-1">
         <InventoryTable
