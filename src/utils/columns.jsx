@@ -137,6 +137,10 @@ export const accountColumns = [
         accessorKey: "employeeRole"
     },
     {
+        header: "Shift",
+        accessorKey: "employeeShift"
+    },
+    {
         header: "Status",
         accessorKey: "status"
     }

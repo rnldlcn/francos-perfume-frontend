@@ -31,6 +31,18 @@ export const useInventory = () => {
         pageSize: 10,
     });
 
+    const [filterOptions, setFilterOptions] = useState({
+        productType: [],
+        productGender: [],
+        branch: [],
+    });
+
+    const INVENTORY_FILTER_SCHEMA = [
+      { key: "productType", label: "Filter: Product Type", allLabel: "All Product Types" },
+      { key: "productGender", label: "Filter: Product Gender", allLabel: "All Product Genders" },
+      { key: "branch", label: "Filter: Branch", allLabel: "All Branches" },
+    ]
+
     const fetchInventory = useCallback(() => {
       if (isFirstLoad.current) {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -91,6 +103,23 @@ export const useInventory = () => {
         return null;
       }
     };
+
+    const fetchFilters = useCallback(async () => {
+      setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
+        try {
+            const data = await getAccountFilters();
+            setFilterOptions(buildFilterOptions(data, ACCOUNT_FILTER_SCHEMA));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchFilters();
+    }, [fetchFilters]);
+
 
 
     return { 
