@@ -1,8 +1,8 @@
-import { cleanFilters } from "@/utils/filterUtils.js";
+import { cleanFilters } from "@/utils/formattingUtils.js";
 
 import apiClient from "./apiClient";
 
-const PATH = "/Product";
+const PATH = "/Products";
 
 export const getAllProducts = async (filter) => {
   const cleanedFilter = cleanFilters(filter);

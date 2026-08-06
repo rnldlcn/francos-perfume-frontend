@@ -44,9 +44,9 @@ export const AuthProvider = ({ children }) => {
     }
     
     const handleSwitchAccess = () => {
-        const newRole = user.activeRole === 'manager' 
-        ? 'cashier' 
-        : 'manager';
+        const newRole = user.activeRole === 'MANAGER' 
+        ? 'CASHIER' 
+        : 'MANAGER';
         
         sessionStorage.setItem('activeRole', newRole);
         setUser(prev => ({

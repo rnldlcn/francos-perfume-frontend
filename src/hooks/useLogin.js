@@ -23,10 +23,10 @@ export const useLogin = () => {
         
         try {
             const result = await login(email, password);
-            const normalizedRole = result.role.toLowerCase();
+            const normalizedRole = result.role;
             setTrueRole(normalizedRole);
 
-            if (normalizedRole === 'manager') {
+            if (normalizedRole === 'MANAGER') {
                 setView('module');
             } else {
                 setUserLogin({
@@ -53,12 +53,12 @@ export const useLogin = () => {
             activeRole: module,
             branchId: sessionStorage.getItem('branchId')
         });
-        navigateByRole(module === 'cashier' ? '/pos' : '/home');
+        navigateByRole(module === 'CASHIER' ? '/pos' : '/home');
     };
 
     const navigateByRole = (role) => {
-        if (role === 'cashier') navigate('/pos');
-        else if (role === 'owner' || role === 'admin') navigate('/');
+        if (role === 'CASHIER') navigate('/pos');
+        else if (role === 'OWNER' || role === 'ADMIN') navigate('/');
         else navigate('/home');
     };
 

@@ -20,6 +20,12 @@ export const useProduct = () => {
         totalEntries: 0,
     });
 
+    const [filterOptions, setFilterOptions] = useState({
+        productType: [],
+        productGender: [],
+        branchLocation: [],
+    });
+
     const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
@@ -40,15 +46,11 @@ export const useProduct = () => {
 
       getAllProducts(filter, user?.accessToken)
         .then(data => {
-          isFirstLoad.current = false;
-
-            console.log(data);
-
-            setProducts(data);
-
+            isFirstLoad.current = false;
+            setProducts(data.data);
             setPagination({
-                totalPages: data.totalInventoriesPages || 0,
-                totalEntries: data.totalInventories || 0,
+                totalPages: data.totalProductsPages || 0,
+                totalEntries: data.totalProducts || 0,
             });
         })
         .catch((err) => {
@@ -76,6 +78,7 @@ export const useProduct = () => {
       asyncState,
       pagination,
       filter,
-      updateFilter
+      updateFilter,
+      filterOptions
     };
 }

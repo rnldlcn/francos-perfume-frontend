@@ -1,4 +1,4 @@
-import { cleanFilters } from "@/utils/filterUtils.js";
+import { cleanFilters } from "@/utils/formattingUtils.js";
 
 import apiClient from "./apiClient";
 
@@ -21,11 +21,11 @@ export const getAllArchivedProducts = async (filter) => {
 };
 
 export const archiveAccount = async (id) => {
-  const response = await apiClient.patch(`${PATH}/account/${id}`);
+  const response = await apiClient.patch(`${PATH}/account/archive/${id}`);
   return response.data;
 };
 
 export const archiveProduct = async (id) => {
-  const response = await apiClient.patch(`${PATH}/product/${id}`);
+  const response = await apiClient.patch(`${PATH}/product/archive/${id}`);
   return response.data;
 };

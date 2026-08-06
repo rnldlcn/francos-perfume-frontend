@@ -1,4 +1,4 @@
-import { cleanFilters } from "@/utils/filterUtils.js";
+import { cleanFilters } from "@/utils/formattingUtils.js";
 import apiClient from "./apiClient";
 
 const PATH = "/Inventory";

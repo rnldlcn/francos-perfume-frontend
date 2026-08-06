@@ -1,7 +1,7 @@
 import { useAuth } from "@/auth/UseAuth";
 import InventoryTable from "@/components/features/inventory_components/InventoryTable";
 import { Button } from "@/components/ui/button";
-import { formatDateForInput } from "@/utils/dateFormatUtils";
+import { formatDateForInput } from "@/utils/formattingUtils";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";

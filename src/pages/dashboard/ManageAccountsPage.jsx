@@ -25,8 +25,9 @@ const ManageAccountsPage = () => {
     resetPassword,
     filterOptions,
     updateDetails,
+    createAccount,
   } = useAccount();
-  
+
   const [searchQuery, setSearchQuery] = useState(""); 
   const [selectedAccount, setSelectedAccount] = useState(null);
   
@@ -38,7 +39,6 @@ const ManageAccountsPage = () => {
 
 
   const handleRowClick = async (row) => {
-    
     if (selectedAccount?.employeeId === row.employeeId) {
       setSelectedAccount(null);
       return;
@@ -78,7 +78,6 @@ const ManageAccountsPage = () => {
 
         {role !== 'MANAGER' && (
           <Button
-            variant="primary" 
             onClick={() => setIsCreateAccountModalOpen(true)}
             className="w-full sm:w-auto shrink-0"
           >
@@ -117,7 +116,9 @@ const ManageAccountsPage = () => {
 
     <CreateAccountModal 
       isOpen={isCreateAccountModalOpen} 
-      onClose={() => setIsCreateAccountModalOpen(false)}  
+      onClose={() => setIsCreateAccountModalOpen(false)}
+      filterOptions={filterOptions}
+      createAccount={createAccount}
     />
 
     <AccountInfoModal

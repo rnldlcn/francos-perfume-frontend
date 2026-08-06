@@ -1,4 +1,4 @@
-import { formatDateTimeForTable } from "./dateFormatUtils";
+import { formatDateTimeForTable, formatLabel } from "./formattingUtils";
 
 export const auditLogColumns = [
     {
@@ -11,7 +11,8 @@ export const auditLogColumns = [
     },
     {
         header: "Branch",
-        accessorKey: "branchLocation"
+        accessorKey: "branchLocation",
+        render: (row) => formatLabel(row.branchLocation) || "N/A"
     },
     {
         header: "Module",
@@ -62,7 +63,8 @@ export const transactionColumns = [
     },
     {
         header: "Payment Method",
-        accessorKey: "paymentMethod"
+        accessorKey: "paymentMethod",
+         render: (row) => formatLabel(row.paymentMethod) || "N/A"
     },
     
 ]
@@ -82,7 +84,8 @@ export const archivedAccountColumns = [
     },
     {
         header: "Role",
-        accessorKey: "employeeRole" 
+        accessorKey: "employeeRole",
+        render: (row) => formatLabel(row.employeeRole) || "N/A"
     },
     {
         header: "Date Archived",
@@ -130,18 +133,22 @@ export const accountColumns = [
     },
     {
         header: "Branch",
-        accessorKey: "branchLocation"
+        accessorKey: "branchLocation",
+         render: (row) => formatLabel(row.branchLocation) || "N/A"
     },
     {
         header: "Role",
-        accessorKey: "employeeRole"
+        accessorKey: "employeeRole",
+         render: (row) => formatLabel(row.employeeRole) || "N/A"
     },
     {
         header: "Shift",
-        accessorKey: "employeeShift"
+        accessorKey: "employeeShift",
+         render: (row) => formatLabel(row.employeeShift) || "N/A"
     },
     {
         header: "Status",
-        accessorKey: "status"
+        accessorKey: "accountStatus",
+        render: (row) => formatLabel(row.accountStatus) || "N/A"
     }
 ]
