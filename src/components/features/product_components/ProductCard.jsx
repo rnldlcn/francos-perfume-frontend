@@ -1,4 +1,5 @@
 
+import { Button } from "@/components/ui/button";
 import { formatDateForTable, formatLabel } from "@/utils/formattingUtils";
 import { Barcode } from "lucide-react";
 import FrancoPerfumeLogo from '../../../assets/FrancoPerfumeLogo.png';
@@ -19,24 +20,24 @@ export const ProductCard = ({ product, isOwner, onEdit }) => {
       </div>
 
       {/* Product Image */}
-      <div className="grow flex justify-center items-center mb-4 h-40 bg-gray-50/50 rounded-lg overflow-hidden border border-gray-100 p-2">
+      <div className="grow flex justify-center items-center mb-8 bg-background rounded-lg overflow-hidden border border-gray-100 p-2">
         <img
           src={
             product.productImageUrl ||
             FrancoPerfumeLogo
           }
           alt={product.productName}
-          className="h-full w-auto object-contain mix-blend-multiply"
+          className="h-32 w-32 object-contain mix-blend-multiply"
         />
       </div>
 
       {/* Product Details */}
       <div className="mb-4">
         <div className="flex justify-between items-end mb-1">
-          <h3 className="font-bold text-lg text-custom-black leading-tight">
+          <h3 className="font-bold text-sm text-custom-black leading-tight">
             {product.productName}
           </h3>
-          <span className="text-[10px] text-gray-400 font-bold tracking-wider">
+          <span className="text-xs text-gray-400 font-bold tracking-wider">
             {product.productDisplayId}
           </span>
         </div>
@@ -58,12 +59,11 @@ export const ProductCard = ({ product, isOwner, onEdit }) => {
 
       {/* Action */}
       {isOwner && (
-        <button
-          onClick={() => onEdit(product)}
-          className="mt-auto w-full py-2.5 bg-[#EAE2D0] hover:bg-[#DCD0B3] text-gray-800 rounded-lg font-bold text-sm transition-colors shadow-sm"
+        <Button
+          //onClick={() => onEdit(product)}
         >
           Edit Details
-        </button>
+        </Button>
       )}
     </div>
   );

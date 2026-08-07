@@ -23,8 +23,6 @@ const NavigationManager = ({ user }) => {
   const navigate = useNavigate();
   const path = useLocation().pathname;
 
-  console.log(user);
-
   useEffect(() => {
     if (user) {
       const role = user.activeRole;

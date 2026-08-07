@@ -1,5 +1,6 @@
 import { useAuth } from "@/auth/UseAuth";
-import { getAllProducts } from "@/services/productService";
+import { getAllProducts, getProductFilters } from "@/services/productService";
+import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 
@@ -23,14 +24,17 @@ export const useProduct = () => {
     const [filterOptions, setFilterOptions] = useState({
         productType: [],
         productGender: [],
-        branchLocation: [],
     });
+
+    const PRODUCT_FILTER_SCHEMA = [
+        { key: "productType", label: "Filter: Type", allLabel: "All Types" },
+        { key: "productGender", label: "Filter: Gender", allLabel: "All Gender" },
+    ]
 
     const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
-        branch: '',
         productType: '',
         productGender: '',
         pageCount: 1,
@@ -47,6 +51,7 @@ export const useProduct = () => {
       getAllProducts(filter, user?.accessToken)
         .then(data => {
             isFirstLoad.current = false;
+            
             setProducts(data.data);
             setPagination({
                 totalPages: data.totalProductsPages || 0,
@@ -62,15 +67,32 @@ export const useProduct = () => {
 
     }, [filter, user?.accessToken]);
 
-        useEffect(() => {
-        if (!user?.accessToken) {
-            return;
+    useEffect(() => {
+    if (!user?.accessToken) {
+        return;
+    }
+    const timer = setTimeout(() => {
+        fetchProducts();
+    }, 0);
+    return () => clearTimeout(timer);
+    }, [fetchProducts, user?.accessToken]);
+
+    const fetchFilters = useCallback(async () => {
+        setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
+        try {
+            const data = await getProductFilters();
+            setFilterOptions(buildFilterOptions(data, PRODUCT_FILTER_SCHEMA));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
         }
-        const timer = setTimeout(() => {
-            fetchProducts();
-        }, 0);
-        return () => clearTimeout(timer);
-        }, [fetchProducts, user?.accessToken]);
+    }, []);
+
+    useEffect(() => {
+        fetchFilters();
+    }, [fetchFilters]);
+
 
         
     return { 

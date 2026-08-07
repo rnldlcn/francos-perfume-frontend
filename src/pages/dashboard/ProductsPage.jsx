@@ -17,8 +17,6 @@ export default function ProductsPage() {
         updateFilter
     } = useProduct();
 
-    console.log(user.trueRole);
-
     const isOwner = user?.trueRole === 'OWNER';
 
     const [searchQuery, setSearchQuery] = useState('');
