@@ -10,7 +10,7 @@ const ProductGrid = ({ products = [], isOwner, openEditModal }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 flex-1 content-start">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 flex-1 content-start">
       {products.map((product) => (
         <ProductCard
           key={product.productId}

@@ -10,7 +10,7 @@ export const getAllAccounts = async (filter) => {
   return response.data;
 };
 
-export const getAccount = async (id) => {
+export const getAccountDetails = async (id) => {
   const response = await apiClient.get(`${PATH}/${id}`);
   return response.data;
 };

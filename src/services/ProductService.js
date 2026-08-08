@@ -10,7 +10,7 @@ export const getAllProducts = async (filter) => {
   return response.data;
 };
 
-export const getProduct = async (id) => {
+export const getProductDetails = async (id) => {
   const response = await apiClient.get(`${PATH}/${id}`);
   return response.data;
 };

@@ -1,3 +1,4 @@
+import { accountColumns } from "@/components/features/accounts_components/AccountColumns";
 import AccountInfoModal from "@/components/features/accounts_components/AccountInfoModal";
 import CreateAccountModal from "@/components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "@/components/features/accounts_components/EditAccountModal";
@@ -5,7 +6,6 @@ import { FilterDropDown } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/hooks/account_hooks/useAccount";
-import { accountColumns } from "@/utils/columns";
 import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../auth/UseAuth";

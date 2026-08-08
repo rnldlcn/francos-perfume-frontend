@@ -1,4 +1,4 @@
-import { addNewAccount, getAccount, getAccountFilters, getAllAccounts, resetAccountPassword, toggleAccountStatus, updateAccountDetails } from "@/services/accountService";
+import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, resetAccountPassword, updateAccountDetails } from "@/services/accountService";
 import { archiveAccount } from "@/services/archiveService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -77,9 +77,9 @@ export const useAccount = () => {
         return () => clearTimeout(timer); 
     }, [fetchAllAccounts])
 
-    const fetchAccount = useCallback(async (employeeId) => {
+    const fetchAccountDetails = useCallback(async (employeeId) => {
         try {
-            const data = await getAccount(employeeId);
+            const data = await getAccountDetails(employeeId);
             return data;
         } catch (err) {
             setAsyncState({ error: err });
@@ -128,7 +128,7 @@ export const useAccount = () => {
         // TO BE ADDED
     };
 
-    const toggleStatus = useCallback(async (id) => {
+    const toggleAccountStatus = useCallback(async (id) => {
         try {
             await toggleAccountStatus(id);
             fetchAllAccounts();
@@ -153,7 +153,7 @@ export const useAccount = () => {
         }
     }, [fetchAllAccounts]);
 
-    const fetchFilters = useCallback(async () => {
+    const fetchAccountFilters = useCallback(async () => {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         try {
             const data = await getAccountFilters();
@@ -166,8 +166,8 @@ export const useAccount = () => {
     }, []);
 
     useEffect(() => {
-        fetchFilters();
-    }, [fetchFilters]);
+        fetchAccountFilters();
+    }, [fetchAccountFilters]);
 
     return { 
         accounts, 
@@ -175,12 +175,12 @@ export const useAccount = () => {
         pagination,
         filter,
         updateFilter,
-        fetchAccount,
+        fetchAccount: fetchAccountDetails,
         archive,
-        toggleStatus,
+        toggleStatus: toggleAccountStatus,
         resetPassword,
         filterOptions,
-        updateDetails,
+        updateDetails: updateDetails,
         createAccount,
     };
 }

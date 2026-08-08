@@ -1,12 +1,12 @@
 import { useAuth } from "@/auth/UseAuth";
-import { addNewProduct, getAllProducts, getProductDetails, getProductFilters, updateProductDetails } from "@/services/productService";
+import { addNewDiscount, getAllDiscounts, getDiscountFilters } from "@/services/discountService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 
-export const useProduct = () => {
+export const useDiscounts = () => {
     const { user } = useAuth();
-    const [products, setProducts] = useState([]);
+    const [discounts, setDiscounts] = useState([]);
     const isFirstLoad = useRef(true);
     
     // can add the page and page size here
@@ -22,40 +22,36 @@ export const useProduct = () => {
     });
 
     const [filterOptions, setFilterOptions] = useState({
-        productType: [],
-        productGender: [],
+        discountStatus: [],
     });
 
-    const PRODUCT_FILTER_SCHEMA = [
-        { key: "productType", label: "Filter: Type", allLabel: "All Types" },
-        { key: "productGender", label: "Filter: Gender", allLabel: "All Gender" },
+    const DISCOUNT_FILTER_SCHEMA = [
+        { key: "discountStatus", label: "Filter: Status", allLabel: "All Status" },
     ]
 
     const { filter, updateFilter, resetFilter } = useFilter({
         search: '',
         fromDate: '',
         toDate: '',
-        productType: '',
-        productGender: '',
+        discountStatus: '',
         pageCount: 1,
         pageSize: 10,
     });
 
-    const fetchAllProducts = useCallback(() => {
+    const fetchAllDiscounts = useCallback(() => {
       if (isFirstLoad.current) {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
       } else {
         setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
       }
 
-      getAllProducts(filter)
+      getAllDiscounts(filter)
         .then(data => {
             isFirstLoad.current = false;
-            
-            setProducts(data.data);
+            setDiscounts(data.data);
             setPagination({
-                totalPages: data.totalProductsPages || 0,
-                totalEntries: data.totalProducts || 0,
+                totalPages: data.totalDiscountPages || 0,
+                totalEntries: data.totalDiscounts || 0,
             });
         })
         .catch((err) => {
@@ -69,45 +65,48 @@ export const useProduct = () => {
 
     useEffect(() => {
     const timer = setTimeout(() => {
-        fetchAllProducts();
+        fetchAllDiscounts();
     }, 0);
     return () => clearTimeout(timer);
-    }, [fetchAllProducts]);
+    }, [fetchAllDiscounts]);
 
-    const getProduct = async (id) => {
+    const getDiscount = async (id) => {
         try {
-            const data = getProductDetails(id);
+            const data = getDiscount(id);
             return data;
         } catch (err) {
             setAsyncState({ error: err })
         }
     }
 
-    const updateDetails = async (id, dto) => {
+    /*
+    NO ENDPOINT EXISTS FOR UPDATING DISCOUNT AT THE MOMENT.
+    const updateDiscount = async (id, dto) => {
         try {
-            const data = updateProductDetails(id, dto);
+            const data = updateDiscountDetails(id, dto);
             fetchAllProducts();
             return data;
         } catch (err) {
             setAsyncState({ error: err })
         }
     }
+    */
 
-    const createProduct = async (dto) => {
+    const createDiscount = async (dto) => {
         try {
-            const data = await addNewProduct(dto);
-            await fetchAllProducts();
+            const data = await addNewDiscount(dto);
+            await fetchAllDiscounts();
             return data;
         } catch (err) {
             setAsyncState({ error: err })
         }
     }
 
-    const fetchProductFilters = useCallback(async () => {
+    const fetchDiscountFilters = useCallback(async () => {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         try {
-            const data = await getProductFilters();
-            setFilterOptions(buildFilterOptions(data, PRODUCT_FILTER_SCHEMA));
+            const data = await getDiscountFilters();
+            setFilterOptions(buildFilterOptions(data, DISCOUNT_FILTER_SCHEMA));
         } catch (err) {
             setAsyncState((prev) => ({ ...prev, error: err }));
         } finally {
@@ -116,19 +115,16 @@ export const useProduct = () => {
     }, []);
 
     useEffect(() => {
-        fetchProductFilters();
-    }, [fetchProductFilters]);
+        fetchDiscountFilters();
+    }, [fetchDiscountFilters]);
 
         
     return { 
-      products, 
+      discounts, 
       asyncState,
       pagination,
       filter,
       updateFilter,
       filterOptions,
-      getProduct,
-      updateDetails,
-      createProduct
     };
 }

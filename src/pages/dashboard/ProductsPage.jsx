@@ -14,18 +14,19 @@ export default function ProductsPage() {
         asyncState,
         pagination,
         filter,
-        updateFilter
+        updateFilter,
+        filterOptions,
+        // THESE FUNCTIONS BELOW ARE ALREADY CONNECTED WITH THE BACKEND SERVICE. PLEASE CHECK THE useProducts HOOK FOR MORE DETAILED INFORMATION.
+        getProduct,
+        updateDetails,
+        createProduct
     } = useProduct();
 
     const isOwner = user?.trueRole === 'OWNER';
-
     const [searchQuery, setSearchQuery] = useState('');
-
-    const [editId, setEditId] = useState(null);
-
-    const handleInputChange = (e) => {
-        
-    };
+    
+    // PLEASE CREATE SEPARATE COMPONENTS FOR THESE. PUT IT UNDER THE product_components FOLDER UNDER components/features
+    // CHECK THE MANAGEACCOUNTSPAGE AND ITS PATTERN. FOLLOW HOW THE MANAGEACCOUNTSPAGE WAS MADE. 
 
     const openCreateModal = () => {
         
@@ -38,15 +39,6 @@ export default function ProductsPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-    };
-
-    const handleArchive = async () => {
-        /*
-        if (editStock > 0) {
-            alert("Cannot archive this perfume because there are still stocks remaining.");
-            return;
-        }
-        */
     };
 
     const handleSearchChange = (value) => {
@@ -89,7 +81,7 @@ export default function ProductsPage() {
                 <FilterDropDown 
                 filter={filter}
                 updateFilter={updateFilter}
-                //filterOptions={filterOptions}
+                filterOptions={filterOptions}
                 />
             </div>
             </div>
