@@ -19,6 +19,9 @@ export const isValid = {
 
     numbersOnly: (value) =>
         /\D/.test(value) ? 'Numbers only' : null,
+
+    prefix: (value) =>
+        value.length !== 3 ? `Must be 3 characters only` : null
 };
 
 export const checkIfValid = (value, rules = []) => {

@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/button";
 import { useAccount } from "@/hooks/account_hooks/useAccount";
 import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "../../auth/UseAuth";
 import SearchBar from "../../components/shared/SearchBar";
 
 const ManageAccountsPage = () => {
-  const { user } = useAuth();
   const { 
     accounts, 
     asyncState,
@@ -35,8 +33,7 @@ const ManageAccountsPage = () => {
   const [isAccountInfoModalOpen, setIsAccountInfoModalOpen] = useState(false);
   const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
 
-  const role = user.trueRole.toUpperCase();
-
+  const role = sessionStorage.getItem("trueRole");
 
   const handleRowClick = async (row) => {
     if (selectedAccount?.employeeId === row.employeeId) {
@@ -46,7 +43,7 @@ const ManageAccountsPage = () => {
 
     setSelectedAccount(row);    
 
-    const profile = await fetchAccount(row.employeeId, user?.accessToken);
+    const profile = await fetchAccount(row.employeeId);
     if (profile) {
       setSelectedAccount(prev => prev ? { ...prev, ...profile }: profile);
     }
@@ -79,7 +76,6 @@ const ManageAccountsPage = () => {
         {role !== 'MANAGER' && (
           <Button
             onClick={() => setIsCreateAccountModalOpen(true)}
-            className="w-full sm:w-auto shrink-0"
           >
             <Plus className="h-5 w-5 mr-2" />
             Create New Account

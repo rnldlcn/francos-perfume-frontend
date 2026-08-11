@@ -1,10 +1,13 @@
 import { useAuth } from "@/auth/UseAuth";
+import CreateDiscountModal from "@/components/features/discount_components/CreateDiscountModal";
 import { discountColumns } from "@/components/features/discount_components/DiscountColumns";
+import DiscountInfoModal from "@/components/features/discount_components/DiscountInfoModal";
+import EditDiscountModal from "@/components/features/discount_components/EditDiscountModal";
 import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useDiscounts } from "@/hooks/discount_hooks/useDiscount";
-import { Plus } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { useState } from "react";
 
 const DiscountPage = () => {
@@ -16,15 +19,34 @@ const DiscountPage = () => {
       filter,
       updateFilter,
       filterOptions,
+      createDiscount,
+      fetchDiscount,
+      removeDiscount,
+      toggleStatus,
   } = useDiscounts();
 
   const role = user.trueRole;
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDiscount, setSelectedDiscount] = useState(null);
+  const [isCreateDiscountModalOpen, setIsCreateDiscountModalOpen] = useState(false);
+  const [isDiscountInfoModalOpen, setIsDiscountInfoModalOpen] = useState(false);
 
-  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
-  const [discountToArchive, setDiscountToArchive] = useState(null);
+  const handleRowClick = async (row) => {
+    if (selectedDiscount?.discountId === row.discountId) {
+      setSelectedDiscount(null);
+      return;
+    }
 
+    setSelectedDiscount(row);    
+
+    const discount = await fetchDiscount(row.discountId);
+    if (discount) {
+      setSelectedDiscount(prev => prev ? { ...prev, ...discount }: discount);
+    }
+  }
+
+  
   const handleSearchChange = (value) => {
         const query = value?.target ? value.target.value : value;
         setSearchQuery(query);
@@ -36,8 +58,6 @@ const DiscountPage = () => {
 
       <h1 className="text-3xl font-bold text-custom-black mb-1 leading-none tracking-tight">Discount Management</h1>
       <p className="text-gray-400 text-sm mb-8">Create, remove, and change discounts</p>
-
-
         <div className="flex flex-col gap-4 mb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="w-full sm:max-w-xl">
@@ -49,8 +69,7 @@ const DiscountPage = () => {
 
         {role !== 'MANAGER' && (
           <Button
-            //onClick={() => setIsCreateAccountModalOpen(true)}
-            className="w-full sm:w-auto shrink-0"
+            onClick={() => setIsCreateDiscountModalOpen(true)}
           >
             <Plus className="h-5 w-5 mr-2" />
             Create New Discount
@@ -79,12 +98,42 @@ const DiscountPage = () => {
         pagination={pagination}
         filter={filter}
         updateFilter={updateFilter}
-        //selectedItem={selectedAccount}
-        //onRowClick={handleRowClick}
-        //onRowDoubleClick={() => setIsAccountInfoModalOpen(true)}
+        selectedItem={selectedDiscount}
+        onRowClick={handleRowClick}
+        onRowDoubleClick={() => setIsDiscountInfoModalOpen(true)}
       />
     </div>
 
+    <div className="flex justify-end">
+      <Button
+        variant={selectedDiscount ? "default" : "ghost"}
+        disabled={!selectedDiscount}
+        onClick={() => setIsDiscountInfoModalOpen(true)}
+        >
+        <Eye className="h-8 w-8"/>
+        View Discount
+      </Button>
+    </div>
+
+    <CreateDiscountModal 
+        isOpen={isCreateDiscountModalOpen} 
+        onClose={() => setIsCreateDiscountModalOpen(false)}
+        filterOptions={filterOptions}
+        createDiscount={createDiscount}
+    />
+
+    <DiscountInfoModal 
+        isOpen={isDiscountInfoModalOpen}
+        onClose={() => setIsDiscountInfoModalOpen(false)}
+        selectedDiscount={selectedDiscount}
+        setSelectedDiscount={setSelectedDiscount}
+        removeDiscount={removeDiscount}
+        toggleStatus={toggleStatus}
+    />
+
+    <EditDiscountModal 
+    
+    />
 
     </div>
   );

@@ -4,7 +4,20 @@ import FormSelect from '@/components/shared/FormSelect';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { isValid, validateForm } from "@/utils/validationUtils";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from "../../../auth/UseAuth";
+
+const getAccountFormData = (account) => ({
+  firstName: account?.firstName || "",
+  lastName: account?.lastName || "",
+  middleName: account?.middleName || "",
+  contactNumber: account?.contactNumber || "",
+  address: account?.address || "",
+  email: account?.email || "",
+  branchLocation: account?.branchLocation || "",
+  employeeRole: account?.employeeRole || "",
+  employeeShift: account?.employeeShift || "",
+});
 
 const accountValidationSchema = {
   firstName: [isValid.required],
@@ -23,11 +36,22 @@ const ROLE_RANKS = {
   OWNER: 4,
 };
 
-const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount }) => {
+const EditDiscountModal = ({ isOpen, onClose, selectedAccount, filterOptions = [], updateDetails }) => {
+  
+  const { user } = useAuth();
   const [config, setConfig] = useState(null);
 
-  const [data, setData] = useState({});
-  const [errors,setErrors] = useState({});
+  const [data, setData] = useState(() => getAccountFormData(selectedAccount));
+  const [errors, setErrors] = useState({});
+
+  const isManager = user?.trueRole?.toUpperCase() === 'MANAGER';
+
+  useEffect(() => {
+    if (isOpen && selectedAccount) {
+      setData(getAccountFormData(selectedAccount));
+      setErrors({});
+    }
+  }, [isOpen, selectedAccount]);
 
   if (!isOpen) return null;
 
@@ -46,7 +70,7 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
       }
 
     const targetRoleRank = ROLE_RANKS[option.value.toUpperCase()] || 0;
-    const currentUserRank = ROLE_RANKS[sessionStorage.getItem("trueRole")] || 0;
+    const currentUserRank = ROLE_RANKS[user?.trueRole?.toUpperCase()] || 0;
 
     return targetRoleRank < currentUserRank;
   });
@@ -72,16 +96,18 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
         return;
       }
       setConfig({
-      title: "Are you sure you want to create this account?",
-      description: "This will make a new account for the employee.",
-      confirmText: "Create Account",
+      title: "Are you sure you want to save changes for this account?",
+      description: "The user of this account will be notified of the changes made to their account.",
+      confirmText: "Save Changes",
       onConfirm: async () => {
-        await createAccount(data);
+        await updateDetails(selectedAccount.employeeId, data);
         setData(null);
         onClose();
       } 
     })
   }
+
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -89,12 +115,13 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
           className="sm:max-w-3xl"
         >
           <DialogHeader>
-            <DialogTitle>Create Account</DialogTitle>
+            <DialogTitle>Edit Account</DialogTitle>
           </DialogHeader>
 
           <div className='grid grid-cols-3 gap-4 py-4'>
             <FormField 
               label="First Name"
+              value={data.firstName}
               onChange={e => handleChange('firstName', e.target.value)}
               placeholder="Enter first name here..."
               error={errors.firstName}
@@ -102,6 +129,7 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
 
             <FormField 
               label="Middle Name"
+              value={data.middleName}
               onChange={e => handleChange('middleName', e.target.value)}
               placeholder="Enter middle name here..."
               error={errors.middleName}
@@ -109,6 +137,7 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
 
             <FormField 
               label="Last Name"
+              value={data.lastName}
               onChange={e => handleChange('lastName', e.target.value)}
               placeholder="Enter last name here..."
               error={errors.lastName}
@@ -118,6 +147,7 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
           <div className='mb-6'>
             <FormField 
               label="Address"
+              value={data.address}
               onChange={e => handleChange('address', e.target.value)}
               placeholder="Enter address here..."
               error={errors.address}
@@ -127,12 +157,14 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
           <div className="grid grid-cols-2 gap-6 mb-6">
             <FormField 
               label="Email"
+              value={data.email}
               onChange={e => handleChange('email', e.target.value)}
               placeholder="Enter email here..."
               error={errors.email}
             />
             <FormField 
               label="Contact Number"
+              value={data.contactNumber}
               onChange={e => handleChange('contactNumber', e.target.value)}
               placeholder="Enter contact number here..."
               error={errors.contactNumber}
@@ -142,24 +174,31 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
           <div className="grid grid-cols-3 gap-6 mb-8">
             <FormSelect
               label="Branch"
+              value={data.branchLocation}
               onChange={(value) => setData(prev => ({...prev, branchLocation: value }))}
               options={branchOptions}
               placeholder="Select branch..."
+              disabled={isManager}
             />
             
             <FormSelect
               label="Role"
+              value={data.employeeRole}
               onChange={(value) => setData(prev => ({...prev, employeeRole: value }))}
               options={roleOptions}
               placeholder="Select role..."
+              disabled={isManager}
             />
 
             <FormSelect
               label="Shift"
+              value={data.employeeShift}
               onChange={(value) => setData(prev => ({...prev, employeeShift: value }))}
               options={employeeShiftOptions}
               placeholder="Select shift..."
+              disabled={isManager}
             />
+
           </div>
 
           <div className="grid grid-cols-2 gap-6 mb-8">
@@ -188,4 +227,4 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
   );
 };
 
-export default CreateAccountModal;
+export default EditDiscountModal;

@@ -8,12 +8,20 @@ export const discountColumns = [
         accessorKey: 'discountName'
     },
     {
-        header: 'Percentage',
-        accessorKey: 'discountPercentage'
+        header: 'Type',
+        accessorKey: 'discountType'
     },
     {
-        header: 'Amount',
-        accessorKey: 'discountAmount'
+        id: 'discountValue',
+        header: 'Value',
+        render: (row) => {
+            const { discountPercent, discountAmount, discountType } = row || {};
+            if (discountType?.toUpperCase() === 'PERCENTAGE') {
+                const percentValue = discountPercent < 1 ? discountPercent * 100 : discountPercent;
+                return `${percentValue}%`
+            }
+            return `₱${Number(discountAmount || 0)}`;
+        }
     },
     {
         header: 'Status',

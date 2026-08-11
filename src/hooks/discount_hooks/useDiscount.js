@@ -1,11 +1,9 @@
-import { useAuth } from "@/auth/UseAuth";
-import { addNewDiscount, getAllDiscounts, getDiscountFilters } from "@/services/discountService";
+import { addNewDiscount, deleteDiscount, getAllDiscounts, getDiscountDetails, getDiscountFilters, toggleDiscountStatus } from "@/services/discountService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 
-export const useDiscounts = () => {
-    const { user } = useAuth();
+export const useDiscounts = () => {;
     const [discounts, setDiscounts] = useState([]);
     const isFirstLoad = useRef(true);
     
@@ -23,10 +21,12 @@ export const useDiscounts = () => {
 
     const [filterOptions, setFilterOptions] = useState({
         discountStatus: [],
+        discountType: [],
     });
 
     const DISCOUNT_FILTER_SCHEMA = [
         { key: "discountStatus", label: "Filter: Status", allLabel: "All Status" },
+        { key: "discountType", label: "Filter: Type", allLabel: "All Types"}
     ]
 
     const { filter, updateFilter, resetFilter } = useFilter({
@@ -34,6 +34,7 @@ export const useDiscounts = () => {
         fromDate: '',
         toDate: '',
         discountStatus: '',
+        discountType: '',
         pageCount: 1,
         pageSize: 10,
     });
@@ -70,9 +71,9 @@ export const useDiscounts = () => {
     return () => clearTimeout(timer);
     }, [fetchAllDiscounts]);
 
-    const getDiscount = async (id) => {
+    const fetchDiscount = async (id) => {
         try {
-            const data = getDiscount(id);
+            const data = getDiscountDetails(id);
             return data;
         } catch (err) {
             setAsyncState({ error: err })
@@ -102,6 +103,26 @@ export const useDiscounts = () => {
         }
     }
 
+    const removeDiscount = async (id) => {
+        try {
+            await deleteDiscount(id);
+        } catch (err) {
+            setAsyncState({ error: err })
+        }
+    }
+
+    const toggleStatus = useCallback(async (id) => {
+        try {
+            await toggleDiscountStatus(id);
+            fetchAllDiscounts();
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: null }));
+        } catch (err) {
+            setAsyncState((prev) => ({ ...prev, isLoading: false, error: err }));
+        } finally {
+            setAsyncState((prev) => ({ ...prev, isLoading: false }));
+        }
+    }, [fetchAllDiscounts]);
+
     const fetchDiscountFilters = useCallback(async () => {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
         try {
@@ -120,11 +141,15 @@ export const useDiscounts = () => {
 
         
     return { 
-      discounts, 
-      asyncState,
-      pagination,
-      filter,
-      updateFilter,
-      filterOptions,
+        discounts, 
+        asyncState,
+        pagination,
+        filter,
+        updateFilter,
+        filterOptions,
+        createDiscount,
+        fetchDiscount,
+        removeDiscount,
+        toggleStatus,
     };
 }
