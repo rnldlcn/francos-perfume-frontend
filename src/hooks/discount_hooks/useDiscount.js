@@ -1,4 +1,4 @@
-import { addNewDiscount, deleteDiscount, getAllDiscounts, getDiscountDetails, getDiscountFilters, toggleDiscountStatus } from "@/services/discountService";
+import { addNewDiscount, deleteDiscount, getAllDiscounts, getDiscountDetails, getDiscountFilters, patchDiscount, toggleDiscountStatus } from "@/services/discountService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
@@ -97,9 +97,20 @@ export const useDiscounts = () => {;
         try {
             const data = await addNewDiscount(dto);
             await fetchAllDiscounts();
+
             return data;
         } catch (err) {
             setAsyncState({ error: err })
+        }
+    }
+
+    const updateDiscount = async (id, dto) => {
+        try {
+            const data = await patchDiscount(id, dto);
+            await fetchAllDiscounts();
+            return data;
+        } catch (err) {
+            setAsyncState({ error: err});
         }
     }
 
@@ -151,5 +162,6 @@ export const useDiscounts = () => {;
         fetchDiscount,
         removeDiscount,
         toggleStatus,
+        updateDiscount,
     };
 }

@@ -16,7 +16,7 @@ const CreateDiscountModal = ({ isOpen, onClose, filterOptions = [], createDiscou
 
     const isPercent = data.discountType === 'PERCENTAGE';
 
-    const discountType = filterOptions.find(option => option.key === "discountType")?.options || [];
+    const discountTypeOptionData = filterOptions.find(option => option.key === "discountType")?.options || [];
 
     const discountValidationSchema = {
         discountPrefix: [isValid.required, isValid.prefix],
@@ -29,6 +29,10 @@ const CreateDiscountModal = ({ isOpen, onClose, filterOptions = [], createDiscou
             : { discountAmount: [isValid.required, isValid.decimalNumber] }
         )
     };
+
+    const discountTypeOptions = discountTypeOptionData.filter(
+        (option) => option.value !== "" && option.value !== "__all__"
+    );
 
 
     const handleChange = (field, value) => {
@@ -57,19 +61,25 @@ const CreateDiscountModal = ({ isOpen, onClose, filterOptions = [], createDiscou
 
     const handleSave = () => {
       const validationErrors = validateForm(data, discountValidationSchema);
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
 
-      if (Object.keys(validationErrors).length > 0) {
-        setErrors(validationErrors);
-        return;
-      }
-      setConfig({
-      title: "Create discount?",
-      description: "This will immediately be available to use under the Point-Of-Sale system",
-      confirmText: "Create Discount",
-      onConfirm: async () => {
-        await createDiscount(data);
-        setData({});
-        onClose();
+        const payload = {
+            ...data,
+            discountPercent: Number(data.discountPercent) || 0,
+            discountAmount: Number(data.discountAmount) || 0,
+        };
+
+        setConfig({
+        title: "Create discount?",
+        description: "This will immediately be available to use under the Point-Of-Sale system",
+        confirmText: "Create Discount",
+        onConfirm: async () => {
+            await createDiscount(payload);
+            setData({});
+            onClose();
             } 
         })
     }
@@ -103,9 +113,9 @@ const CreateDiscountModal = ({ isOpen, onClose, filterOptions = [], createDiscou
           <div className="grid grid-cols-2 gap-6 mb-6">
             <FormSelect
                 label="Discount Type"
-                value={data.discountType || ''}
+                value={data.discountType ?? ''}
                 onChange={(value) => handleTypeChange(value)}
-                options={discountType}
+                options={discountTypeOptions}
                 placeholder="Select discount type..."
                 error={errors.discountType}
             />
@@ -113,7 +123,10 @@ const CreateDiscountModal = ({ isOpen, onClose, filterOptions = [], createDiscou
             <FormField 
                 label={isPercent ? "Discount Percentage (%)" : "Discount Amount (₱)"}
                 value={isPercent ? (data.discountPercent || '') : (data.discountAmount || '')}
-                onChange={e => handleChange(e.target.value)}
+                onChange={e => handleChange(
+                    isPercent ? 'discountPercent' : 'discountAmount',
+                    e.target.value
+                )}
                 placeholder={isPercent ? "e.g. 10 (for 10%)" : "e.g. 50.00"}
                 error={isPercent ? errors.discountPercent : errors.discountAmount}
             />

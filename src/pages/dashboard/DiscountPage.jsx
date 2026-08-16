@@ -23,6 +23,7 @@ const DiscountPage = () => {
       fetchDiscount,
       removeDiscount,
       toggleStatus,
+      updateDiscount,
   } = useDiscounts();
 
   const role = user.trueRole;
@@ -31,6 +32,7 @@ const DiscountPage = () => {
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const [isCreateDiscountModalOpen, setIsCreateDiscountModalOpen] = useState(false);
   const [isDiscountInfoModalOpen, setIsDiscountInfoModalOpen] = useState(false);
+  const [isEditDiscountModalOpen, setIsEditModalDiscountModalOpen] = useState(false);
 
   const handleRowClick = async (row) => {
     if (selectedDiscount?.discountId === row.discountId) {
@@ -129,10 +131,15 @@ const DiscountPage = () => {
         setSelectedDiscount={setSelectedDiscount}
         removeDiscount={removeDiscount}
         toggleStatus={toggleStatus}
+        setIsEditDiscountModalOpen={setIsEditModalDiscountModalOpen}
     />
 
     <EditDiscountModal 
-    
+        isOpen={isEditDiscountModalOpen} 
+        onClose={() => setIsEditModalDiscountModalOpen(false)}
+        selectedDiscount={selectedDiscount}
+        filterOptions={filterOptions} 
+        updateDiscount={updateDiscount}
     />
 
     </div>

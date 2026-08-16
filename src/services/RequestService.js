@@ -1,83 +1,39 @@
-const API_BASE_URL = 'http://localhost:5000/api/request';
+import { cleanFilters } from "@/utils/formattingUtils.js";
+import apiClient from "./apiClient";
 
-// Helper function to extract the REAL error message safely
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        let errorMessage = `Server Error (${response.status})`;
-        
-        // We use a single attempt to read the body
-        try {
-            const errorData = await response.json();
-            // Dig into the ASP.NET 'errors' object if it exists (for 400 Bad Requests)
-            if (errorData.errors) {
-                errorMessage = Object.values(errorData.errors).flat().join(', ');
-            } else {
-                errorMessage = errorData.message || errorData.title || JSON.stringify(errorData);
-            }
-        } catch {
-            // If JSON parsing fails, we cannot read 'response' again directly.
-            // In most cases, a 400/500 error will be JSON.
-            errorMessage = "A validation or server error occurred.";
-        }
-        throw new Error(errorMessage);
-    }
-    return response.json();
+const PATH = "/request";
+
+export const getAllRequests = async (filter = {}) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(PATH, { params: cleanedFilter });
+  return response.data;
 };
 
-export const RequestService = {
-    
-    getAllRequests: async () => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/displayAll`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        return handleResponse(response);
-    },
+export const getRequestById = async (id) => {
+  const response = await apiClient.get(`${PATH}/${id}`);
+  return response.data;
+};
 
-    getRequestDetails: async (id) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/displayOne/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        return handleResponse(response);
-    },
+export const createRequest = async (payload) => {
+  const response = await apiClient.post(PATH, payload);
+  return response.data;
+};
 
-    createRequest: async (payload) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/create`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        return handleResponse(response);
-    },
+export const approveRequest = async (requestId, remarks = "") => {
+  const response = await apiClient.patch(`${PATH}/${requestId}/approve`, {
+    remarks,
+  });
+  return response.data;
+};
 
-    approveRequest: async (requestId, remarks) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/${requestId}/approve`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ remarks: remarks || "" }) // Ensures remarks is always sent
-        });
-        return handleResponse(response);
-    },
+export const rejectRequest = async (requestId, remarks = "") => {
+  const response = await apiClient.patch(`${PATH}/${requestId}/reject`, {
+    remarks,
+  });
+  return response.data;
+};
 
-    rejectRequest: async (requestId, remarks) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/${requestId}/reject`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ remarks: remarks || "" }) // Ensures remarks is always sent
-        });
-        return handleResponse(response);
-    }
+export const getRequestFilters = async () => {
+  const response = await apiClient.get(`${PATH}/filters`);
+  return response.data;
 };

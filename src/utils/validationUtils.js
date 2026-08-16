@@ -20,6 +20,9 @@ export const isValid = {
     numbersOnly: (value) =>
         /\D/.test(value) ? 'Numbers only' : null,
 
+    decimalNumber: (value) =>
+        value && !/^\d+(\.\d+)?$/.test(String(value)) ? 'Valid numbers or decimals only' : null,
+
     prefix: (value) =>
         value.length !== 3 ? `Must be 3 characters only` : null
 };

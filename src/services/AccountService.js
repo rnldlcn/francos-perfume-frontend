@@ -6,7 +6,7 @@ const PATH = "/Account";
 
 export const getAllAccounts = async (filter) => {
     const cleanedFilter = cleanFilters(filter);
-    const response = await apiClient.get(`${PATH}`, { params: cleanedFilter });
+    const response = await apiClient.get(`${PATH}`, {params: cleanedFilter });
     return response.data;
 };
 
@@ -20,12 +20,12 @@ export const addNewAccount = async (dto) => {
     return response.data;
 };
 
-export const updateAccountDetails = async (id, dto) => {
+export const patchAccountDetails = async (id, dto) => {
     const response = await apiClient.patch(`${PATH}/update/${id}`, dto);
     return response.data;
 };
 
-export const updateAccountPassword = async (id, dto) => {
+export const patchAccountPassword = async (id, dto) => {
     const response = await apiClient.patch(`${PATH}/update/password/${id}`, dto);
     return response.data;
 };

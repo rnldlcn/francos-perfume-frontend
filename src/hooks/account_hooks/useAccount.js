@@ -1,4 +1,4 @@
-import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, resetAccountPassword, updateAccountDetails } from "@/services/accountService";
+import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, patchAccountDetails, resetAccountPassword } from "@/services/accountService";
 import { archiveAccount } from "@/services/archiveService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -88,7 +88,7 @@ export const useAccount = () => {
 
     const updateDetails = async (id, dto) => {
         try {
-            const data = updateAccountDetails(id, dto);
+            const data = patchAccountDetails(id, dto);
             fetchAllAccounts();
             return data;
         } catch (err) {

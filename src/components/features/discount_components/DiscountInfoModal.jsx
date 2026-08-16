@@ -17,32 +17,30 @@ const DiscountInfoModal = ({
 
     setIsEditDiscountModalOpen,
 }) => {
-  const [config, setConfig] = useState(null);
+    const [config, setConfig] = useState(null);
 
-  if (!isOpen || !selectedDiscount) return null;
-
-    const isManager = sessionStorage.getItem("trueRole") === "MANAGER";
+    if (!isOpen || !selectedDiscount) return null;
     const discountId = selectedDiscount.discountId;
     const isActive = selectedDiscount?.discountStatus?.toUpperCase() === "ACTIVE";
 
-  const handleEditDiscount = () => {
-    setIsEditDiscountModalOpen(true);
-    onClose();
-  };
-
-  const handleRemoveDiscount = () => {
-    setConfig({
-      title: "Are you sure you want to delete this discount?",
-      description:
-        "The discount will be deleted. This action is irreversible.",
-      confirmText: "Delete Discount",
-      onConfirm: async () => {
-        await removeDiscount(discountId);
-        setSelectedDiscount(null);
+    const handleEditDiscount = () => {
+        setIsEditDiscountModalOpen(true);
         onClose();
-      },
-    });
-  };
+    };
+
+    const handleRemoveDiscount = () => {
+        setConfig({
+        title: "Are you sure you want to delete this discount?",
+        description:
+            "The discount will be deleted. This action is irreversible.",
+        confirmText: "Delete Discount",
+        onConfirm: async () => {
+            await removeDiscount(discountId);
+            setSelectedDiscount(null);
+            onClose();
+        },
+        });
+    };
 
   const handleToggleStatus = () => {
     const text = isActive ? "deactivate" : "activate";
@@ -70,13 +68,13 @@ const DiscountInfoModal = ({
           </DialogHeader>
 
           <div className="p-8">
-            <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-3 gap-6 mb-6">
                 <DetailItem label="Discount prefix" value={selectedDiscount.discountPrefix || "N/A"} />
                 <DetailItem label="Discount name" value={selectedDiscount.discountName || "N/A"} />
+                <DetailItem label="Discount type" value={selectedDiscount.discountType || "N/A"} />
             </div>
 
             <div className="grid grid-cols-2 gap-6 mb-6">
-                <DetailItem label="Discount type" value={selectedDiscount.discountType || "N/A"} />
                 <DetailItem label="Discount value" value={(() => {
                     if (!selectedDiscount) return "N/A";
 
@@ -90,6 +88,7 @@ const DiscountInfoModal = ({
                     return `₱${Number(amount || 0)}`;
                     })()}
                     />
+                <DetailItem label="Discount status" value={selectedDiscount.discountStatus || "N/A"}/>
             </div>
 
             <div className="grid grid-cols-2 gap-6">

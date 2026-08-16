@@ -71,13 +71,14 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
         setErrors(validationErrors);
         return;
       }
+      
       setConfig({
       title: "Are you sure you want to create this account?",
       description: "This will make a new account for the employee.",
       confirmText: "Create Account",
       onConfirm: async () => {
         await createAccount(data);
-        setData(null);
+        setData({});
         onClose();
       } 
     })

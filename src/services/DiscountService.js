@@ -5,20 +5,26 @@ import apiClient from "./apiClient";
 const PATH = "/Discount";
 
 export const getAllDiscounts = async (filter) => {
-  const cleanedFilter = cleanFilters(filter);
-  const response = await apiClient.get(`${PATH}`, { params: cleanedFilter });
-  return response.data;
-};
-
-export const addNewDiscount = async (dto) => {
-    const response = await apiClient.post(`${PATH}`, { params: dto});
+    const cleanedFilter = cleanFilters(filter);
+    const response = await apiClient.get(`${PATH}`, cleanedFilter);
     return response.data;
-}
+};
 
 export const getDiscountDetails = async (id) => {
     const response = await apiClient.get(`${PATH}/${id}`);
     return response.data;
 }
+
+export const patchDiscount = async (id, dto) => {
+    const response = await apiClient.patch(`${PATH}/${id}`, dto);
+    return response.data;
+}
+
+export const addNewDiscount = async (dto) => {
+    const response = await apiClient.post(`${PATH}`, dto);
+    return response.data;
+}
+
 
 export const toggleDiscountStatus = async (id) => {
     const response = await apiClient.patch(`${PATH}/status/${id}`);
