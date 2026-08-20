@@ -1,11 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { DeliveryService } from '../../../services/deliveryService';
-import { RequestService } from '../../../services/requestService';
 // 🔧 FIXED: Added missing icon imports that were causing the crash
-import { CheckCircle, ChevronLeft, Clock } from 'lucide-react';
 
 export default function DeliveryConfirmationPage() {
+    /*
     const { id } = useParams();
     const navigate = useNavigate();
     const [request, setRequest] = useState(null);
@@ -104,8 +100,6 @@ export default function DeliveryConfirmationPage() {
                     INBOUND
                 </span>
             </div>
-
-            {/* Product Table */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
                 <h2 className="text-lg font-bold mb-4 text-gray-800">Requested Products</h2>
                 <div className="overflow-x-auto">
@@ -171,7 +165,6 @@ export default function DeliveryConfirmationPage() {
                 </div>
             </div>
 
-            {/* Additional Remarks */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
                 <h2 className="text-lg font-bold mb-4 text-gray-800">Additional Remarks</h2>
                 <textarea 
@@ -188,8 +181,6 @@ export default function DeliveryConfirmationPage() {
             >
                 Confirm Delivery
             </button>
-
-            {/* --- POPUP MODAL --- */}
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full text-center">
@@ -228,4 +219,5 @@ export default function DeliveryConfirmationPage() {
             )}
         </div>
     );
+    */
 }

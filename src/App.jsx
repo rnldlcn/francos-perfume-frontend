@@ -5,7 +5,7 @@ import DeliveryConfirmationPage from './components/features/delivery_components/
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
 import DashboardLayout from './layouts/DashboardLayout';
-import { ArchivesPage, AuditLogPage, BarcodePage, CreateTransferRequestPage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
+import { ArchivesPage, AuditLogPage, BarcodePage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
@@ -73,7 +73,6 @@ const App = () => {
           <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'STAFF']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
-            <Route path="new-transfer" element={<CreateTransferRequestPage />} />
             <Route path="requests/:id" element={<RequestDetailsPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />

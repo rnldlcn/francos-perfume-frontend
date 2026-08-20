@@ -1,10 +1,6 @@
-import { AlertTriangle, Check, Clock, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from "../../../auth/useAuth";
-import { RequestService } from '../../../services/requestService';
 
 export default function RequestDetailsPage() {
+    /*
     const { id } = useParams(); 
     const navigate = useNavigate();
     const { user } = useAuth(); 
@@ -154,7 +150,6 @@ export default function RequestDetailsPage() {
     return (
         <div className="p-6 bg-gray-50 min-h-screen font-montserrat relative">
             
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                     <button 
@@ -181,10 +176,8 @@ export default function RequestDetailsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* LEFT COLUMN */}
                 <div className="lg:col-span-2 space-y-6">
                     
-                    {/* Request Information Card */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <h2 className="text-lg font-bold mb-4 text-gray-800">Request Information</h2>
                         <div className="grid grid-cols-4 gap-4 mb-6 text-sm">
@@ -227,9 +220,7 @@ export default function RequestDetailsPage() {
                         )}
                     </div>
 
-                    {/* Requested Products Table */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        {/* 🔧 FIXED: Dynamic Title */}
                         <h2 className="text-lg font-bold mb-4 text-gray-800">
                             {isWarehousePush ? "Products to be Sent" : "Requested Products"}
                         </h2>
@@ -239,7 +230,6 @@ export default function RequestDetailsPage() {
                                     <tr className="text-gray-400 border-b border-gray-100">
                                         <th className="pb-3 font-medium">ID</th>
                                         <th className="pb-3 font-medium">Product Name</th>
-                                        {/* 🔧 FIXED: Added Available column */}
                                         <th className="pb-3 font-medium text-center">Available</th>
                                         <th className="pb-3 font-medium text-center">Requested</th>
                                         <th className="pb-3 font-medium text-center">Approve?</th>
@@ -258,7 +248,6 @@ export default function RequestDetailsPage() {
                                             <td className="py-4 text-center text-gray-500">{item.available_qty || 50}</td>
                                             <td className="py-4 text-center font-bold text-gray-800">{item.requested_qty}</td>
                                             
-                                            {/* 🔧 FIXED: Replaced button with a proper native Checkbox */}
                                             <td className="py-4 text-center">
                                                 <input 
                                                     type="checkbox" 
@@ -269,7 +258,6 @@ export default function RequestDetailsPage() {
                                                 />
                                             </td>
 
-                                            {/* 🔧 FIXED: Quantity Input linked to Checkbox */}
                                             <td className="py-4 text-center">
                                                 <input 
                                                     type="number" 
@@ -291,17 +279,14 @@ export default function RequestDetailsPage() {
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN */}
                 <div className="space-y-6">
                     
-                    {/* Approval Timeline */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <h2 className="text-lg font-bold mb-6 text-gray-800">Approval Timeline</h2>
                         <div className="relative border-l-2 border-dashed border-gray-200 ml-3 space-y-8">
                             
-                            {/* Dynamic Database Approvals */}
+
                             {request.approvals
-                                // 🔧 FIXED: Filters out Fulfilling Manager entirely if it's a push from Warehouse
                                 .filter(approval => !(isWarehousePush && approval.stage === 'FULFILLING_MANAGER'))
                                 .map((approval, index) => {
                                     
@@ -344,7 +329,6 @@ export default function RequestDetailsPage() {
                                     );
                             })}
 
-                            {/* Static Step: For Dispatch */}
                             <div className="relative pl-6">
                                 <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
                                     (request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') 
@@ -373,7 +357,6 @@ export default function RequestDetailsPage() {
                                 </div>
                             </div>
 
-                            {/* Static Step: Stock Received */}
                             <div className="relative pl-6">
                                 <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
                                     request.request_status === 'COMPLETED' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
@@ -399,7 +382,6 @@ export default function RequestDetailsPage() {
                         </div>
                     </div>
 
-                    {/* Summary */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <h2 className="text-lg font-bold mb-4 text-gray-800">Summary</h2>
                         <div className="space-y-3 text-sm">
@@ -418,7 +400,6 @@ export default function RequestDetailsPage() {
                         </div>
                     </div>
 
-                    {/* Actions */}
                     {canApprove && (
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-yellow-300">
                             <h2 className="text-lg font-bold mb-2 text-gray-800">Required Action</h2>
@@ -432,7 +413,6 @@ export default function RequestDetailsPage() {
                             />
 
                             <div className="space-y-3">
-                                {/* 🔧 FIXED: Approve button only renders if all checkboxes are ticked and quantities are valid */}
                                 {allProductsApproved && (
                                     <button 
                                         onClick={() => setShowApproveModal(true)}
@@ -456,7 +436,6 @@ export default function RequestDetailsPage() {
                 </div>
             </div>
 
-            {/* --- CANCEL CONFIRMATION MODAL --- */}
             {showCancelModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
@@ -488,7 +467,6 @@ export default function RequestDetailsPage() {
                 </div>
             )}
 
-            {/* --- APPROVE CONFIRMATION MODAL --- */}
             {showApproveModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                     <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
@@ -522,4 +500,5 @@ export default function RequestDetailsPage() {
 
         </div>
     );
+    */
 }

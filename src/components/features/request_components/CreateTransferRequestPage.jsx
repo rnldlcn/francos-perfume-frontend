@@ -1,8 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { RequestService } from '../../services/requestService';
 
 export default function CreateTransferRequestPage() {
+    /*
     const navigate = useNavigate();
 
     // Dynamically retrieve the branch ID from session storage established during login
@@ -185,8 +183,7 @@ export default function CreateTransferRequestPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* Branch Info Card */}
+
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                         <h2 className="text-lg font-bold mb-4 text-gray-800">Branch Information</h2>
                         <div className="grid grid-cols-2 gap-4">
@@ -218,7 +215,6 @@ export default function CreateTransferRequestPage() {
                         </div>
                     </div>
 
-                    {/* Combined Inventory Selection & Requested Items Card */}
                     <div className={`bg-white p-6 rounded-lg shadow-sm border border-gray-200 transition-opacity ${!sourceBranch ? 'opacity-50 pointer-events-none' : ''}`}>
                         <h2 className="text-lg font-bold mb-4 text-gray-800">Products to Request</h2>
                         
@@ -235,7 +231,6 @@ export default function CreateTransferRequestPage() {
                         ) : (
                             <div className="space-y-6">
                                 
-                                {/* 1. Add Product Controls (MOVED TO TOP) */}
                                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                     <h3 className="text-sm font-bold text-gray-700 mb-3">Add Product to List</h3>
                                     <div className="flex items-end gap-4 mb-4">
@@ -288,7 +283,6 @@ export default function CreateTransferRequestPage() {
                                     </button>
                                 </div>
 
-                                {/* 2. Requested Items Table (MOVED TO BOTTOM) */}
                                 <div className="overflow-x-auto border-t border-gray-100 pt-4">
                                     <table className="w-full text-left text-sm">
                                         <thead>
@@ -335,7 +329,6 @@ export default function CreateTransferRequestPage() {
 
                 </div>
 
-                {/* Summary Column */}
                 <div className="space-y-6">
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 sticky top-6">
                         <h2 className="text-lg font-bold mb-4 text-gray-800">Summary</h2>
@@ -375,4 +368,5 @@ export default function CreateTransferRequestPage() {
             </div>
         </div>
     );
+    */
 }

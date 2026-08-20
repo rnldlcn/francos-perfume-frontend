@@ -1,11 +1,9 @@
-import { useAuth } from "@/auth/UseAuth";
 import { getAllTransactions } from "@/services/transactionService";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 
 
 export const useTransaction = () => {
-    const { user } = useAuth();
     const isFirstLoad = useRef(true);
 
     const [transactions, setTransaction] = useState([]);
@@ -38,7 +36,7 @@ export const useTransaction = () => {
             setAsyncState((prev) => ({ ...prev, isFetching: true, error: null }));
         }
 
-        getAllTransactions(filter, user?.accessToken)
+        getAllTransactions(filter)
             .then(data => {
                 isFirstLoad.current = false;
                 setTransaction(data.data);
@@ -54,17 +52,14 @@ export const useTransaction = () => {
         .finally(() => {
             setAsyncState((prev) => ({ ...prev, isLoading: false, isFetching: false}));
         });
-    }, [filter, user?.accessToken])
+    }, [filter])
 
     useEffect(() => {
-      if (!user?.accessToken) {
-        return;
-      }
       const timer = setTimeout(() => {
         fetchTransactions();
       }, 0);
       return () => clearTimeout(timer);
-    }, [fetchTransactions, user?.accessToken]);
+    }, [fetchTransactions]);
 
     return { 
         transactions, 

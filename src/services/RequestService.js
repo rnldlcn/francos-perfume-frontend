@@ -9,7 +9,7 @@ export const getAllRequests = async (filter = {}) => {
   return response.data;
 };
 
-export const getRequestById = async (id) => {
+export const getRequestDetails = async (id) => {
   const response = await apiClient.get(`${PATH}/${id}`);
   return response.data;
 };
