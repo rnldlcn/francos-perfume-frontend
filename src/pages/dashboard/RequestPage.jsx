@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
 import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const RequestPage = () => {
     const navigate = useNavigate(); 
@@ -26,7 +26,10 @@ const RequestPage = () => {
 
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedRequest, setSelectedRequest] = useState(null);
-    const [isRequestDetailsPageOpen, setIsRequestDetailsPageOpen] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const requestId = searchParams.get("requestId");
+    const isRequestDetailsPageOpen = Boolean(requestId);
 
     const handleChangeDirection = (direction) => {
         updateFilter('direction', direction);
@@ -45,6 +48,17 @@ const RequestPage = () => {
         if (request) {
             setSelectedRequest(prev => prev ? { ...prev, ...request }: request);
         }
+    }
+
+    const handleViewRequest = (row) => {
+        const request = row || selectedRequest
+        if(request) {
+            setSearchParams({ requestId: selectedRequest.requestId });
+        }
+    }
+
+    const handleClose = () => {
+        setSearchParams({});
     }
   
 
@@ -128,13 +142,16 @@ const RequestPage = () => {
                 filter={filter}
                 updateFilter={updateFilter}
                 onRowClick={handleRowClick}
-                onRowDoubleClick={() => setIsRequestDetailsPageOpen(true)}
+                onRowDoubleClick={(row) => {
+                    handleRowClick(row);
+                    handleViewRequest(row);
+                }}
             />
         <div className="flex justify-end">
             <Button
                 variant={selectedRequest ? "default" : "ghost"}
                 disabled={!selectedRequest}
-                onClick={() => selectedRequest(true)}
+                onClick={handleViewRequest}
                 >
                 <Eye className="h-8 w-8"/>
                 View Request
