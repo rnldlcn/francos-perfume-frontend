@@ -1,5 +1,9 @@
+import { useParams } from "react-router-dom";
 
-export default function RequestDetailsPage() {
+export default function RequestDetailsPage({onClose}) {
+    const { requestId } = useParams();
+
+    console.log(requestId);
     /*
     const { id } = useParams(); 
     const navigate = useNavigate();
