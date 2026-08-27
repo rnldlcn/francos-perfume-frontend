@@ -18,23 +18,29 @@ const RequestPage = () => {
         asyncState,
         pagination,
         filter,
-        fetchRequest,
         updateFilter,
         filterOptions,
         fetchRequestDetails
     } = useRequest();
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedRequest, setSelectedRequest] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
+
+    const searchQuery = searchParams.get('search') || '';
+    const activeTab = searchParams.get('direction') || '';
+
+    const [selectedRequest, setSelectedRequest] = useState(null);
 
     const requestId = searchParams.get("requestId");
     const isRequestDetailsPageOpen = Boolean(requestId);
 
-    const handleChangeDirection = (direction) => {
+    const handleTabChange = (direction) => {
+        setSearchParams(prev => {
+            if (direction) prev.set("direction", direction);
+            else prev.delete("direction");
+            return prev;
+        });
         updateFilter('direction', direction);
-        updateFilter('pageCount', 1);
-    }
+    };
 
     const handleRowClick = async (row) => {
         if (selectedRequest?.requestId === row.requestId) {
@@ -48,25 +54,28 @@ const RequestPage = () => {
         if (request) {
             setSelectedRequest(prev => prev ? { ...prev, ...request }: request);
         }
-    }
+    };
 
     const handleViewRequest = (row) => {
         const request = row || selectedRequest
         if(request) {
             setSearchParams({ requestId: selectedRequest.requestId });
         }
-    }
+    };
 
     const handleClose = () => {
         setSearchParams({});
-    }
+    };
   
 
-    const handleSearchChange = (value) => {
-        const query = value?.target ? value.target.value : value;
-        setSearchQuery(query);
+    const handleSearchChange = (query) => {
+        setSearchParams(prev => {
+            if (query) prev.set("search", query);
+            else prev.delete("search");
+            return prev;
+        });
         updateFilter('search', query);
-    }
+    };
 
     return (
         <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
@@ -88,25 +97,25 @@ const RequestPage = () => {
         <div className="w-full justify-between items-center gap-3 mb-2 grid grid-cols-3">
 
             <Button
-                variant={filter.direction === "INBOUND" ? "default" : "outline"}
+                variant={activeTab === "INBOUND" ? "default" : "outline"}
                 disabled={user.branchLocation === "WAREHOUSE"}
-                onClick={() => handleChangeDirection("INBOUND")}
+                onClick={() => handleTabChange("INBOUND")}
             >
                 <ArrowDownLeft className="w-4 h-4" />
                     Inbound
             </Button>
 
             <Button
-                variant={filter.direction === "OUTBOUND" ? "default" : "outline"}
-                onClick={() => handleChangeDirection("OUTBOUND")}
+                variant={activeTab === "OUTBOUND" ? "default" : "outline"}
+                onClick={() => handleTabChange("OUTBOUND")}
             >
                 <ArrowUpRight className="w-4 h-4" />
                 Outbound
             </Button>
 
             <Button
-                variant={filter.direction === "" ? "default" : "outline"}
-                onClick={() => handleChangeDirection("")}
+                variant={activeTab === "" ? "default" : "outline"}
+                onClick={() => handleTabChange("")}
                 className="flex items-center gap-2"
             >
                 <ListFilter className="w-4 h-4" />
@@ -151,16 +160,21 @@ const RequestPage = () => {
             <Button
                 variant={selectedRequest ? "default" : "ghost"}
                 disabled={!selectedRequest}
-                onClick={handleViewRequest}
+                onClick={() => handleViewRequest()}
                 >
                 <Eye className="h-8 w-8"/>
                 View Request
             </Button>
         </div>
 
+        {isRequestDetailsPageOpen &&      
         <RequestDetailsPage 
+                requestId={requestId}
             selectedRequest={selectedRequest}
+                handleClose={handleClose}
+
         />
+        }
             
         </div>
   );

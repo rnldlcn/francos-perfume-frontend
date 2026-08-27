@@ -1,11 +1,21 @@
+import { useRequest } from "@/hooks/request_hooks/useRequest";
+import { useState } from "react";
 
-export default function RequestDetailsPage() {
+export default function RequestDetailsPage({ requestId, selectedRequest, handleClose}) {
+
+    const [details, setDetails] = useState(selectedRequest);
+    const { 
+        fetchRequestDetails, 
+
+    } = useRequest();
+
+    useEffect(() => {
+        if (!details && requestId) {
+            fetchRequestDetails(requestId).then((data) => setDetails(data));
+        }
+    }, [requestId, details]);
     /*
-    const { id } = useParams(); 
-    const navigate = useNavigate();
-    const { user } = useAuth(); 
-
-    // --- STATE ---
+    
     const [request, setRequest] = useState(null);
     const [loading, setLoading] = useState(true);
     const [remarks, setRemarks] = useState('');
