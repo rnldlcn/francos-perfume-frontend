@@ -1,23 +1,29 @@
 import { useRequest } from "@/hooks/request_hooks/useRequest";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-export default function RequestDetailsPage({ requestId, selectedRequest, handleClose}) {
+export default function RequestDetailsPage() {
 
-    const [details, setDetails] = useState(selectedRequest);
+    const { requestId } = useParams();
+    const navigate = useNavigate();
     const { 
-        fetchRequestDetails, 
-
+        fetchRequestDetails
     } = useRequest();
 
+    const [requestDetails, setRequestDetails] = useState(null);
+
     useEffect(() => {
-        if (!details && requestId) {
-            fetchRequestDetails(requestId).then((data) => setDetails(data));
+        if (requestId) {
+            fetchRequestDetails(requestId)
+                .then(data => 
+                    setRequestDetails(data),
+            );
+                
         }
-    }, [requestId, details]);
+    }, [requestId, fetchRequestDetails]);
+
     /*
-    
-    const [request, setRequest] = useState(null);
-    const [loading, setLoading] = useState(true);
+
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -25,35 +31,6 @@ export default function RequestDetailsPage({ requestId, selectedRequest, handleC
     const [lineItems, setLineItems] = useState([]);
 
     // Modal States
-    const [showCancelModal, setShowCancelModal] = useState(false);
-    const [showApproveModal, setShowApproveModal] = useState(false);
-
-    // --- FETCH DATA ---
-    useEffect(() => {
-        loadRequestDetails();
-    }, [id]);
-
-    const loadRequestDetails = async () => {
-        setLoading(true);
-        try {
-            const data = await RequestService.getRequestDetails(id);
-            setRequest(data);
-            
-            setLineItems(data.items.map(item => ({
-                ...item,
-                // 🔧 FIXED: Defaults to false so the user is forced to review and check them manually
-                isApproved: false, 
-                approved_qty: item.requested_qty 
-            })));
-
-        } catch (error) {
-            console.error("Failed to fetch request details:", error);
-            alert("Could not load request details. Please try again.");
-            navigate('/home/requests');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // --- HANDLERS ---
     const handleLineItemToggle = (itemId, checked) => {

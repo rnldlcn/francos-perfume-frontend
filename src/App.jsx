@@ -73,7 +73,7 @@ const App = () => {
           <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'STAFF']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
-            <Route path="requests/:id" element={<RequestDetailsPage />} />
+            <Route path="requests/:requestId" element={<RequestDetailsPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
             {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}

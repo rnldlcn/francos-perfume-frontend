@@ -1,13 +1,12 @@
 
 import { useAuth } from "@/auth/UseAuth";
 import { requestColumns } from "@/components/features/request_components/RequestColumns";
-import RequestDetailsPage from "@/components/features/request_components/RequestDetailsPage";
 import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
 import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 const RequestPage = () => {
@@ -20,7 +19,6 @@ const RequestPage = () => {
         filter,
         updateFilter,
         filterOptions,
-        fetchRequestDetails
     } = useRequest();
     
     const [searchParams, setSearchParams] = useSearchParams();
@@ -30,8 +28,10 @@ const RequestPage = () => {
 
     const [selectedRequest, setSelectedRequest] = useState(null);
 
-    const requestId = searchParams.get("requestId");
-    const isRequestDetailsPageOpen = Boolean(requestId);
+    useEffect(() => {
+        updateFilter('direction', activeTab);
+        updateFilter('search', searchQuery);
+    }, [activeTab, searchQuery]);
 
     const handleTabChange = (direction) => {
         setSearchParams(prev => {
@@ -49,28 +49,19 @@ const RequestPage = () => {
         }
 
         setSelectedRequest(row);    
-
-        const request = await fetchRequestDetails(row.requestId);
-        if (request) {
-            setSelectedRequest(prev => prev ? { ...prev, ...request }: request);
-        }
     };
 
     const handleViewRequest = (row) => {
-        const request = row || selectedRequest
-        if(request) {
-            navigate(`/home/requests/${request.requestId}`);
+        const targetRequest = row || selectedRequest;
+        if (targetRequest) {
+            // change it to requestDisplayId eventually for better user exp
+            navigate(`/home/requests/${targetRequest.requestId}`);
         }
     };
 
-    const handleClose = () => {
-        setSearchParams({});
-    };
-  
-
     const handleSearchChange = (query) => {
         setSearchParams(prev => {
-            if (query) prev.set("search", query);
+            if (query) prev.set('search', query);
             else prev.delete("search");
             return prev;
         });
@@ -166,13 +157,7 @@ const RequestPage = () => {
                 View Request
             </Button>
         </div>
-
-        {isRequestDetailsPageOpen && (
-            <RequestDetailsPage 
-                onClose={handleClose}
-            />
-        )};
-
+        
         </div>
   );
 };
