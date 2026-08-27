@@ -22,7 +22,7 @@ const RequestPage = () => {
         filterOptions,
         fetchRequestDetails
     } = useRequest();
-
+    
     const [searchParams, setSearchParams] = useSearchParams();
 
     const searchQuery = searchParams.get('search') || '';
@@ -168,12 +168,12 @@ const RequestPage = () => {
         </div>
 
         {isRequestDetailsPageOpen &&      
-        <RequestDetailsPage 
+            <RequestDetailsPage 
                 requestId={requestId}
-            selectedRequest={selectedRequest}
+                selectedRequest={selectedRequest}
                 handleClose={handleClose}
 
-        />
+            />
         }
             
         </div>
