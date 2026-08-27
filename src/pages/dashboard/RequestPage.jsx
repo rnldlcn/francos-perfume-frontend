@@ -59,7 +59,7 @@ const RequestPage = () => {
     const handleViewRequest = (row) => {
         const request = row || selectedRequest
         if(request) {
-            setSearchParams({ requestId: selectedRequest.requestId });
+            navigate(`/home/requests/${request.requestId}`);
         }
     };
 
@@ -141,7 +141,6 @@ const RequestPage = () => {
 
         </div>
 
-        
             <DataTable 
                 columns={requestColumns}
                 data={requests}
@@ -150,6 +149,7 @@ const RequestPage = () => {
                 pagination={pagination}
                 filter={filter}
                 updateFilter={updateFilter}
+                selectedItem={selectedRequest}
                 onRowClick={handleRowClick}
                 onRowDoubleClick={(row) => {
                     handleRowClick(row);
@@ -160,22 +160,19 @@ const RequestPage = () => {
             <Button
                 variant={selectedRequest ? "default" : "ghost"}
                 disabled={!selectedRequest}
-                onClick={() => handleViewRequest()}
+                onClick={() => handleViewRequest(selectedRequest)}
                 >
                 <Eye className="h-8 w-8"/>
                 View Request
             </Button>
         </div>
 
-        {isRequestDetailsPageOpen &&      
+        {isRequestDetailsPageOpen && (
             <RequestDetailsPage 
-                requestId={requestId}
-                selectedRequest={selectedRequest}
-                handleClose={handleClose}
-
+                onClose={handleClose}
             />
-        }
-            
+        )};
+
         </div>
   );
 };
