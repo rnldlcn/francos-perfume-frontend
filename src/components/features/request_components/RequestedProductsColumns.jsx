@@ -1,18 +1,13 @@
-export const requestedProductsColumns = (onApproveChange, onQtyChange) => [
+export const requestedProductsColumns = ( itemApprovals, handleApproveToggle, handleQtyChange ) => [
     {
-        accessorKey: "productId",
+        accessorKey: "productDisplayId",
         header: "ID",
-        cell: (row) => row.productId,
+        cell: (row) => row.productDisplayId,
     },
     {
-        accessorKey: "perfumeName",
+        accessorKey: "productName",
         header: "Perfume Name",
-        cell: (row) => row.perfumeName,
-    },
-    {
-        accessorKey: "availableQty",
-        header: "Available",
-        cell: (row) => row.availableQty,
+        cell: (row) => row.productName,
     },
     {
         accessorKey: "requestedQty",
@@ -23,11 +18,11 @@ export const requestedProductsColumns = (onApproveChange, onQtyChange) => [
         accessorKey: "isApproved",
         header: "Approve?",
         cell: (row) => (
-            <input 
+            <input
                 type="checkbox"
-                checked={row.isApproved}
-                onChange={(e) => onApproveChange(row.productId, e.target.checked)}
-                className="w-5 h-5 rounded border-gray-300 accent-custom-black cursor-pointer"
+                checked={itemApprovals[row.requestItemId]?.isApproved ?? true}
+                onChange={(e) => handleApproveToggle(row.requestItemId, e.target.checked)}
+                className="w-5 h-5 rounded border-gray-300 accent-black cursor-pointer"
             />
         ),
     },
@@ -35,11 +30,11 @@ export const requestedProductsColumns = (onApproveChange, onQtyChange) => [
         accessorKey: "approvedQty",
         header: "Approved Qty",
         cell: (row) => (
-            <input 
+            <input
                 type="number"
-                disabled={!row.isApproved}
-                value={row.approvedQty}
-                onChange={(e) => onQtyChange(row.productId, e.target.value)}
+                disabled={!itemApprovals[row.requestItemId]?.isApproved}
+                value={itemApprovals[row.requestItemId]?.approvedQty ?? row.requestedQty}
+                onChange={(e) => handleQtyChange(row.requestItemId, e.target.value)}
                 className="w-20 px-2 py-1 border border-gray-300 rounded text-center disabled:bg-gray-100"
             />
         ),
