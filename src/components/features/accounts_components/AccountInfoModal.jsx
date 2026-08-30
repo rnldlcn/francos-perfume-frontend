@@ -47,7 +47,6 @@ const AccountInfoModal = ({
 
   const handleToggleStatus = () => {
     const text = isActive ? "deactivate" : "activate";
-
     setConfig({
       title: `Are you sure you want to ${text} this account?`,
       description: isActive

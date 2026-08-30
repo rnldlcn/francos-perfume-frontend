@@ -1,24 +1,23 @@
-import { useAuth } from "@/auth/UseAuth";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RequestInformation from "./RequestInformation";
 import RequestTimeline from "./RequestTimeline";
 import { requestedProductsColumns } from "./RequestedProductsColumns";
 
 export default function RequestDetailsPage() {
-    const { id, requestId: routeRequestId } = useParams();
-    const requestId = routeRequestId || id;
+    const { 
+        fetchRequestDetails 
+    } = useRequest();
+
+    const { requestId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
-    const { fetchRequestDetails } = useRequest();
 
     const [requestDetails, setRequestDetails] = useState(null);
     const [remarks, setRemarks] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showApproveModal, setShowApproveModal] = useState(false);
     
     // Track row modifications for approval inputs
@@ -58,7 +57,7 @@ export default function RequestDetailsPage() {
         }));
     };
 
-    // Summary Calculations
+    /*
     const totalProducts = requestDetails?.items?.length || 0;
     const totalRequestedUnits = useMemo(() => {
         return requestDetails?.items?.reduce((acc, curr) => acc + (curr.requestedQty || 0), 0) || 0;
@@ -69,24 +68,30 @@ export default function RequestDetailsPage() {
             return acc + (curr.isApproved ? Number(curr.approvedQty || 0) : 0);
         }, 0);
     }, [itemApprovals]);
+    */
 
     const isWarehousePush = requestDetails?.requestedFrom === "WAREHOUSE";
     const canApprove = requestDetails?.requestStatus === "PENDING";
-    const allProductsApproved = Object.values(itemApprovals).some((item) => item.isApproved);
+    //const allProductsApproved = Object.values(itemApprovals).some((item) => item.isApproved);
 
-    const handleAction = (actionType) => {
-        setIsSubmitting(true);
-        // Add your approval/rejection API handler logic here
-        console.log("Action:", actionType, { remarks, itemApprovals });
-        setIsSubmitting(false);
-    };
+    const handleRejectRequest = async (requestId) => {
+        // add reject endpoint here
+    }
+    
+    const handleConfirmRequest = async (requestId) => {
+        // add confirm endpoint here
+    }
+
+    const handleCancelRequest = async (requestId) => {
+        // add cancel endpoint here
+    }
 
     if (!requestDetails) {
         return <div className="p-6 text-gray-500 font-montserrat">Loading request details...</div>;
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat">
+        <div className="p-6 min-h-screen font-montserrat">
             {/* Header / Navigation */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
@@ -97,8 +102,8 @@ export default function RequestDetailsPage() {
                     >
                         <ArrowLeft className="w-4 h-4" /> Back
                     </Button>
-                    <h1 className="text-2xl font-bold text-gray-900">
-                        {requestDetails.requestDisplayId || `REQ-${requestId}`}
+                    <h1 className="text-2xl font-bold text-custom-black">
+                        {requestDetails.requestDisplayId}
                     </h1>
                     <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase">
                         {requestDetails.requestStatus}
@@ -106,7 +111,10 @@ export default function RequestDetailsPage() {
                 </div>
 
                 {canApprove && (
-                    <Button variant="destructive" onClick={() => handleAction("CANCEL")}>
+                    <Button 
+                        variant="destructive" 
+                        onClick={() => handleCancelRequest(requestId)}
+                    >
                         Cancel Request
                     </Button>
                 )}
@@ -114,7 +122,9 @@ export default function RequestDetailsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <RequestInformation request={requestDetails} />
+                    <RequestInformation 
+                        request={requestDetails} 
+                    />
 
                     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Requested Products</h2>
@@ -140,13 +150,13 @@ export default function RequestDetailsPage() {
                         canApprove={canApprove}
                         remarks={remarks}
                         setRemarks={setRemarks}
-                        allProductsApproved={allProductsApproved}
-                        isSubmitting={isSubmitting}
+                        //isSubmitting={isSubmitting}
                         setShowApproveModal={setShowApproveModal}
-                        handleAction={handleAction}
-                        totalProducts={totalProducts}
-                        totalRequestedUnits={totalRequestedUnits}
-                        totalApprovedUnits={totalApprovedUnits}
+                        //allProductsApproved={allProductsApproved}
+                        //handleAction={handleAction}
+                        //totalProducts={totalProducts}
+                        //totalRequestedUnits={totalRequestedUnits}
+                        //totalApprovedUnits={totalApprovedUnits}
                     />
                 </div>
             </div>

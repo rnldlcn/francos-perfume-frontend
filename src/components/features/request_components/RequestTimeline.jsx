@@ -13,27 +13,29 @@ const RequestTimeline = ({
     isSubmitting,
     setShowApproveModal,
     handleAction,
-    totalProducts,
-    totalRequestedUnits,
-    totalApprovedUnits,
+    //totalProducts,
+    //totalRequestedUnits,
+    //totalApprovedUnits,
 }) => {
-    // Standardize timeline step badges
+
     const renderBadge = (status) => {
         switch (status) {
             case "APPROVED":
             case "COMPLETED":
             case "DISPATCHED":
-                return (
-                    <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-none px-3 py-0.5 font-medium rounded-md text-xs">
-                        {status === "APPROVED" ? "Approved" : status}
-                    </Badge>
-                );
+            return (
+                <Badge variant="outline" className="bg-emerald-100 text-emerald-700 border-none px-3 py-0.5 font-medium rounded-md text-xs">
+                    {status === "APPROVED" ? "Approved" : status}
+                </Badge>
+            );
+
             case "REJECTED":
                 return (
                     <Badge variant="outline" className="bg-red-100 text-red-700 border-none px-3 py-0.5 font-medium rounded-md text-xs">
                         Rejected
                     </Badge>
                 );
+
             case "PENDING":
             default:
                 return (
@@ -70,7 +72,7 @@ const RequestTimeline = ({
                 ) : (
                     "Waiting for approval"
                 ),
-                status: approval.status,
+                status: approval.status,    
             };
         });
 
@@ -130,15 +132,15 @@ const RequestTimeline = ({
                     <div className="space-y-2 text-sm font-medium">
                         <div className="flex justify-between">
                             <span className="text-gray-400">Products:</span>
-                            <span className="font-bold text-gray-900">{totalProducts ?? 0}</span>
+                            <span className="font-bold text-gray-900">{0}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-400">Total Units:</span>
-                            <span className="font-bold text-gray-900">{totalRequestedUnits ?? 0}</span>
+                            <span className="font-bold text-gray-900">{0}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-gray-400">Approved Units:</span>
-                            <span className="font-bold text-emerald-600">{totalApprovedUnits ?? 0}</span>
+                            <span className="font-bold text-emerald-600">{0}</span>
                         </div>
                     </div>
                 </div>

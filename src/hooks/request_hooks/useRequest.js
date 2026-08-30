@@ -66,6 +66,7 @@ export const useRequest = () => {
     const fetchRequestDetails = useCallback(async (requestId) => {
         try {
             const data = await getRequestDetails(requestId);
+            //console.log(data);
             return data;
         } catch (err) {
             setAsyncState({ error: err });
