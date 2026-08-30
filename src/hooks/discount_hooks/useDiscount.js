@@ -1,4 +1,4 @@
-import { addNewDiscount, deleteDiscount, getAllDiscounts, getDiscountDetails, getDiscountFilters, patchDiscount, toggleDiscountStatus } from "@/services/discountService";
+import { addNewDiscount, deleteDiscount, getAllDiscounts, getDiscountDetails, getDiscountFilters, patchDiscount, toggleDiscountStatus } from "@/services/DiscountService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";

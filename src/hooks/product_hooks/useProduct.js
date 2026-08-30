@@ -1,5 +1,5 @@
 import { useAuth } from "@/auth/UseAuth";
-import { addNewProduct, getAllProducts, getProductDetails, getProductFilters, updateProductDetails } from "@/services/productService";
+import { addNewProduct, getAllProducts, getProductDetails, getProductFilters, updateProductDetails } from "@/services/ProductService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";

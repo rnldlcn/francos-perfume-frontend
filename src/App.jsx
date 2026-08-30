@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, 
 import { useAuth } from './auth/UseAuth';
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
+import CreateTransferRequestPage from './components/features/request_components/CreateTransferRequestPage';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import { ArchivesPage, AuditLogPage, BarcodePage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
@@ -74,6 +75,7 @@ const App = () => {
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
             <Route path="requests/:requestId" element={<RequestDetailsPage />} />
+            <Route path="requests/create" element={<CreateTransferRequestPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
             <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
             {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}

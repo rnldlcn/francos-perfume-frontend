@@ -27,6 +27,7 @@ const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount
   const [config, setConfig] = useState(null);
 
   const [data, setData] = useState({});
+  // use async state instead of setErrors
   const [errors,setErrors] = useState({});
 
   if (!isOpen) return null;

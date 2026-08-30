@@ -1,4 +1,4 @@
-import { getAllRequests, getRequestDetails, getRequestFilters } from "@/services/requestService";
+import { getAllRequests, getRequestDetails, getRequestFilters } from "@/services/RequestService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
@@ -32,6 +32,8 @@ export const useRequest = () => {
 
     const [filterOptions, setFilterOptions] = useState({
         requestStatus: [],
+        branchLocation: [],
+        products: [],
     });
 
     const REQUEST_FILTER_SCHEMA = [
@@ -66,7 +68,7 @@ export const useRequest = () => {
     const fetchRequestDetails = useCallback(async (requestId) => {
         try {
             const data = await getRequestDetails(requestId);
-            //console.log(data);
+            console.log(data);
             return data;
         } catch (err) {
             setAsyncState({ error: err });

@@ -79,7 +79,7 @@ const RequestPage = () => {
 
                 <Button 
                 variant="default"
-                onClick={() => navigate('/home/new-transfer')} 
+                onClick={() => navigate('/home/requests/create')} 
                 >
                     <Plus className="w-4 h-4"/> New Transfer
                 </Button>

@@ -1,4 +1,4 @@
-import { getAllTransactions } from "@/services/transactionService";
+import { getAllTransactions } from "@/services/TransactionService";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 

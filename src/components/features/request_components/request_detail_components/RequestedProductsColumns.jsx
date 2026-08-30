@@ -1,4 +1,5 @@
-export const requestedProductsColumns = ( itemApprovals, handleApproveToggle, handleQtyChange ) => [
+export const requestedProductsColumns = ( itemApprovals, handleApproveToggle, handleQtyChange ) => 
+[
     {
         accessorKey: "productDisplayId",
         header: "ID",
@@ -17,8 +18,8 @@ export const requestedProductsColumns = ( itemApprovals, handleApproveToggle, ha
     {
         accessorKey: "isApproved",
         header: "Approve?",
-        cell: (row) => (
-            <input
+        render: (row) => (
+            <input  
                 type="checkbox"
                 checked={itemApprovals[row.requestItemId]?.isApproved ?? true}
                 onChange={(e) => handleApproveToggle(row.requestItemId, e.target.checked)}
@@ -29,7 +30,7 @@ export const requestedProductsColumns = ( itemApprovals, handleApproveToggle, ha
     {
         accessorKey: "approvedQty",
         header: "Approved Qty",
-        cell: (row) => (
+        render: (row) => (
             <input
                 type="number"
                 disabled={!itemApprovals[row.requestItemId]?.isApproved}

@@ -1,4 +1,4 @@
-import { cleanFilters } from "@/utils/formattingUtils.js";
+import { cleanFilters } from "@/utils/formattingUtils.jsx";
 import apiClient from "./apiClient";
 
 const PATH = "/AuditLog";
