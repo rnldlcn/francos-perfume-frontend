@@ -1,5 +1,5 @@
-import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, patchAccountDetails, resetAccountPassword } from "@/services/accountService";
-import { archiveAccount } from "@/services/archiveService";
+import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, patchAccountDetails, resetAccountPassword } from "@/services/AccountService";
+import { archiveAccount } from "@/services/ArchiveService";
 import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";

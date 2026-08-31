@@ -7,20 +7,20 @@ import { isValid, validateForm } from "@/utils/validationUtils";
 import { useState } from 'react';
 
 const accountValidationSchema = {
-  firstName: [isValid.required],
-  lastName: [isValid.required],
-  email: [isValid.required, isValid.email],
-  contactNumber: [isValid.required, isValid.phone],
-  branchLocation: [isValid.required],
-  employeeRole: [isValid.required],
-  employeeShift: [isValid.required],
+    firstName: [isValid.required],
+    lastName: [isValid.required],
+    email: [isValid.required, isValid.email],
+    contactNumber: [isValid.required, isValid.phone],
+    branchLocation: [isValid.required],
+    employeeRole: [isValid.required],
+    employeeShift: [isValid.required],
 };
 
 const ROLE_RANKS = {
-  STAFF: 1,
-  MANAGER: 2,
-  ADMIN: 3,
-  OWNER: 4,
+    STAFF: 1,
+    MANAGER: 2,
+    ADMIN: 3,
+    OWNER: 4,
 };
 
 const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount }) => {

@@ -1,17 +1,29 @@
+import { useAuth } from '@/auth/UseAuth';
 import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 
 const TransferSummary = ({ 
     fromBranch,
     toBranch,
-    userBranchId,
     productCount,
     totalUnits,
     message,
     onMessageChange,
     onSubmit,
     isSubmitting,
+    branchOptions = [],
 }) => {
+    const { user } = useAuth();
+
+    const userBranchId = user.branchId;
+
+    const fromBranchLabel = branchOptions.find(b => b.value === fromBranch)?.label;
+    const toBranchLabel = branchOptions.find(b => b.value === toBranch)?.label;
+
+    const isNotRelatedToBranchDirection = userBranchId
+    ? String(fromBranch) !== String(userBranchId) && String(toBranch) !== String(userBranchId)
+    : false;
+
     const direction = fromBranch === userBranchId ? 'OUTBOUND' : 'INBOUND';
     const hasProducts = productCount > 0;
 
@@ -19,11 +31,20 @@ const TransferSummary = ({
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col gap-4">
             <h2 className="text-lg font-bold text-foreground">Transfer Request Summary</h2>
 
-            {/* Direction */}
             {fromBranch && toBranch && (
-                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center text-sm">
-                    The request will be an{' '}
-                    <span className="font-bold">{direction}</span> request
+                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center text-sm text-rose-900">
+                    {isNotRelatedToBranchDirection ? (
+                        <span>
+                            The request will be a transfer from{' '}
+                            <span className="font-bold">{fromBranchLabel}</span> to{' '}
+                            <span className="font-bold">{toBranchLabel}</span>
+                        </span>
+                    ) : (
+                        <span>
+                            The request will be an{' '}
+                            <span className="font-bold">{direction}</span> request
+                        </span>
+                    )}
                 </div>
             )}
 

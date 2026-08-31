@@ -25,8 +25,7 @@ const ProductSelector = ({
                     />
                 </div>
 
-                {/* Available Qty */}
-                <div className="text-center min-w-[80px]">
+                <div className="text-center min-w-20">
                     <p className="text-xs text-muted-foreground mb-1 leading-tight">
                         Available Qty in<br/>Source Branch
                     </p>

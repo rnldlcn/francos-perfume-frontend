@@ -30,11 +30,7 @@ export const useRequest = () => {
         pageSize: 10,
     })
 
-    const [filterOptions, setFilterOptions] = useState({
-        requestStatus: [],
-        branchLocation: [],
-        products: [],
-    });
+    const [filterOptions, setFilterOptions] = useState([]);
 
     const REQUEST_FILTER_SCHEMA = [
         { key: "requestStatus", label: "Filter: Status", allLabel: "All Statuses" },
@@ -68,7 +64,6 @@ export const useRequest = () => {
     const fetchRequestDetails = useCallback(async (requestId) => {
         try {
             const data = await getRequestDetails(requestId);
-            console.log(data);
             return data;
         } catch (err) {
             setAsyncState({ error: err });
@@ -87,6 +82,7 @@ export const useRequest = () => {
         try {
             const data = await getRequestFilters();
             setFilterOptions(buildFilterOptions(data, REQUEST_FILTER_SCHEMA));
+            return data;
         } catch (err) {
             setAsyncState((prev) => ({ ...prev, error: err }));
         } finally {
@@ -106,6 +102,7 @@ export const useRequest = () => {
         fetchRequests, 
         updateFilter,
         filterOptions,
-        fetchRequestDetails
+        fetchRequestDetails,
+        fetchRequestFilters
     }
 }

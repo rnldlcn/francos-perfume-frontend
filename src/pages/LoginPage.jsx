@@ -6,7 +6,7 @@ import logo from '../assets/FrancoPerfumeLogo.png';
 
 const LoginPage = () => {
   const {
-    error,
+    //error,
     isLoading,
     displayName, 
     handleLogin, 

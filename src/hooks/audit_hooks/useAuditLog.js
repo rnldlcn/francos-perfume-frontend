@@ -1,5 +1,5 @@
 import { useAuth } from "@/auth/UseAuth";
-import { getAllAuditLogs } from "@/services/auditLogService";
+import { getAllAuditLogs } from "@/services/AuditLogService";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 

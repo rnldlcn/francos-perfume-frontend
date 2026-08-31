@@ -10,7 +10,7 @@ import { requestedProductsColumns } from "./request_detail_components/RequestedP
 
 export default function RequestDetailsPage() {
     const { 
-        fetchRequestDetails 
+        fetchRequestDetails,
     } = useRequest();
 
     const { requestId } = useParams();

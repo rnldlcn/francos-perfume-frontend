@@ -1,4 +1,4 @@
-import { getAllProductsPOS } from "@/services/pointOfSaleService";
+import { getAllProductsPOS } from "@/services/PointOfSaleService";
 import { useEffect, useState } from "react";
 import { useAuth } from "../../auth/UseAuth";
 
