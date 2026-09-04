@@ -4,13 +4,25 @@ import { Minus, Plus } from 'lucide-react';
 
 const ProductSelector = ({ 
     selectedProduct, 
-    onProductChange, 
+    setSelectedProduct,
     quantity, 
-    onQtyChange,
-    availableQty,
+    setQuantity,
     productOptions,
-    onAddProduct,
+    handleAddProduct,
+    fromBranch,
+    branchOptions,
 }) => {
+    const selectedProductOption = productOptions.find(p => p.value === selectedProduct);
+    const availableQty = selectedProductOption?.availableQty ?? null;
+
+    const fromBranchName = branchOptions?.find(
+        b => b.value === fromBranch
+    )?.label?.toUpperCase();
+    const isWarehouse = fromBranchName === 'WAREHOUSE';
+
+    const maxQty = isWarehouse ? 99 : (availableQty ?? 99);
+    const displayQty = isWarehouse ? '99' : (availableQty ?? '--');
+
     return (
         <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
             <h2 className="text-lg font-bold text-foreground mb-4">Select Products to Request</h2>
@@ -19,7 +31,7 @@ const ProductSelector = ({
                 <div className="flex-1">
                     <FormSelect
                         value={selectedProduct}
-                        onChange={onProductChange}
+                        onChange={setSelectedProduct}
                         options={productOptions}
                         placeholder="Select product..."
                     />
@@ -30,7 +42,7 @@ const ProductSelector = ({
                         Available Qty in<br/>Source Branch
                     </p>
                     <p className="font-bold text-foreground">
-                        {availableQty ?? '--'}
+                        {selectedProduct ? displayQty : '--'}
                     </p>
                 </div>
 
@@ -42,33 +54,38 @@ const ProductSelector = ({
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => onQtyChange(Math.max(1, quantity - 1))}
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
                         >
                             <Minus size={14} />
                         </Button>
                         <input
                             type="number"
                             value={quantity}
-                            onChange={(e) => onQtyChange(Number(e.target.value))}
+                            onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setQuantity(isWarehouse ? Math.max(1, val) : Math.min(maxQty, Math.max(1, val)));
+                            }}
                             className="w-14 text-center border border-gray-300 rounded-md p-1 text-sm font-bold"
                             min={1}
-                            max={availableQty}
+                            max={isWarehouse ? undefined : availableQty}
                         />
                         <Button
                             variant="outline"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => onQtyChange(Math.min(availableQty ?? Infinity, quantity + 1))}
+                            onClick={() => setQuantity(prev => 
+                                isWarehouse ? prev + 1 : Math.min(maxQty, prev + 1)
+                            )}
                         >
                             <Plus size={14} />
                         </Button>
                     </div>
-                </div>
+                </div>  
             </div>
 
             <Button
                 className="w-full bg-custom-primary text-custom-black hover:bg-custom-primary-50-opacity"
-                onClick={onAddProduct}
+                onClick={handleAddProduct}
                 disabled={!selectedProduct}
             >
                 Add Product

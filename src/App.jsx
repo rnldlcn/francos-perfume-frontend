@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/UseAuth';
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
+import DeliveryDetailsPage from './components/features/delivery_components/DeliveryDetailsPage';
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
 import CreateTransferRequestPage from './components/features/request_components/CreateTransferRequestPage';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
@@ -77,7 +78,8 @@ const App = () => {
             <Route path="requests/:requestId" element={<RequestDetailsPage />} />
             <Route path="requests/create" element={<CreateTransferRequestPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
-            <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
+            <Route path="deliveries/:deliveryId" element={<DeliveryDetailsPage />} />
+            <Route path="deliveries/confirm/:deliveryId" element={<DeliveryConfirmationPage />} />
             {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}
             <Route path="barcode" element={<BarcodePage />} /> 
           </Route>

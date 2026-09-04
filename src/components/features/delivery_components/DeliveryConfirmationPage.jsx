@@ -1,12 +1,11 @@
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
+import { receiveDelivery } from "@/services/DeliveryService";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-// TODO: Replace with your actual useDelivery hook
-// import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
 
 // Reason options for partial/missing items
 // TODO: Confirm these reason options with your backend enum values
@@ -21,12 +20,12 @@ const REASON_OPTIONS = [
 const DeliveryConfirmationPage = () => {
     const { deliveryId } = useParams();
     const navigate = useNavigate();
+    const { fetchDeliveryDetails } = useDelivery();
+
+    const [delivery, setDelivery] = useState(null);
     const [config, setConfig] = useState(null);
     const [remarks, setRemarks] = useState("");
-
-    // TODO: Replace with real data from useDelivery hook
-    // const { fetchDeliveryDetails, confirmDelivery, asyncState } = useDelivery();
-    const [delivery, setDelivery] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Track per-item received state
     // { [itemId]: { isReceived: bool, receivedQty: number, reason: string } }
@@ -34,20 +33,26 @@ const DeliveryConfirmationPage = () => {
 
     useEffect(() => {
         if (!deliveryId) return;
-        // TODO: fetch delivery details
-        // fetchDeliveryDetails(deliveryId).then(data => {
-        //     setDelivery(data);
-        //     const initial = {};
-        //     (data.items || []).forEach(item => {
-        //         initial[item.deliveryItemId] = {
-        //             isReceived: true,
-        //             receivedQty: item.requestedQty,
-        //             reason: "",
-        //         };
-        //     });
-        //     setItemReceipts(initial);
-        // });
-    }, [deliveryId]);
+
+        let isMounted = true;
+        fetchDeliveryDetails(deliveryId).then((data) => {
+            if (!isMounted || !data) return;
+            setDelivery(data);
+            const initial = {};
+            (data.items || []).forEach((item) => {
+                initial[item.deliveryItemId] = {
+                    isReceived: true,
+                    receivedQty: item.quantity,
+                    reason: "",
+                };
+            });
+            setItemReceipts(initial);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [deliveryId, fetchDeliveryDetails]);
 
     const handleReceiveToggle = (itemId, isReceived) => {
         setItemReceipts(prev => ({
@@ -55,7 +60,7 @@ const DeliveryConfirmationPage = () => {
             [itemId]: {
                 ...prev[itemId],
                 isReceived,
-                receivedQty: isReceived ? prev[itemId]?.receivedQty || 0 : 0,
+                receivedQty: isReceived ? (prev[itemId]?.receivedQty || 0) : 0,
                 reason: isReceived ? "" : prev[itemId]?.reason,
             }
         }));
@@ -79,38 +84,54 @@ const DeliveryConfirmationPage = () => {
     };
 
     const handleConfirm = () => {
+        const items = delivery?.items || [];
+        const isComplete = items.every((item) => {
+            const receipt = itemReceipts[item.deliveryItemId];
+            return receipt?.isReceived && Number(receipt?.receivedQty) === Number(item.quantity);
+        });
+
         setConfig({
-            title: "Confirm delivery received?",
-            description: "This will update your inventory and mark the delivery as completed.",
-            confirmText: "Confirm Delivery",
+            title: isComplete
+                ? "Mark this delivery as completed?"
+                : "Mark this delivery as partially completed?",
+            description: isComplete
+                ? "All items have been received in full. This will finalize the delivery and update your inventory."
+                : "Some items are missing or received in lower quantities. The delivery will be marked as partially completed, and your inventory will be updated to reflect what was actually received.",
+            confirmText: isComplete ? "Confirm Completion" : "Confirm Partial",
+            confirmVariant: isComplete ? "default" : "destructive",
             onConfirm: async () => {
-                // TODO: Build payload and call confirmDelivery service
-                // const payload = {
-                //     remarks,
-                //     items: Object.entries(itemReceipts).map(([itemId, data]) => ({
-                //         deliveryItemId: Number(itemId),
-                //         isReceived: data.isReceived,
-                //         receivedQty: data.receivedQty,
-                //         reason: data.reason,
-                //     }))
-                // };
-                // await confirmDelivery(deliveryId, payload, user?.accessToken);
-                // navigate("/home/deliveries");
-            }
+                setIsSubmitting(true);
+                try {
+                    const payload = {
+                        remarks,
+                        items: Object.entries(itemReceipts).map(([itemId, data]) => ({
+                            deliveryItemId: Number(itemId),
+                            isReceived: data.isReceived,
+                            receivedQty: data.receivedQty,
+                            reason: data.reason,
+                        }))
+                    };
+                    await receiveDelivery(deliveryId, payload);
+                    navigate("/home/deliveries");
+                } catch (err) {
+                    console.error("Failed to confirm delivery:", err);
+                } finally {
+                    setIsSubmitting(false);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
         });
     };
 
-    // TODO: Replace with actual delivery data check
     if (!delivery) {
         return (
             <div className="flex items-center justify-center h-full font-montserrat text-muted-foreground">
-                {/* TODO: Add Skeleton loading state here */}
                 Loading delivery details...
             </div>
         );
     }
 
-    // TODO: Replace with actual field names from your delivery DTO
     const isInbound = delivery.direction === "INBOUND";
 
     return (
@@ -127,8 +148,7 @@ const DeliveryConfirmationPage = () => {
                 </Button>
 
                 <h1 className="text-2xl font-bold text-custom-black">
-                    {/* TODO: delivery.deliveryDisplayId */}
-                    DEL-001
+                    {delivery.deliveryDisplayId}
                 </h1>
 
                 <Badge
@@ -139,8 +159,7 @@ const DeliveryConfirmationPage = () => {
                             : "bg-purple-100 text-purple-700"
                     }`}
                 >
-                    {/* TODO: delivery.direction */}
-                    INBOUND
+                    {delivery.direction}
                 </Badge>
             </div>
 
@@ -161,15 +180,13 @@ const DeliveryConfirmationPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* TODO: Replace with delivery.items.map() */}
-                            {/* Example structure:
-                            {(delivery.items || []).map(item => {
+                            {(delivery.items || []).map((item) => {
                                 const receipt = itemReceipts[item.deliveryItemId] || {};
                                 return (
                                     <tr key={item.deliveryItemId} className="border-b border-gray-50 last:border-0">
                                         <td className="py-4 text-muted-foreground">{item.productDisplayId}</td>
                                         <td className="py-4 font-medium text-custom-black">{item.productName}</td>
-                                        <td className="py-4 text-center font-bold">{item.requestedQty}</td>
+                                        <td className="py-4 text-center font-bold">{item.quantity}</td>
                                         <td className="py-4 text-center">
                                             <input
                                                 type="checkbox"
@@ -181,12 +198,12 @@ const DeliveryConfirmationPage = () => {
                                         <td className="py-4 text-center">
                                             <input
                                                 type="number"
-                                                value={receipt.receivedQty ?? item.requestedQty}
+                                                value={receipt.receivedQty ?? item.quantity}
                                                 onChange={e => handleQtyChange(item.deliveryItemId, e.target.value)}
                                                 disabled={!receipt.isReceived}
                                                 className="w-20 text-center border border-gray-200 rounded px-2 py-1 disabled:bg-gray-50 disabled:text-gray-300"
                                                 min={0}
-                                                max={item.requestedQty}
+                                                max={item.quantity}
                                             />
                                         </td>
                                         <td className="py-4">
@@ -203,31 +220,7 @@ const DeliveryConfirmationPage = () => {
                                         </td>
                                     </tr>
                                 );
-                            })} */}
-
-                            {/* Placeholder row — remove once real data is connected */}
-                            <tr className="border-b border-gray-50">
-                                <td className="py-4 text-muted-foreground">PERF-001</td>
-                                <td className="py-4 font-medium">Hibana no.5</td>
-                                <td className="py-4 text-center font-bold">50</td>
-                                <td className="py-4 text-center">
-                                    <input type="checkbox" defaultChecked className="w-5 h-5 accent-emerald-600" />
-                                </td>
-                                <td className="py-4 text-center">
-                                    <input
-                                        type="number"
-                                        defaultValue={50}
-                                        className="w-20 text-center border border-gray-200 rounded px-2 py-1"
-                                    />
-                                </td>
-                                <td className="py-4">
-                                    <select className="border border-gray-200 rounded px-2 py-1 text-sm w-full">
-                                        {REASON_OPTIONS.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                </td>
-                            </tr>
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -243,12 +236,23 @@ const DeliveryConfirmationPage = () => {
                 />
             </div>
 
-            <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 text-base"
-                onClick={handleConfirm}
-            >
-                <CheckCircle size={18} /> Confirm Delivery
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+                <Button
+                    variant="outline"
+                    className="w-full font-bold py-6 text-base"
+                    onClick={() => navigate(-1)}
+                    disabled={isSubmitting}
+                >
+                    Save Draft
+                </Button>
+                <Button
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-6 text-base"
+                    onClick={handleConfirm}
+                    disabled={isSubmitting}
+                >
+                    <CheckCircle size={18} /> Confirm Delivery
+                </Button>
+            </div>
 
             <ConfirmDialog
                 isOpen={!!config}

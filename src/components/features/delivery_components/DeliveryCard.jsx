@@ -15,15 +15,14 @@ const DeliveryCard = ({
     const navigate = useNavigate();
 
     const isInbound = delivery.direction === "INBOUND";
+    const deliveryStatus = (delivery.deliveryStatus)
 
-    // TODO: Replace with actual field names from your delivery DTO
     const deliveryId = delivery.deliveryDisplayId;
-    const route = `From ${delivery.fromBranch} To ${delivery.toBranch}`;
+    const route = `From ${delivery.fromBranchName} To ${delivery.toBranchName}`;
     const productCount = delivery.itemCount || 0;
     const unitCount = delivery.totalUnits || 0;
 
     const handleViewDetails = () => {
-        // TODO: Update route to match your App.jsx delivery details route
         navigate(`/home/deliveries/${delivery.deliveryId}`);
     };
 
@@ -31,13 +30,17 @@ const DeliveryCard = ({
         if (activeTab === "FOR_DISPATCH") {
             if (!isInbound) {
                 return (
-                    <div className="grid grid-cols-3 gap-2 mt-3">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => onMarkInTransit(delivery.deliveryId)}>
-                            <Truck size={15} /> Mark as In Transit
-                        </Button>
-                        <Button variant="destructive" onClick={() => onCancelRequest(delivery.deliveryId)}>
-                            <XCircle size={15} /> Cancel Request
-                        </Button>
+                    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {deliveryStatus == "PENDING" && (
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => onMarkInTransit(delivery.deliveryId)}>
+                                <Truck size={15} /> Mark as In Transit
+                            </Button>
+                        )}
+                        {deliveryStatus !== "IN TRANSIT" && deliveryStatus !== "COMPLETED" && deliveryStatus !== "CANCELLED" && (
+                            <Button variant="destructive" onClick={() => onCancelRequest(delivery.deliveryId)}>
+                                <XCircle size={15} /> Cancel Request
+                            </Button>
+                        )}
                         <Button className="bg-custom-primary text-custom-black hover:bg-custom-primary/80" onClick={handleViewDetails}>
                             <Eye size={15} /> View Details
                         </Button>
@@ -46,12 +49,16 @@ const DeliveryCard = ({
             }
             return (
                 <div className="grid grid-cols-3 gap-2 mt-3">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => onAcceptRequest(delivery.deliveryId)}>
-                        <CheckCircle size={15} /> Accept Request
-                    </Button>
-                    <Button variant="destructive" onClick={() => onRejectRequest(delivery.deliveryId)}>
-                        <XCircle size={15} /> Reject Request
-                    </Button>
+                    {deliveryStatus !== "ACCEPTED" && deliveryStatus !== "COMPLETED" && (
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => onAcceptRequest(delivery.deliveryId)}>
+                            <CheckCircle size={15} /> Accept Request
+                        </Button>
+                    )}
+                    {deliveryStatus !== "ACCEPTED" && deliveryStatus !== "COMPLETED" && (
+                        <Button variant="destructive" onClick={() => onRejectRequest(delivery.deliveryId)}>
+                            <XCircle size={15} /> Reject Request
+                        </Button>
+                    )}
                     <Button className="bg-custom-primary text-custom-black hover:bg-custom-primary/80" onClick={handleViewDetails}>
                         <Eye size={15} /> View Details
                     </Button>
@@ -70,9 +77,11 @@ const DeliveryCard = ({
         if (activeTab === "INBOUND") {
             return (
                 <div className="grid grid-cols-2 gap-2 mt-3">
-                    <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => onConfirmDelivery(delivery.deliveryId)}>
-                        <CheckCircle size={15} /> Confirm Delivery
-                    </Button>
+                    {deliveryStatus !== "COMPLETED" && (
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => onConfirmDelivery(delivery.deliveryId)}>
+                            <CheckCircle size={15} /> Confirm Delivery
+                        </Button>
+                    )}
                     <Button className="bg-custom-primary text-custom-black hover:bg-custom-primary/80" onClick={handleViewDetails}>
                         <Eye size={15} /> View Details
                     </Button>
@@ -91,9 +100,18 @@ const DeliveryCard = ({
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-lg text-custom-black">{deliveryId}</h3>
-                            {/* ✅ StatusBadge handles direction styling */}
-                            <StatusBadge status={delivery.direction} />
+                            <StatusBadge
+                                status={delivery.direction}
+                            />
+                            <StatusBadge
+                                status={delivery.deliveryStatus}
+                            />
                         </div>
+                        {delivery.requestDisplayId && (
+                            <p className="text-xs italic text-muted-foreground mt-0.5">
+                                {delivery.requestDisplayId}
+                            </p>
+                        )}
                         <p className="text-sm text-muted-foreground">{route}</p>
                     </div>
                 </div>

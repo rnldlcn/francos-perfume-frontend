@@ -62,7 +62,7 @@ const TransferSummary = ({
             <div>
                 <p className="text-sm font-semibold text-foreground mb-2">Request Message</p>
                 <textarea
-                    value={message}
+                    value={message || ''}
                     onChange={(e) => onMessageChange(e.target.value)}
                     placeholder="Add your comments or message for this request...."
                     className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none h-24 outline-none focus:border-gray-400 transition-colors"

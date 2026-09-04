@@ -19,17 +19,13 @@ export const createRequest = async (payload) => {
   return response.data;
 };
 
-export const approveRequest = async (requestId, remarks = "") => {
-  const response = await apiClient.patch(`${PATH}/${requestId}/approve`, {
-    remarks,
-  });
+export const approveRequest = async (requestId, payload) => {
+  const response = await apiClient.patch(`${PATH}/${requestId}/approve`, payload);
   return response.data;
 };
 
-export const rejectRequest = async (requestId, remarks = "") => {
-  const response = await apiClient.patch(`${PATH}/${requestId}/reject`, {
-    remarks,
-  });
+export const rejectRequest = async (requestId, remarks) => {
+  const response = await apiClient.patch(`${PATH}/${requestId}/reject`, { remarks });
   return response.data;
 };
 
@@ -37,3 +33,8 @@ export const getRequestFilters = async () => {
   const response = await apiClient.get(`${PATH}/filters`);
   return response.data;
 };
+
+export const cancelRequest = async (requestId) => {
+  const response = await apiClient.patch(`${PATH}/${requestId}/cancel`);
+  return response.data;
+}

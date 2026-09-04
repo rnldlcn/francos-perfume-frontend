@@ -1,6 +1,7 @@
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
+import { approveRequest, cancelRequest, rejectRequest } from "@/services/RequestService";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,9 +17,10 @@ export default function RequestDetailsPage() {
     const { requestId } = useParams();
     const navigate = useNavigate();
     const [requestPayload, setRequestPayload] = useState({});
+    const [remarks, setRemarks] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [selectedRequest, setRequestDetails] = useState(null);
-    // Track row modifications for approval inputs
     const [itemApprovals, setItemApprovals] = useState({});
 
     useEffect(() => {
@@ -26,7 +28,6 @@ export default function RequestDetailsPage() {
             fetchRequestDetails(requestId).then((data) => {
                 if (data) {
                     setRequestDetails(data);
-                    // Initialize approval quantities to match requested quantities
                     const initialApprovals = {};
                     (data.items || []).forEach((item) => {
                         initialApprovals[item.requestItemId] = {
@@ -40,17 +41,19 @@ export default function RequestDetailsPage() {
         }
     }, [requestId, fetchRequestDetails]);
 
-    // Handle Checkbox / Quantity state updates
     const handleApproveToggle = (requestItemId, isApproved) => {
-        setItemApprovals((prev) => ({
-            ...prev,
-            [requestItemId]: { 
-                ...prev[requestItemId],
-                 isApproved,
-                approvedQty: isApproved
-                    ? prev[requestItemId]?.approvedQty : 0   
-            },
-        }));
+        setItemApprovals((prev) => {
+            const requestedQty = selectedRequest?.items?.find((item) => item.requestItemId === requestItemId)?.requestedQty || 0;
+
+            return {
+                ...prev,
+                [requestItemId]: {
+                    ...prev[requestItemId],
+                    isApproved,
+                    approvedQty: isApproved ? (prev[requestItemId]?.approvedQty || requestedQty) : 0,
+                },
+            };
+        });
     };
 
     const handleQtyChange = (requestItemId, approvedQty) => {
@@ -63,7 +66,7 @@ export default function RequestDetailsPage() {
         setItemApprovals((prev) => ({
                 ...prev,
                 [requestItemId]: { 
-                    ...prev[requestItemId], 
+                    ...prev[requestItemId]  , 
                     approvedQty: maximumQtyAllowed,
                     isApproved: maximumQtyAllowed > 0
                 },
@@ -73,20 +76,52 @@ export default function RequestDetailsPage() {
 
     const allProductsApproved = Object.values(itemApprovals).some((item) => item.isApproved);
 
-
     const isPending = selectedRequest?.requestStatus === "PENDING";
 
-    const handleRejectRequest = async (requestId, requestPayload) => {
-        // add reject endpoint here
-    }
-    
-    const handleApproveRequest = async (requestId, requestPayload) => {
-        // add confirm endpoint here
-    }
+    const handleRejectRequest = async () => {
+        if (!remarks.trim()) return;
+        setIsSubmitting(true);
+        try {
+            await rejectRequest(requestId, remarks);
+            navigate(0);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-    const handleCancelRequest = async (requestId) => {
-        // add cancel endpoint here
-    }
+    const handleApproveRequest = async () => {
+        setIsSubmitting(true);
+        try {
+
+            const payload = (selectedRequest?.items || []).map((item) => {
+            const approvalState = itemApprovals[item.requestItemId];
+            return {
+                    remarks: remarks || "N/A",
+                    productId: item.productId,
+                    requestedItemId: item.requestItemId,
+                    isApproved: approvalState?.isApproved ?? true,
+                    requestedItemQty: approvalState?.isApproved 
+                        ? (approvalState?.approvedQty ?? item.requestedQty) 
+                        : 0,
+                };
+            });
+            console.log(payload);
+            await approveRequest(requestId, payload);
+            navigate(0);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        setIsSubmitting(true);
+        try {
+            await cancelRequest(requestId);
+            navigate("/home/requests");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (!selectedRequest) {
         return <div className="p-6 text-custom-gray font-montserrat">Loading request details...</div>;
@@ -150,6 +185,10 @@ export default function RequestDetailsPage() {
                         setRequestPayload={setRequestPayload}
                         isPending={isPending}
                         allProductsApproved={allProductsApproved}
+                        handleRejectRequest={handleRejectRequest}
+                        handleApproveRequest={handleApproveRequest}
+                        remarks={remarks}
+                        setRemarks={setRemarks}
                     />
                 </div>
             </div>

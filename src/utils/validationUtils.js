@@ -1,6 +1,15 @@
 export const isValid = {
-    required: (value) => 
-        !value || value.trim() === '' ? 'This field is required' : null,
+    required: (value) => {
+        if (value === null || value === undefined || value === '') {
+            return 'This field is required';
+        }
+
+        if (String(value).trim() === '') {
+            return 'This field is required';
+        }
+
+        return null;
+    },
     
     email: (value) => 
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Invalid email address' : null,

@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { buildApprovalSteps, buildTimeline, renderBadgeForRequestTimeline, renderTimelineIcon } from "@/utils/timelineUtils";
 import { Check, Clock, X } from "lucide-react";
 
-const RequestTimeline = ({ selectedRequest, setRequestPayload, allProductsApproved, isPending, }) => {
+const RequestTimeline = ({ selectedRequest, setRequestPayload, allProductsApproved, isPending, handleRejectRequest, handleApproveRequest, remarks, setRemarks}) => {
 
     const totalProducts = selectedRequest?.items?.length || 0;
     const totalUnits = selectedRequest?.items?.reduce((sum, item) => sum + item.receivedQty, 0);
@@ -96,14 +96,14 @@ const RequestTimeline = ({ selectedRequest, setRequestPayload, allProductsApprov
                     <Textarea
                         placeholder="Add remarks (required for rejection)..."
                         className="resize-none h-20 text-sm border-gray-200 focus:border-gray-400"
-                        value={selectedRequest.remarks}
-                        onChange={(e) => setRequestPayload(e.target.value)}
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
                     />
 
                     <div className="space-y-2">
                         {allProductsApproved && (
                             <Button
-                                //onClick={() => setShowApproveModal(true)}
+                                onClick={() => handleApproveRequest(selectedRequest.requestId)}
                                 variant="confirm"
                                 className="w-full"
                             >
@@ -111,7 +111,7 @@ const RequestTimeline = ({ selectedRequest, setRequestPayload, allProductsApprov
                             </Button>
                             )}
                             <Button
-                                //onClick={() => handleAction("REJECT")}
+                                onClick={() => handleRejectRequest(selectedRequest.requestId)}
                                 variant="destructive"
                                 className="w-full"
                             >
