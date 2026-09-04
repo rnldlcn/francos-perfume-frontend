@@ -1,7 +1,7 @@
 
+import { auditLogColumns } from "@/components/features/auditlogs_components/AuditLogColumns";
 import DataTable from "@/components/shared/DataTable";
 import { useAuditLog } from "@/hooks/audit_hooks/useAuditLog.js";
-import { auditLogColumns } from "@/utils/columns.jsx";
 
 const AuditLogPage = () => {
   const { auditLogs, asyncState, pagination, filter,  updateFilter } = useAuditLog();

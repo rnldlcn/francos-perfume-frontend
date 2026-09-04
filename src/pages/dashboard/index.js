@@ -1,7 +1,6 @@
 export { default as ArchivesPage } from './ArchivesPage';
 export { default as AuditLogPage } from './AuditLogPage';
 export { default as BarcodePage } from './BarcodePage';
-export { default as CreateTransferRequestPage } from './CreateTransferRequestPage';
 export { default as DeliveriesPage } from './DeliveriesPage';
 export { default as DiscountPage } from './DiscountPage';
 export { default as ForecastPage } from './ForecastPage';

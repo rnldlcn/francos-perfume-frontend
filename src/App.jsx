@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, Route, BrowserRouter as Router, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/UseAuth';
 import DeliveryConfirmationPage from './components/features/delivery_components/DeliveryConfirmationPage';
+import DeliveryDetailsPage from './components/features/delivery_components/DeliveryDetailsPage';
 import MobileBlocker from './components/features/point_of_sale_components/MobileBlocker';
+import CreateTransferRequestPage from './components/features/request_components/CreateTransferRequestPage';
 import RequestDetailsPage from './components/features/request_components/RequestDetailsPage';
 import DashboardLayout from './layouts/DashboardLayout';
-import { ArchivesPage, AuditLogPage, BarcodePage, CreateTransferRequestPage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
+import { ArchivesPage, AuditLogPage, BarcodePage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
@@ -26,10 +28,10 @@ const NavigationManager = ({ user }) => {
   useEffect(() => {
     if (user) {
       const role = user.activeRole;
-      if (role === 'cashier' && path !== '/pos') {
+      if (role === 'CASHIER' && path !== '/pos') {
         navigate('/pos', { replace: true });
       } 
-      else if (['manager', 'owner', 'admin', 'staff'].includes(role)) {
+      else if (['MANAGER', 'OWNER', 'ADMIN', 'STAFF'].includes(role)) {
         if (!path.startsWith('/home')) {
           navigate('/home', { replace: true });
         }
@@ -59,7 +61,7 @@ const App = () => {
         <Route path='/forgot-password' element={<ForgotPasswordPage />} />
         <Route path='/login' 
           element={
-            !user ? <LoginPage /> : <Navigate to={user.activeRole === 'cashier' ? '/pos' : '/home'} replace />
+            !user ? <LoginPage /> : <Navigate to={user.activeRole === 'CASHIER' ? '/pos' : '/home'} replace />
           }
         />
         <Route path='/home'
@@ -70,33 +72,34 @@ const App = () => {
           <Route index element={<HomePage role={user?.trueRole} />} />
 
           {/* 1. INVENTORY & DAILY OPS (Manager, Owner, & Staff) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'staff']} />}>
+          <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'STAFF']} />}>
             <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />
             <Route path="requests" element={<RequestPage />} />
-            <Route path="new-transfer" element={<CreateTransferRequestPage />} />
-            <Route path="requests/:id" element={<RequestDetailsPage />} />
+            <Route path="requests/:requestId" element={<RequestDetailsPage />} />
+            <Route path="requests/create" element={<CreateTransferRequestPage />} />
             <Route path="deliveries" element={<DeliveriesPage />} />
-            <Route path="deliveries/confirm/:id" element={<DeliveryConfirmationPage />} />
+            <Route path="deliveries/:deliveryId" element={<DeliveryDetailsPage />} />
+            <Route path="deliveries/confirm/:deliveryId" element={<DeliveryConfirmationPage />} />
             {/* 🔧 Barcode moved here so Staff, Manager, and Owner can access it */}
             <Route path="barcode" element={<BarcodePage />} /> 
           </Route>
 
           {/* 2. ANALYTICS & TRANSACTIONS (Manager & Owner Only - Hidden from Staff) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner']} />}>
+          <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER']} />}>
             <Route path="transactions" element={<TransactionsPage />} />
             {/* 🔧 Forecast moved here so Staff cannot access it */}
             <Route path="forecast" element={<ForecastPage />} />
           </Route>
 
           {/* 3. BUSINESS CONTROL (Owner Only - Hidden from Managers & Staff) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['owner']} />}>
+          <Route element={<ProtectedRoute user={user} allowedRoles={['OWNER']} />}>
             {/* 🔧 Products and Discount moved here to match Sidebar limits */}
             <Route path="products" element={<ProductsPage />} />
             <Route path="discount" element={<DiscountPage />} />
           </Route>
 
           {/* 4. SYSTEM MANAGEMENT (Manager, Owner, & Admin) */}
-          <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'owner', 'admin']} />}>
+          <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'ADMIN']} />}>
             <Route path="accounts" element={<AccountsPage />} />
             <Route path="archives" element={<ArchivesPage />} />
             <Route path="audit" element={<AuditLogPage />} />
@@ -104,7 +107,7 @@ const App = () => {
         </Route>
         
         {/* POS SYSTEM */}
-        <Route element={<ProtectedRoute user={user} allowedRoles={['manager', 'cashier']} />}>
+        <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'CASHIER']} />}>
           <Route path="/pos" element={<PointOfSalePage />} />
         </Route>
 

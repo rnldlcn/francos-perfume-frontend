@@ -1,5 +1,5 @@
 import { useAuth } from "@/auth/UseAuth";
-import { getAllArchivedProducts } from "@/services/archiveService";
+import { getAllArchivedProducts } from "@/services/ArchiveService";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 

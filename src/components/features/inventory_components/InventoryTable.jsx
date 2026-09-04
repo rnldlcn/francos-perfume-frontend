@@ -1,19 +1,19 @@
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 
 import PaginationBar from "@/components/shared/PaginationBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDateForInput, formatDateForTable } from '@/utils/formattingUtils';
 import { ChevronDown, ChevronUp, Edit } from "lucide-react";
 import { useState } from "react";
 import perfumePlaceholder from "../../../assets/FrancoPerfumeLogo.png";
-import { formatDateForInput, formatDateForTable } from '../../../utils/dateFormatUtils';
 
 const InventoryTable = ({inventory, asyncState, pagination, fetchBatchesForProduct, batchMap, setBatchMap, filter, updateFilter, handleOpenEditBatchModal}) => {
 

@@ -1,141 +1,269 @@
-import { CheckCircle, Eye, Truck } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import StatusBadge from '../../components/shared/StatusBadge'; // 🔧 NEW: Imported the StatusBadge component
-import { DeliveryService } from '../../services/deliveryService';
+import { useAuth } from "@/auth/UseAuth";
+import DeliveryCard from "@/components/features/delivery_components/DeliveryCard";
+import { FilterDropDown } from "@/components/shared";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import PaginationBar from "@/components/shared/PaginationBar";
+import SearchBar from "@/components/shared/SearchBar";
+import StatusCard from "@/components/shared/StatusCard";
+import { Button } from "@/components/ui/button";
+import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
+import { cancelDelivery, dispatchDelivery, receiveDelivery } from "@/services/DeliveryService";
+import { ArrowDownLeft, ArrowUpRight, Clock, ListFilter } from "lucide-react";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-export default function DeliveriesPage() {
-    const navigate = useNavigate();
-    const userBranchId = parseInt(sessionStorage.getItem('branchId'));
-    
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('DISPATCH'); 
+const DeliveriesPage = () => {
+    const {
+        deliveries,
+        asyncState,
+        pagination,
+        filter,
+        updateFilter,
+        filterOptions,
+        fetchDeliveries,
+    } = useDelivery();
 
-    useEffect(() => {
-        loadDeliveries();
-    }, []);
-    const loadDeliveries = async () => {
-        setLoading(true);
-        try {
-            const response = await DeliveryService.getAllDeliveries();
-            setRequests(response.data || []);
-        } catch (error) {
-            console.error("Failed to load deliveries", error);
-        } finally {
-            setLoading(false);
-        }
+    const { user } = useAuth();
+
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [config, setConfig] = useState(null);
+
+    const activeTab = searchParams.get("direction") || "FOR_DISPATCH";
+
+
+    const handleTabChange = (direction) => {
+             setSearchParams(prev => {
+            if (direction) prev.set("direction", direction);
+            else prev.delete("direction");
+            return prev;
+        });
+        updateFilter('direction', direction);
     };
 
-    const handleDispatch = async (requestId) => {
-        try {
-            await DeliveryService.dispatchRequest(requestId);
-            alert("Request marked as In Transit!");
-            loadDeliveries(); 
-        } catch (error) {
-            alert(error.message);
-        }
+    const handleSearchChange = (value) => {
+        const query = value?.target ? value.target.value : value;
+        setSearchParams(prev => {
+            if (query) prev.set("search", query);
+            else prev.delete("search");
+            return prev;
+        });
+        updateFilter("search", query);
     };
 
-    // --- UPDATED FILTER LOGIC ---
-    
-    // 1. FOR DISPATCH: Actionable to-do list for the SENDING branch only.
-    const forDispatch = requests.filter(r => 
-        r.request_status === 'FOR DISPATCH' && r.from_branch_id === userBranchId
-    );
-    
-    // 2. OUTBOUND: All requests leaving this branch (Approved, In Transit, or Completed).
-    const outboundDeliveries = requests.filter(r => 
-        r.from_branch_id === userBranchId && r.request_status !== 'REJECTED'
-    );
 
-    // 3. INBOUND: All requests coming to this branch (Approved, In Transit, or Completed).
-    const inboundDeliveries = requests.filter(r => 
-        r.to_branch_id === userBranchId && r.request_status !== 'REJECTED'
-    );
-
-    const getDisplayList = () => {
-        if (activeTab === 'DISPATCH') return forDispatch;
-        if (activeTab === 'OUTBOUND') return outboundDeliveries;
-        return inboundDeliveries;
+    const handleMarkInTransit = (deliveryId) => {
+        setConfig({
+            title: "Mark as In Transit?",
+            description: "This will notify the receiving branch that the delivery is on its way.",
+            confirmText: "Mark In Transit",
+            onConfirm: async () => {
+                try {
+                    await dispatchDelivery(deliveryId);
+                    fetchDeliveries();
+                } catch (err) {
+                    console.error("Failed to mark as in transit:", err);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
+        });
     };
 
-    if (loading) return <div className="p-10 text-center font-montserrat">Loading Deliveries...</div>;
+    const handleCancelRequest = (deliveryId) => {
+        setConfig({
+            title: "Cancel this request?",
+            description: "This cannot be undone. The request will be terminated.",
+            confirmText: "Cancel Request",
+            onConfirm: async () => {
+                try {
+                    await cancelDelivery(deliveryId);
+                    fetchDeliveries();
+                } catch (err) {
+                    console.error("Failed to cancel delivery:", err);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
+        });
+    };
+
+    const handleAcceptRequest = (deliveryId) => {
+        setConfig({
+            title: "Accept this delivery request?",
+            description: "You are confirming that you accept this inbound delivery.",
+            confirmText: "Accept Request",
+            onConfirm: async () => {
+                try {
+                    await receiveDelivery(deliveryId, { accepted: true });
+                    fetchDeliveries();
+                } catch (err) {
+                    console.error("Failed to accept delivery:", err);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
+        });
+    };
+
+    const handleRejectRequest = (deliveryId) => {
+        setConfig({
+            title: "Reject this delivery request?",
+            description: "This will notify the source branch that the request has been rejected.",
+            confirmText: "Reject Request",
+            onConfirm: async () => {
+                try {
+                    await receiveDelivery(deliveryId, { accepted: false });
+                    fetchDeliveries();
+                } catch (err) {
+                    console.error("Failed to reject delivery:", err);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
+        });
+    };
+
+    const handleConfirmDelivery = (deliveryId) => {
+        setConfig({
+            title: "Confirm delivery received?",
+            description: "This will mark the delivery as completed and update your inventory.",
+            confirmText: "Confirm Delivery",
+            onConfirm: async () => {
+                try {
+                    await receiveDelivery(deliveryId, { received: true });
+                    fetchDeliveries();
+                } catch (err) {
+                    console.error("Failed to confirm delivery:", err);
+                }
+                setConfig(null);
+            },
+            onCancel: () => setConfig(null),
+        });
+    };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Deliveries</h1>
-            <p className="text-gray-500 mb-8">Manage stock movement between branches</p>
-
-            {/* TABS */}
-            <div className="flex gap-2 mb-6">
-                <button onClick={() => setActiveTab('DISPATCH')} className={`flex-1 py-3 font-semibold rounded transition ${activeTab === 'DISPATCH' ? 'bg-[#E5D7B7] text-gray-800 border-b-4 border-[#C8B285]' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}>
-                    For Dispatch ({forDispatch.length})
-                </button>
-                <button onClick={() => setActiveTab('OUTBOUND')} className={`flex-1 py-3 font-semibold rounded transition ${activeTab === 'OUTBOUND' ? 'bg-[#E5D7B7] text-gray-800 border-b-4 border-[#C8B285]' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}>
-                    Outbound Deliveries ({outboundDeliveries.length})
-                </button>
-                <button onClick={() => setActiveTab('INBOUND')} className={`flex-1 py-3 font-semibold rounded transition ${activeTab === 'INBOUND' ? 'bg-[#E5D7B7] text-gray-800 border-b-4 border-[#C8B285]' : 'bg-gray-200 text-gray-500 hover:bg-gray-300'}`}>
-                    Inbound Deliveries ({inboundDeliveries.length})
-                </button>
+        <div className="flex flex-col h-full animate-fade-in font-montserrat overflow-y-auto">
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold text-custom-black tracking-tight leading-none mb-1">
+                    Deliveries
+                </h1>
+                <p className="text-muted-foreground text-sm">Manage transfer deliveries</p>
             </div>
 
-            {/* LIST */}
-            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4 shadow-sm">
-                {getDisplayList().length === 0 && <p className="text-center text-gray-500 py-10">No deliveries found in this category.</p>}
-                
-                {getDisplayList().map(req => (
-                    <div key={req.request_id} className="border border-gray-200 rounded-lg p-5 bg-white hover:border-amber-200 transition-colors">
-                        <div className="flex justify-between items-center mb-5">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-gray-100 rounded-full text-gray-600">
-                                    <Truck size={24} />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-3">
-                                        <h3 className="font-bold text-xl text-gray-800">{req.request_display_id}</h3>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${req.from_branch_id === userBranchId ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'}`}>
-                                            {req.from_branch_id === userBranchId ? 'Outbound' : 'Inbound'}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-gray-500">From <span className="font-semibold text-gray-700">{req.requested_from}</span> To <span className="font-semibold text-gray-700">{req.delivered_to}</span></p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-bold text-gray-800 mb-1">{req.item_count} Products</p>
-                                {/* 🔧 FIXED: Replaced messy Tailwind logic with the clean StatusBadge */}
-                                <StatusBadge status={req.request_status} />
-                            </div>
-                        </div>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                <StatusCard
+                    title="Pending Dispatches"
+                    Icon={Clock}
+                    //secondValue={forDispatchInbound}
+                    subText=" inbound, "
+                    //thirdValue={forDispatchOutbound}
+                    secondSubText=" outbound"
+                />
+                <StatusCard
+                    title="Outbound Deliveries"
+                    Icon={Clock}
+                    //secondValue={outboundInTransit}
+                    subText=" in-transit "
+                    //thirdValue={outboundCompleted}
+                    secondSubText=" completed"
+                />
+                <StatusCard
+                    title="Inbound Deliveries"
+                    Icon={Clock}
+                    //secondValue={inboundInTransit}
+                    subText=" in-transit "
+                    //thirdValue={inboundCompleted}
+                    secondSubText=" completed"
+                />
+            </div>
 
-                        <div className="flex gap-3">
-                            {/* ACTION: SENDER MARKS AS IN TRANSIT */}
-                            {req.request_status === 'FOR DISPATCH' && req.from_branch_id === userBranchId && (
-                                <button onClick={() => handleDispatch(req.request_id)} className="flex-[2] bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-bold transition shadow-sm">
-                                    <CheckCircle size={18} /> Mark as In Transit
-                                </button>
-                            )}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+                <Button
+                    variant={activeTab === "INBOUND" ? "default" : "outline"}
+                    disabled={user.branchLocation === "WAREHOUSE"}
+                    onClick={() => handleTabChange("INBOUND")}
+                >
+                    <ArrowDownLeft className="w-4 h-4" />
+                        Inbound
+                </Button>
 
-                            {/* ACTION: RECEIVER MARKS AS ARRIVED */}
-                            {req.request_status === 'IN TRANSIT' && req.to_branch_id === userBranchId && (
-                                <button 
-                                    onClick={() => navigate(`/home/deliveries/confirm/${req.request_id}`)} 
-                                    className="flex-[2] bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg flex justify-center items-center gap-2 font-bold transition shadow-sm"
-                                >
-                                    <CheckCircle size={18} /> Delivery Arrived
-                                </button>
-                            )}
+                <Button
+                    variant={activeTab === "OUTBOUND" ? "default" : "outline"}
+                    onClick={() => handleTabChange("OUTBOUND")}
+                >
+                    <ArrowUpRight className="w-4 h-4" />
+                    Outbound
+                </Button>
 
-                            <button 
-                                onClick={() => navigate(`/home/requests/${req.request_id}`)} 
-                                className="flex-1 bg-[#EAE2D0] hover:bg-[#DCD0B3] text-gray-800 py-3 rounded-lg flex justify-center items-center gap-2 font-bold transition"
-                            >
-                                <Eye size={18} /> View Details
-                            </button>
-                        </div>
+                <Button
+                    variant={activeTab === "" ? "default" : "outline"}
+                    onClick={() => handleTabChange("")}
+                    className="flex items-center gap-2"
+                >
+                    <ListFilter className="w-4 h-4" />
+                    All Deliveries
+                </Button>
+            </div>
+
+            <div className="flex flex-col gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="w-full sm:max-w-xl">
+                        <SearchBar
+                            value={filter.search}
+                            onChange={handleSearchChange}
+                        />
                     </div>
-                ))}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <FilterDropDown
+                        filter={filter}
+                        updateFilter={updateFilter}
+                        filterOptions={filterOptions}
+                    />
+                </div>
             </div>
+
+            <div className="space-y-4">
+                {asyncState.isLoading ? (
+                    <div className="text-center py-16 text-muted-foreground">
+                        Loading deliveries...
+                    </div>
+                ) : deliveries.length === 0 ? (
+                    <div className="text-center py-16 text-muted-foreground">
+                        No deliveries found.
+                    </div>
+                ) : (
+                    deliveries.map(delivery => (
+                        <DeliveryCard
+                            key={delivery.deliveryId}
+                            delivery={delivery}
+                            activeTab={activeTab}
+                            onMarkInTransit={handleMarkInTransit}
+                            onCancelRequest={handleCancelRequest}
+                            onAcceptRequest={handleAcceptRequest}
+                            onRejectRequest={handleRejectRequest}
+                            onConfirmDelivery={handleConfirmDelivery}
+                        />
+                    ))
+                )}
+            </div>
+
+            <PaginationBar
+                pageCount={filter.pageCount}
+                pageSize={filter.pageSize}
+                totalPages={pagination.totalPages}
+                totalEntries={pagination.totalEntries}
+                updateFilter={updateFilter}
+            />
+
+            <ConfirmDialog
+                isOpen={!!config}
+                onClose={() => setConfig(null)}
+                config={config}
+            />
         </div>
     );
-}
+};
+
+export default DeliveriesPage;

@@ -25,8 +25,8 @@ const DataTable = ({
         const hasData = Array.isArray(data) && data.length > 0;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col overflow-hidden min-h-50 mb-4">
-      <div className="overflow-x-auto flex-1">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col mb-4">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="">

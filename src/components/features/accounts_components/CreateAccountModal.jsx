@@ -1,101 +1,192 @@
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import FormField from '@/components/shared/FormField';
+import FormSelect from '@/components/shared/FormSelect';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { isValid, validateForm } from "@/utils/validationUtils";
 import { useState } from 'react';
-import { useAuth } from "../../../auth/useAuth";
 
-const CreateAccountModal = ({ isOpen, onClose, onSave }) => {
-  const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const accountValidationSchema = {
+    firstName: [isValid.required],
+    lastName: [isValid.required],
+    email: [isValid.required, isValid.email],
+    contactNumber: [isValid.required, isValid.phone],
+    branchLocation: [isValid.required],
+    employeeRole: [isValid.required],
+    employeeShift: [isValid.required],
+};
+
+const ROLE_RANKS = {
+    STAFF: 1,
+    MANAGER: 2,
+    ADMIN: 3,
+    OWNER: 4,
+};
+
+const CreateAccountModal = ({ isOpen, onClose, filterOptions = [], createAccount }) => {
+  const [config, setConfig] = useState(null);
+
+  const [data, setData] = useState({});
+  // use async state instead of setErrors
+  const [errors,setErrors] = useState({});
 
   if (!isOpen) return null;
 
-  const role = user.trueRole.toUpperCase();
+  const branchOptionData = filterOptions.find(option => option.key === "branchLocation")?.options || [];
+  const roleOptionData = filterOptions.find(option => option.key === "employeeRole")?.options || [];
+  const employeeShiftOptionData = filterOptions.find(option => option.key === "employeeShift")?.options || [];
 
+  const branchOptions = branchOptionData.filter(
+    (option) => option.value !== "" && option.value !== "__all__"
+  );
+
+  const roleOptions = roleOptionData.filter(
+    (option) => {
+      if (!option.value || option.value === "__all__") {
+        return false;
+      }
+
+    const targetRoleRank = ROLE_RANKS[option.value.toUpperCase()] || 0;
+    const currentUserRank = ROLE_RANKS[sessionStorage.getItem("trueRole")] || 0;
+
+    return targetRoleRank < currentUserRank;
+  });
+
+  const employeeShiftOptions = employeeShiftOptionData.filter(
+    (option) => option.value !== "" && option.value !== "__all__"
+  );
+
+
+  const handleChange = (field, value) => {
+    setData((prev) => ({ ...prev, [field]: value }));
+    
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const handleSave = () => {
+      const validationErrors = validateForm(data, accountValidationSchema);
+
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors);
+        return;
+      }
+      
+      setConfig({
+      title: "Are you sure you want to create this account?",
+      description: "This will make a new account for the employee.",
+      confirmText: "Create Account",
+      onConfirm: async () => {
+        await createAccount(data);
+        setData({});
+        onClose();
+      } 
+    })
+  }
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 animate-fade-in font-montserrat">
-      <div className="bg-[#F8F9FB] rounded-2xl shadow-xl w-full max-w-[650px] p-10 relative">
-        <button onClick={onClose} className="absolute top-4 right-6 text-gray-400 hover:text-gray-700 text-2xl">✕</button>
-        
-        <h2 className="text-4xl font-extrabold text-[#333] text-center mb-10 tracking-tight">Create New Account:</h2>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent
+          className="sm:max-w-3xl"
+        >
+          <DialogHeader>
+            <DialogTitle>Create Account</DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="Enter first name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+          <div className='grid grid-cols-3 gap-4 py-4'>
+            <FormField 
+              label="First Name"
+              onChange={e => handleChange('firstName', e.target.value)}
+              placeholder="Enter first name here..."
+              error={errors.firstName}
             />
-            <input 
-              type="text" placeholder="Enter last name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+
+            <FormField 
+              label="Middle Name"
+              onChange={e => handleChange('middleName', e.target.value)}
+              placeholder="Enter middle name here..."
+              error={errors.middleName}
+            />
+
+            <FormField 
+              label="Last Name"
+              onChange={e => handleChange('lastName', e.target.value)}
+              placeholder="Enter last name here..."
+              error={errors.lastName}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="Enter middle name"
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-            />
-            <input 
-              type="text" placeholder="Enter contact no."
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.contactNo} onChange={(e) => setFormData({...formData, contactNo: e.target.value})}
+          <div className='mb-6'>
+            <FormField 
+              label="Address"
+              onChange={e => handleChange('address', e.target.value)}
+              placeholder="Enter address here..."
+              error={errors.address}
             />
           </div>
 
-          <input 
-            type="text" placeholder="Enter full address"
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
-          />
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <FormField 
+              label="Email"
+              onChange={e => handleChange('email', e.target.value)}
+              placeholder="Enter email here..."
+              error={errors.email}
+            />
+            <FormField 
+              label="Contact Number"
+              onChange={e => handleChange('contactNumber', e.target.value)}
+              placeholder="Enter contact number here..."
+              error={errors.contactNumber}
+            />
+          </div>
 
-          <input 
-            type="email" placeholder="Enter email" required
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <select 
-              required className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.branch} onChange={(e) => setFormData({...formData, branch: e.target.value})}
-            >
-              <option value="" disabled>Select branch</option>
-              {/* If they are a manager, they ideally should only be able to select their own branch, but we'll leave all options open for owners/admins */}
-              <option value="Sta. Lucia">Sta. Lucia</option>
-              <option value="Riverbanks">Riverbanks</option>
-            </select>
+          <div className="grid grid-cols-3 gap-6 mb-8">
+            <FormSelect
+              label="Branch"
+              onChange={(value) => setData(prev => ({...prev, branchLocation: value }))}
+              options={branchOptions}
+              placeholder="Select branch..."
+            />
             
-            <select 
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
-            >
-              <option value="STAFF">STAFF</option>
-              <option value="CASHIER">CASHIER</option>
-              {/* 🛡️ SECURITY: Only allow Owner or Admin to see the MANAGER option */}
-              {(role === 'OWNER' || role === 'ADMIN') && (
-                <option value="MANAGER">MANAGER</option>
-              )}
-            </select>
+            <FormSelect
+              label="Role"
+              onChange={(value) => setData(prev => ({...prev, employeeRole: value }))}
+              options={roleOptions}
+              placeholder="Select role..."
+            />
+
+            <FormSelect
+              label="Shift"
+              onChange={(value) => setData(prev => ({...prev, employeeShift: value }))}
+              options={employeeShiftOptions}
+              placeholder="Select shift..."
+            />
           </div>
 
-          <div className="flex justify-center gap-6 pt-6">
-            <button 
-              type="button" onClick={onClose} disabled={isSubmitting}
-              className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm transition-colors shadow-sm text-gray-700 disabled:opacity-50"
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <Button 
+              variant="outline"
+              onClick={onClose}
             >
-              <span className="text-lg">✕</span> Discard Changes
-            </button>
-            <button 
-              type="submit" disabled={isSubmitting}
-              className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm transition-colors shadow-sm text-gray-700 disabled:opacity-50"
+              Cancel
+            </Button>
+
+            <Button
+              onClick={handleSave}
             >
-              <span className="text-lg">✓</span> {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
+              Save Changes
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog 
+        isOpen={!!config}
+        onClose={() => setConfig(null)}
+        config={config}
+      />
+    </>
   );
 };
 
