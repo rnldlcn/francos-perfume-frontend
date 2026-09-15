@@ -8,7 +8,7 @@ import StatusCard from "@/components/shared/StatusCard";
 import { Button } from "@/components/ui/button";
 import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
 import { cancelDelivery, dispatchDelivery, receiveDelivery } from "@/services/DeliveryService";
-import { ArrowDownLeft, ArrowUpRight, Clock, ListFilter } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Clock, ListFilter, Loader2 } from "lucide-react"; // ADDED: Loader2
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -144,7 +144,8 @@ const DeliveriesPage = () => {
     return (
         <div className="flex flex-col h-full animate-fade-in font-montserrat overflow-y-auto">
             <div className="mb-6">
-                <h1 className="text-3xl font-bold text-custom-black tracking-tight leading-none mb-1">
+                {/* FIXED: Replaced text-custom-black with text-foreground */}
+                <h1 className="text-3xl font-bold text-foreground tracking-tight leading-none mb-1">
                     Deliveries
                 </h1>
                 <p className="text-muted-foreground text-sm">Manage transfer deliveries</p>
@@ -226,8 +227,10 @@ const DeliveriesPage = () => {
 
             <div className="space-y-4">
                 {asyncState.isLoading ? (
-                    <div className="text-center py-16 text-muted-foreground">
-                        Loading deliveries...
+                    // FIXED: Swapped static text for the standard Loader2 animation block
+                    <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                        <p className="text-muted-foreground font-medium">Loading deliveries...</p>
                     </div>
                 ) : deliveries.length === 0 ? (
                     <div className="text-center py-16 text-muted-foreground">

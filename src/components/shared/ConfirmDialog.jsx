@@ -44,7 +44,8 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
 
                 <AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
                     <AlertDialogTitle className="text-center justify-center font-bold">{config.title}</AlertDialogTitle>
-                    <AlertDialogDescription className="mt-2 text-justify"><span className="text-custom-gray">{config.description || null}</span></AlertDialogDescription>
+                    {/* FIXED: Replaced text-custom-gray with text-muted-foreground */}
+                    <AlertDialogDescription className="mt-2 text-justify"><span className="text-muted-foreground">{config.description || null}</span></AlertDialogDescription>
                 </AlertDialogHeader>
 
                 <AlertDialogFooter className="w-full sm:flex-col sm:justify-stretch">

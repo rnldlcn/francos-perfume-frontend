@@ -48,12 +48,15 @@ export default function ProductsPage() {
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat relative flex flex-col">
+        // FIXED: Replaced bg-gray-50 with bg-background and removed hardcoded padding that might clash with global layout
+        <div className="bg-background min-h-screen font-montserrat relative flex flex-col">
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-custom-black">Products</h1>
-                    <p className="text-sm text-foreground mt-1">List of all available products and details</p>
+                    {/* FIXED: Replaced text-custom-black with text-foreground */}
+                    <h1 className="text-3xl font-bold text-foreground">Products</h1>
+                    {/* FIXED: Replaced text-foreground with text-muted-foreground */}
+                    <p className="text-sm text-muted-foreground mt-1">List of all available products and details</p>
                 </div>
             </div>
 

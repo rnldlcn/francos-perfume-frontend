@@ -57,10 +57,12 @@ const ManageAccountsPage = () => {
 
   return (
     <div className="flex flex-col animate-fade-in font-montserrat h-screen overflow-y-auto">
-      <h1 className="text-3xl font-bold text-custom-black mb-1 tracking-tight leading-none">
+      {/* FIXED: Replaced text-custom-black with text-foreground */}
+      <h1 className="text-3xl font-bold text-foreground mb-1 tracking-tight leading-none">
         Manage Accounts
       </h1>
-      <p className="text-foreground text-sm mb-8">
+      {/* FIXED: Replaced text-foreground with text-muted-foreground */}
+      <p className="text-muted-foreground text-sm mb-8">
         Manage, create, and modify accounts of each user
       </p>
 
@@ -92,7 +94,8 @@ const ManageAccountsPage = () => {
       </div>
     </div>
 
-    <h2 className="text-2xl font-bold text-custom-black mb-6">Accounts List</h2>
+    {/* FIXED: Replaced text-custom-black with text-foreground */}
+    <h2 className="text-2xl font-bold text-foreground mb-6">Accounts List</h2>
 
     <div className="overflow-y-auto h-screen min-h-100"
       onClick={(e) => e.stopPropagation()}>
@@ -136,7 +139,7 @@ const ManageAccountsPage = () => {
       updateDetails={updateDetails}
     />
 
-    <div className="flex justify-end">
+    <div className="flex justify-end mt-4">
       <Button
         variant={selectedAccount ? "default" : "ghost"}
         disabled={!selectedAccount}
