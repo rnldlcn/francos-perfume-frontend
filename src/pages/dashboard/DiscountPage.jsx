@@ -7,7 +7,7 @@ import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useDiscounts } from "@/hooks/discount_hooks/useDiscount";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Loader2 } from "lucide-react"; // ADDED: Imported Loader2
 import { useState } from "react";
 
 const DiscountPage = () => {
@@ -58,8 +58,12 @@ const DiscountPage = () => {
   return (
     <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
 
-      <h1 className="text-3xl font-bold text-custom-black mb-1 leading-none tracking-tight">Discount Management</h1>
-      <p className="text-gray-400 text-sm mb-8">Create, remove, and change discounts</p>
+      {/* FIXED: Replaced text-custom-black with text-foreground */}
+      <h1 className="text-3xl font-bold text-foreground mb-1 leading-none tracking-tight">Discount Management</h1>
+      
+      {/* FIXED: Replaced text-gray-400 with text-muted-foreground */}
+      <p className="text-muted-foreground text-sm mb-8">Create, remove, and change discounts</p>
+        
         <div className="flex flex-col gap-4 mb-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="w-full sm:max-w-xl">
@@ -88,25 +92,34 @@ const DiscountPage = () => {
         </div>
     </div>
 
-    <h2 className="text-2xl font-bold text-custom-black mb-6">Discounts List</h2>
+    {/* FIXED: Replaced text-custom-black with text-foreground */}
+    <h2 className="text-2xl font-bold text-foreground mb-6">Discounts List</h2>
 
-    <div className="overflow-y-auto h-screen min-h-100"
-      onClick={(e) => e.stopPropagation()}>
-      <DataTable 
-        columns={discountColumns}
-        data={discounts}
-        keyField="discountId"
-        asyncState={asyncState}
-        pagination={pagination}
-        filter={filter}
-        updateFilter={updateFilter}
-        selectedItem={selectedDiscount}
-        onRowClick={handleRowClick}
-        onRowDoubleClick={() => setIsDiscountInfoModalOpen(true)}
-      />
-    </div>
+    {/* ADDED: Loading animation guard for initial fetch */}
+    {asyncState?.isLoading && (!discounts || discounts.length === 0) ? (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] animate-fade-in">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground font-medium">Loading discounts...</p>
+      </div>
+    ) : (
+      <div className="overflow-y-auto h-screen min-h-100"
+        onClick={(e) => e.stopPropagation()}>
+        <DataTable 
+          columns={discountColumns}
+          data={discounts}
+          keyField="discountId"
+          asyncState={asyncState}
+          pagination={pagination}
+          filter={filter}
+          updateFilter={updateFilter}
+          selectedItem={selectedDiscount}
+          onRowClick={handleRowClick}
+          onRowDoubleClick={() => setIsDiscountInfoModalOpen(true)}
+        />
+      </div>
+    )}
 
-    <div className="flex justify-end">
+    <div className="flex justify-end mt-4">
       <Button
         variant={selectedDiscount ? "default" : "ghost"}
         disabled={!selectedDiscount}

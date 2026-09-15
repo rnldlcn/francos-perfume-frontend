@@ -1,11 +1,10 @@
-
 import { useAuth } from "@/auth/UseAuth";
 import { requestColumns } from "@/components/features/request_components/RequestColumns";
 import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
-import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus, Loader2 } from "lucide-react"; // ADDED: Loader2
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -73,8 +72,10 @@ const RequestPage = () => {
         <div className="flex justify-between items-end mb-6">
 
             <div>
-                <h1 className="text-3xl font-bold text-custom-black mb-1 leading-none tracking-tight">Requests</h1>
-                <p className="text-foreground text-sm">View and manage inventory transfer requests</p>
+                {/* FIXED: Replaced text-custom-black with text-foreground */}
+                <h1 className="text-3xl font-bold text-foreground mb-1 leading-none tracking-tight">Requests</h1>
+                {/* FIXED: Replaced text-foreground with text-muted-foreground */}
+                <p className="text-muted-foreground text-sm">View and manage inventory transfer requests</p>
             </div>
 
                 <Button 
@@ -132,22 +133,31 @@ const RequestPage = () => {
 
         </div>
 
-            <DataTable 
-                columns={requestColumns}
-                data={requests}
-                keyField="requestId"
-                asyncState={asyncState}
-                pagination={pagination}
-                filter={filter}
-                updateFilter={updateFilter}
-                selectedItem={selectedRequest}
-                onRowClick={handleRowClick}
-                onRowDoubleClick={(row) => {
-                    handleRowClick(row);
-                    handleViewRequest(row);
-                }}
-            />
-        <div className="flex justify-end">
+            {/* ADDED: Initial loading animation guard for when requests are first being fetched */}
+            {asyncState?.isLoading && (!requests || requests.length === 0) ? (
+                <div className="flex flex-col items-center justify-center min-h-[40vh] animate-fade-in">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground font-medium">Loading requests...</p>
+                </div>
+            ) : (
+                <DataTable 
+                    columns={requestColumns}
+                    data={requests}
+                    keyField="requestId"
+                    asyncState={asyncState}
+                    pagination={pagination}
+                    filter={filter}
+                    updateFilter={updateFilter}
+                    selectedItem={selectedRequest}
+                    onRowClick={handleRowClick}
+                    onRowDoubleClick={(row) => {
+                        handleRowClick(row);
+                        handleViewRequest(row);
+                    }}
+                />
+            )}
+            
+        <div className="flex justify-end mt-4">
             <Button
                 variant={selectedRequest ? "default" : "ghost"}
                 disabled={!selectedRequest}
@@ -159,7 +169,7 @@ const RequestPage = () => {
         </div>
         
         </div>
-  );
+    );
 };
 
 export default RequestPage;

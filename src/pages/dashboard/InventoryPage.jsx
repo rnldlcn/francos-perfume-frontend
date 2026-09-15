@@ -45,10 +45,12 @@ const InventoryPage = () => {
     <div className="flex flex-col h-screen overflow-auto-y animate-fade-in relative font-montserrat">
       <div className="flex justify-between items-end mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-custom-black tracking-tight leading-none mb-2">
+          {/* FIXED: Replaced text-custom-black with text-foreground */}
+          <h1 className="text-3xl font-bold text-foreground tracking-tight leading-none mb-2">
             Inventory
           </h1>
-          <p className="text-foreground text-sm">
+          {/* FIXED: Replaced text-foreground with text-muted-foreground for proper visual hierarchy */}
+          <p className="text-muted-foreground text-sm">
             Overview of all available parfum products
           </p>
         </div>

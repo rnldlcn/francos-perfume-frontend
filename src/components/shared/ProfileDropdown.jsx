@@ -1,4 +1,5 @@
-import { useAuth } from '@/auth/useAuth';
+// FIXED: Changed 'useAuth' to 'UseAuth' to prevent the case-sensitivity crash
+import { useAuth } from '@/auth/UseAuth';
 import { ArrowRightLeft, LogOut, Settings, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,16 +15,6 @@ const ProfileDropdown = () => {
   const dropdownRef = useRef(null);
 
   const displayUsername = user.email ? user.email.split('@')[0] : 'Employee Name';
-
-  /* 
-  i dont know what this does
-
-  Adapts the text color based on where you put the component
-  const triggerTextColor = theme === 'dark'
-    ? 'text-custom-gray hover:text-custom-white'
-    : 'text-custom-black hover:text-custom-black/70';
-  */
-
     
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -41,17 +32,23 @@ const ProfileDropdown = () => {
       {/* The Clickable Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 cursor-pointer transition-colors text-custom-gray hover:text-custom-white`}
+        // FIXED: Replaced text-custom-gray and hover:text-custom-white with semantic foregrounds
+        className={`flex items-center gap-2 cursor-pointer transition-colors text-muted-foreground hover:text-foreground`}
       >
         <User size={20} />
         <span className="font-medium text-[15px]">{displayUsername}</span>
         <span className="text-xs">▼</span>
       </div>
+      
       {/* The Floating Menu */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-3 w-48 bg-custom-black text-custom-white rounded shadow-2xl overflow-hidden flex flex-col border border-white/10">
-          <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-            <Settings size={18} className="text-custom-gray-2" />
+        // FIXED: Replaced bg-custom-black, text-custom-white, and border-white/10 with standard card variables
+        <div className="absolute right-0 top-full mt-3 w-48 bg-card text-card-foreground rounded shadow-2xl overflow-hidden flex flex-col border border-border">
+          
+          {/* FIXED: Replaced hover:bg-white/10 with hover:bg-muted */}
+          <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition-colors">
+            {/* FIXED: Replaced text-custom-gray-2 with text-muted-foreground */}
+            <Settings size={18} className="text-muted-foreground" />
             <span className="text-sm font-medium">Settings</span>
           </div>
 
@@ -61,9 +58,10 @@ const ProfileDropdown = () => {
                 setIsOpen(false);
                 handleSwitchAccess();
               }}
-              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
+              // FIXED: Replaced hover:bg-white/10 with hover:bg-muted
+              className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition-colors"
             >
-              <ArrowRightLeft size={18} className="text-custom-gray-2" />
+              <ArrowRightLeft size={18} className="text-muted-foreground" />
               <span className="text-sm font-medium">Switch Access</span>
             </div>
           )}
@@ -73,10 +71,12 @@ const ProfileDropdown = () => {
               setIsOpen(false);
               setShowLogoutModal(true);
             }}
-            className="flex items-center gap-3 px-4 py-3 cursor-pointer bg-custom-red hover:bg-custom-red/80 transition-colors"
+            // FIXED: Replaced bg-custom-red with standard destructive variables
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer bg-destructive hover:bg-destructive/90 transition-colors"
           >
-            <LogOut size={18} className="text-custom-white" />
-            <span className="text-sm font-medium">Logout</span>
+            {/* FIXED: Replaced text-custom-white with text-destructive-foreground */}
+            <LogOut size={18} className="text-destructive-foreground" />
+            <span className="text-sm font-medium text-destructive-foreground">Logout</span>
           </div>
         </div>
       )}
