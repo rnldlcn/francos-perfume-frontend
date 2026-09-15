@@ -2,7 +2,7 @@ import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
 import { approveRequest, cancelRequest, rejectRequest } from "@/services/RequestService";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import RequestInformation from "./request_detail_components/RequestInformation";
@@ -124,7 +124,12 @@ export default function RequestDetailsPage() {
     };
 
     if (!selectedRequest) {
-        return <div className="p-6 text-custom-gray font-montserrat">Loading request details...</div>;
+        return (
+            <div className="flex flex-col gap-4 items-center justify-center min-h-screen p-6 font-montserrat text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                Loading request details...
+            </div>
+        );
     }
 
     return (
@@ -138,10 +143,10 @@ export default function RequestDetailsPage() {
                     >
                         <ArrowLeft className="w-4 h-4" /> Back
                     </Button>
-                    <h1 className="text-2xl font-bold text-custom-black">
+                    <h1 className="text-2xl font-bold text-foreground">
                         {selectedRequest.requestDisplayId}
                     </h1>
-                    <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase">
+                    <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full uppercase">
                         {selectedRequest.requestStatus}
                     </span>
                 </div>
@@ -163,8 +168,8 @@ export default function RequestDetailsPage() {
                         request={selectedRequest} 
                     />
 
-                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Requested Products</h2>
+                    <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
+                        <h2 className="text-xl font-bold text-foreground mb-4">Requested Products</h2>
                         <DataTable
                             columns={requestedProductsColumns(
                                 itemApprovals, 

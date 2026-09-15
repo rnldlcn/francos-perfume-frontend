@@ -1,15 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Montserrat';
-  src: url('assets/fonts/Montserrat_Font.ttf') format('truetype');
-}
-
 @layer base {
   :root {
-    /* Brand Palette Utilities */
     --color-custom-primary: #E1D4C1;
     --color-custom-primary-hover: #D4C3AB;
     --color-custom-primary-50-opacity: #E1D4C180;
@@ -23,82 +19,64 @@
     --color-custom-purple: #AA59BE;
     --color-custom-blue: #424E9E;
 
-    /* Main Layout */
-    --background: #F6F5FF; 
-    --foreground: #1C1C1C; 
-
-    /* Cards & Popovers */
-    --card: #FFFFFF;
-    --card-foreground: #1C1C1C;
-    --popover: #FFFFFF;
-    --popover-foreground: #1C1C1C;
-
-    /* Action Elements */
-    --primary: #E1D4C1; 
-    --primary-foreground: #1C1C1C;
-    --secondary: #DBDBDB; 
-    --secondary-foreground: #1C1C1C;
-    --muted: #EFEFEF;
-    --muted-foreground: #878787; 
-    --accent: #E1D4C180; 
-    --accent-foreground: #1C1C1C;
-    --destructive: #7E102C; 
-    --destructive-foreground: #F6F5FF;
-
-    /* Borders & Focus Rings */
-    --border: #DBDBDB; 
-    --input: #DBDBDB;
-    --ring: #424E9E; 
+    --background: 246 100% 98%;
+    --foreground: 0 0% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 11%;
+    --primary: 36 36% 82%;
+    --primary-foreground: 0 0% 11%;
+    --secondary: 0 0% 86%;
+    --secondary-foreground: 0 0% 11%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 53%;
+    --accent: 36 36% 91%;
+    --accent-foreground: 0 0% 11%;
+    --destructive: 345 77% 28%;
+    --destructive-foreground: 246 100% 98%;
+    --border: 0 0% 86%;
+    --input: 0 0% 86%;
+    --ring: 232 41% 44%;
     --radius: 0.625rem;
-
-    /* Sidebar Navigation */
-    --sidebar: #FFFFFF;
-    --sidebar-foreground: #1C1C1C;
-    --sidebar-primary: #E1D4C1;
-    --sidebar-primary-foreground: #1C1C1C;
-    --sidebar-accent: #E1D4C180;
-    --sidebar-accent-foreground: #1C1C1C;
-    --sidebar-border: #DBDBDB;
-    --sidebar-ring: #424E9E;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 0 0% 11%;
+    --sidebar-primary: 36 36% 82%;
+    --sidebar-primary-foreground: 0 0% 11%;
+    --sidebar-accent: 36 36% 91%;
+    --sidebar-accent-foreground: 0 0% 11%;
+    --sidebar-border: 0 0% 86%;
+    --sidebar-ring: 232 41% 44%;
   }
 
   .dark {
-    /* Main Layout */
-    --background: #141414; 
-    --foreground: #F6F5FF; 
-
-    /* Cards & Popovers */
-    --card: #1C1C1C; 
-    --card-foreground: #F6F5FF;
-    --popover: #1C1C1C;
-    --popover-foreground: #F6F5FF;
-
-    /* Action Elements */
-    --primary: #E1D4C1; 
-    --primary-foreground: #1C1C1C;
-    --secondary: #2B2B2B;
-    --secondary-foreground: #F6F5FF;
-    --muted: #282828;
-    --muted-foreground: #878787; 
-    --accent: #2B2B2B;
-    --accent-foreground: #F6F5FF;
-    --destructive: #9E1B3B; 
-    --destructive-foreground: #F6F5FF;
-
-    /* Borders & Focus Rings */
-    --border: #333333;
-    --input: #333333;
-    --ring: #AA59BE; 
-
-    /* Sidebar Navigation */
-    --sidebar: #1C1C1C;
-    --sidebar-foreground: #F6F5FF;
-    --sidebar-primary: #E1D4C1;
-    --sidebar-primary-foreground: #1C1C1C;
-    --sidebar-accent: #2B2B2B;
-    --sidebar-accent-foreground: #F6F5FF;
-    --sidebar-border: #333333;
-    --sidebar-ring: #AA59BE;
+    --background: 0 0% 8%;
+    --foreground: 246 100% 98%;
+    --card: 0 0% 11%;
+    --card-foreground: 246 100% 98%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 246 100% 98%;
+    --primary: 36 36% 82%;
+    --primary-foreground: 0 0% 11%;
+    --secondary: 0 0% 17%;
+    --secondary-foreground: 246 100% 98%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 53%;
+    --accent: 0 0% 17%;
+    --accent-foreground: 246 100% 98%;
+    --destructive: 345 71% 36%;
+    --destructive-foreground: 246 100% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 288 42% 55%;
+    --sidebar: 0 0% 11%;
+    --sidebar-foreground: 246 100% 98%;
+    --sidebar-primary: 36 36% 82%;
+    --sidebar-primary-foreground: 0 0% 11%;
+    --sidebar-accent: 0 0% 17%;
+    --sidebar-accent-foreground: 246 100% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 288 42% 55%;
   }
 }
 
@@ -109,14 +87,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
   
-  /* FIXED: Bypassed @apply for raw CSS variables to prevent PostCSS compilation errors */
   * {
-    border-color: var(--border);
+    border-color: hsl(var(--border));
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
   
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
