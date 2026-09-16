@@ -1,187 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import { UseAuth } from "../../../services/UseAuth";
+import ConfirmDialog from '@/components/shared/ConfirmDialog';
+import FormField from '@/components/shared/FormField';
+import FormSelect from '@/components/shared/FormSelect';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useEffect, useState } from 'react';
+import { useAuth } from "../../../auth/UseAuth";
 
-const EditAccountModal = ({ isOpen, onClose, account, onSave }) => {
-  const { user } = UseAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const activeRole = sessionStorage.getItem('activeRole')?.toUpperCase() || 'STAFF';
+const getAccountFormData = (account) => ({
+  firstName: account?.firstName || "",
+  lastName: account?.lastName || "",
+  middleName: account?.middleName || "",
+  contactNumber: account?.contactNumber || "",
+  address: account?.address || "",
+  email: account?.email || "",
+  branchLocation: account?.branchLocation || "",
+  employeeRole: account?.employeeRole || "",
+  employeeShift: account?.employeeShift || "",
+});
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    middleName: '',
-    contactNo: '',
-    address: '',
-    email: '',
-    branch: '',
-    role: ''
-  });
+const EditAccountModal = ({ isOpen, onClose, selectedAccount, filterOptions = [], updateDetails }) => {
+  
+  const { user } = useAuth();
+  const [config, setConfig] = useState(null);
 
-  // Pre-fill the form using the actual database keys fetched from backend
+  const [data, setData] = useState(() => getAccountFormData(selectedAccount));
+
   useEffect(() => {
-    if (account && isOpen) {
-      setFormData({
-        firstName: account.first_name || '',
-        lastName: account.last_name || '',
-        middleName: account.middle_name || '',
-        contactNo: account.contact_no || account.contact_number || '',
-        address: account.address || '',
-        email: account.email || '',
-        branch: account.branch || 'Sta. Lucia',
-        role: account.role?.toUpperCase() || 'STAFF'
-      });
+    if (isOpen && selectedAccount) {
+      setData(getAccountFormData(selectedAccount));
     }
-  }, [account, isOpen]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    const branchId = formData.branch === "Sta. Lucia" ? 2 : formData.branch === "Riverbanks" ? 3 : 1;
-    // Use employee_id from DisplayEmployeeProfileDTO, fallback to id
-    const targetId = account.employee_id || account.id;
-
-    try {
-        // -------------------------------------------------------------
-        // CALL 1: Update Profile Details (Name, Contact, Address, Branch)
-        // -------------------------------------------------------------
-        const profilePayload = {
-            branch_id: parseInt(branchId), 
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            middle_name: formData.middleName || "",
-            contact_number: formData.contactNo,
-            address: formData.address,
-            employee_shift: "Morning", // Required field for DTO
-            employee_image_url: ""     // Required field for DTO
-        };
-
-        const profileResponse = await fetch(`http://localhost:5000/api/Employees/updateProfile/${targetId}`, { 
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${user?.accessToken}`,
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(profilePayload)
-        });
-
-        if (!profileResponse.ok) {
-            const errText = await profileResponse.text();
-            throw new Error(`Profile Update Failed: ${errText}`);
-        }
-
-        // -------------------------------------------------------------
-        // CALL 2: Update Authentication Details (Email, Role)
-        // -------------------------------------------------------------
-        const authPayload = {
-            email: formData.email,
-            employee_role: formData.role,
-            password_status: account.password_status || "active" // Must pass existing status
-        };
-
-        const authResponse = await fetch(`http://localhost:5000/api/Employees/updateAuth/${targetId}`, { 
-            method: 'PUT',
-            headers: { 
-                'Authorization': `Bearer ${user?.accessToken}`,
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(authPayload)
-        });
-
-        if (!authResponse.ok) {
-            const errText = await authResponse.text();
-            throw new Error(`Auth Update Failed: ${errText}`);
-        }
-
-        onSave(); // Refresh parent table
-        onClose();
-        alert("Account successfully updated.");
-    } catch (err) { 
-        alert(err.message);
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
+  }, [isOpen, selectedAccount]);
 
   if (!isOpen) return null;
 
+  const branchOptionData = filterOptions.find(option => option.key === "branchLocation")?.options || [];
+  const roleOptionData = filterOptions.find(option => option.key === "employeeRole")?.options || [];
+
+  const branchOptions = branchOptionData.filter(
+    (option) => option.value !== "" && option.value !== "__all__"
+  );
+
+  const roleOptions = roleOptionData.filter(
+    (option) => option.value !== "" && option.value !== "__all__"
+  );
+  
+
+  const handleSave = () => {
+      setConfig({
+      title: "Are you sure you want to save changes for this account?",
+      description: "The user of this account will be notified of the changes made to their account.",
+      confirmText: "Save Changes",
+      onConfirm: async () => {
+        console.log("Saving changes for account:", data);
+        await updateDetails(selectedAccount.employeeId, data);
+        setData(null);
+        onClose();
+      } 
+    })
+  }
+
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-[60] animate-fade-in font-montserrat">
-      <div className="bg-[#F8F9FB] rounded-2xl shadow-xl w-full max-w-[650px] p-10 relative">
-        <button onClick={onClose} className="absolute top-4 right-6 text-gray-400 hover:text-gray-700 text-2xl">✕</button>
-        <h2 className="text-4xl font-extrabold text-[#333] text-center mb-10 tracking-tight">Edit Account Details</h2>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent
+          className="sm:max-w-3xl"
+        >
+          <DialogHeader>
+            <DialogTitle>Edit Account</DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="First name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+          <div className='grid grid-cols-3 gap-4 py-4'>
+            <FormField 
+              label="First Name"
+              value={data.firstName}
+              onChange={e => setData(prev => ({...prev, firstName: e.target.value }) )}
+              placeholder="Enter first name here..."
             />
-            <input 
-              type="text" placeholder="Last name" required
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-            />
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <input 
-              type="text" placeholder="Middle name"
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.middleName} onChange={(e) => setFormData({...formData, middleName: e.target.value})}
+            <FormField 
+              label="Middle Name"
+              value={data.middleName}
+              onChange={e => setData(prev => ({...prev, middleName: e.target.value }))}
+              placeholder="Enter middle name here..."
             />
-            <input 
-              type="text" placeholder="Contact no. (e.g., 09123456789)" required
-              maxLength={11} minLength={11} pattern="^09\d{9}$"
-              title="Must be an 11-digit number starting with 09"
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-              value={formData.contactNo} 
-              onChange={(e) => setFormData({...formData, contactNo: e.target.value.replace(/\D/g, '')})}
+
+            <FormField 
+              label="Last Name"
+              value={data.lastName}
+              onChange={e => setData(prev => ({...prev, lastName: e.target.value }))}
+              placeholder="Enter last name here..."
             />
           </div>
 
-          <input 
-            type="text" placeholder="Full address" required
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
-          />
+          <div className='mb-6'>
+            <FormField 
+              label="Address"
+              value={data.address}
+              onChange={e => setData(prev => ({...prev, address: e.target.value }))}
+              placeholder="Enter address here..."
+            />
+          </div>
 
-          <input 
-            type="email" placeholder="Email" required
-            className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm"
-            value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-          />
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <FormField 
+              label="Email"
+              value={data.email}
+              onChange={e => setData(prev => ({...prev, email: e.target.value }))}
+              placeholder="Enter email here..."
+            />
+            <FormField 
+              label="Contact Number"
+              value={data.contactNumber}
+              onChange={e => setData(prev => ({...prev, contactNumber: e.target.value }))}
+              placeholder="Enter contact number here..."
+            />
+          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <select 
-              required className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.branch} onChange={(e) => setFormData({...formData, branch: e.target.value})}
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <FormSelect
+              label="Branch"
+              value={data.branchLocation}
+              onChange={(value) => setData(prev => ({...prev, branchLocation: value }))}
+              options={branchOptions}
+              placeholder="Select branch..."
+              disabled={user?.trueRole?.toUpperCase() === "MANAGER"}
+            />
+            
+            <FormSelect
+              label="Role"
+              value={data.employeeRole}
+              onChange={(value) => setData(prev => ({...prev, employeeRole: value }))}
+              options={roleOptions}
+              placeholder="Select role..."
+              disabled={user?.trueRole?.toUpperCase() === "MANAGER"}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <Button 
+              variant="outline"
+              onClick={onClose}
             >
-              <option value="Sta. Lucia">Sta. Lucia</option>
-              <option value="Riverbanks">Riverbanks</option>
-            </select>
-            <select 
-              className="border border-gray-300 rounded-md p-3 text-sm focus:outline-none bg-white shadow-sm text-gray-700"
-              value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
-            >
-              <option value="STAFF">STAFF</option>
-              <option value="CASHIER">CASHIER</option>
-              {(activeRole === 'OWNER' || activeRole === 'ADMIN' || account?.role?.toUpperCase() === 'MANAGER') && (
-                <option value="MANAGER">MANAGER</option>
-              )}
-            </select>
-          </div>
+              Cancel
+            </Button>
 
-          <div className="flex justify-center gap-6 pt-6">
-            <button type="button" onClick={onClose} className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm text-gray-700 transition-colors">✕ Discard Changes</button>
-            <button type="submit" disabled={isSubmitting} className="flex items-center gap-2 bg-[#E5D5C1] hover:bg-[#d4c2ab] px-6 py-2 rounded-md font-medium text-sm text-gray-700 transition-colors disabled:opacity-50">
-                ✓ {isSubmitting ? 'Saving...' : 'Save Changes'}
-            </button>
+            <Button
+              onClick={handleSave}
+            >
+              Save Changes
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog 
+        isOpen={!!config}
+        onClose={() => setConfig(null)}
+        config={config}
+      />
+    </>
   );
 };
 

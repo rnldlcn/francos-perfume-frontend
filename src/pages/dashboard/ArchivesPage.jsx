@@ -1,7 +1,26 @@
-import InventoryArchiveTable from "../../components/features/archive_components/InventoryArchiveTable";
-import AccountsArchiveTable from "../../components/features/archive_components/AccountsArchiveTable";
+import DataTable from "@/components/shared/DataTable";
+import { useAccountArchive } from "@/hooks/archive_hooks/useAccountArchive";
+import { useProductArchive } from "@/hooks/archive_hooks/useProductArchive";
+import { archivedAccountColumns, archivedProductColumns } from "@/utils/columns";
 
 const ArchivesPage = () => {
+  const { 
+    archivedProducts, 
+    asyncState: productAsyncState, 
+    pagination: productPagination, 
+    filter: productFilter, 
+    updateFilter: updateProductFilter 
+  } = useProductArchive();
+
+  // 2. Rename 'filter' and 'updateFilter' for accounts
+  const { 
+    archivedAccounts, 
+    asyncState: accountAsyncState, 
+    pagination: accountPagination, 
+    filter: accountFilter, 
+    updateFilter: updateAccountFilter 
+  } = useAccountArchive();
+
   return (
     <div className="flex flex-col h-full animate-fade-in font-montserrat pb-8">
       <header className="mb-8 border-b border-gray-200 pb-6">
@@ -11,8 +30,38 @@ const ArchivesPage = () => {
         </p>
       </header>
 
-      <InventoryArchiveTable />
-      <AccountsArchiveTable />
+      <section>
+        <h2 className="text-2xl font-bold text-foreground mb-6">Accounts Archives</h2>
+        <DataTable 
+            columns={archivedAccountColumns}
+            data={archivedAccounts}
+            keyField="accountArchiveId"
+            asyncState={accountAsyncState}
+            pagination={accountPagination}
+            filter={accountFilter}
+            updateFilter={updateAccountFilter}
+        />
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-bold text-foreground mb-6">Products Archives</h2>
+          <DataTable 
+            columns={archivedProductColumns}
+            data={archivedProducts}
+            keyField="productArchiveId"
+            asyncState={productAsyncState}
+            pagination={productPagination}
+            filter={productFilter}
+            updateFilter={updateProductFilter}
+          />
+      </section>
+
+      
+
+      
+      {/* to be removed */}
+      {/* AccountArchiveId */}
+
     </div>
   );
 };

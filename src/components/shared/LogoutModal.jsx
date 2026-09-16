@@ -1,6 +1,8 @@
+import { useAuth } from '@/auth/useAuth';
 import { Button } from '@/components/ui/button';
 
-const LogoutModal = ({ setShowLogoutModal, onLogout }) => {
+const LogoutModal = ({ setShowLogoutModal }) => {
+    const { logout } = useAuth();
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all"
             onClick={() => setShowLogoutModal(false)}
@@ -12,7 +14,7 @@ const LogoutModal = ({ setShowLogoutModal, onLogout }) => {
             <p className="text-custom-gray mb-8 text-sm">Are you sure you want to end your current session?</p>
             <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowLogoutModal(false)}>Cancel</Button>
-                <Button variant="destructive" onClick={onLogout}>Yes, Sign Out</Button>
+                <Button variant="destructive" onClick={logout}>Yes, Sign Out</Button>
             </div>
             </div>
         </div>

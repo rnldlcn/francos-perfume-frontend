@@ -1,10 +1,14 @@
+import { useAuth } from '@/auth/useAuth';
 import { ArrowRightLeft, LogOut, Settings, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
 import LogoutModal from './LogoutModal';
 
-const ProfileDropdown = ({ user, onSwitchAccess, onLogout }) => {
+const ProfileDropdown = () => {
+  const { user, handleSwitchAccess } = useAuth();
   const canSwitchAccess = user.trueRole === 'manager';
+
+  const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -12,6 +16,16 @@ const ProfileDropdown = ({ user, onSwitchAccess, onLogout }) => {
 
   const displayUsername = user.email ? user.email.split('@')[0] : 'Employee Name';
 
+  /* 
+  i dont know what this does
+
+  Adapts the text color based on where you put the component
+  const triggerTextColor = theme === 'dark'
+    ? 'text-custom-gray hover:text-custom-white'
+    : 'text-custom-black hover:text-custom-black/70';
+  */
+
+    
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,7 +66,7 @@ const ProfileDropdown = ({ user, onSwitchAccess, onLogout }) => {
             <div
               onClick={() => {
                 setIsOpen(false);
-                onSwitchAccess();
+                handleSwitchAccess();
               }}
               className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
             >
@@ -77,8 +91,7 @@ const ProfileDropdown = ({ user, onSwitchAccess, onLogout }) => {
       {showLogoutModal && (
         <LogoutModal
           setShowLogoutModal={setShowLogoutModal}
-          onLogout={onLogout}
-        />
+          />
       )}
     </div>
   );

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { RequestService } from '../../../services/RequestService';
-import { DeliveryService } from '../../../services/DeliveryService';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { DeliveryService } from '../../../services/deliveryService';
+import { RequestService } from '../../../services/requestService';
 // 🔧 FIXED: Added missing icon imports that were causing the crash
-import { CheckCircle, Clock, ChevronLeft } from 'lucide-react'; 
+import { CheckCircle, ChevronLeft, Clock } from 'lucide-react';
 
 export default function DeliveryConfirmationPage() {
     const { id } = useParams();

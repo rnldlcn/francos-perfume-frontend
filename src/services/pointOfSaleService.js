@@ -1,0 +1,17 @@
+import { cleanFilters } from "@/utils/filterUtils.js";
+import apiClient from "./apiClient";
+
+const PATH = "/pos";
+
+export const getAllProductsPOS = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
+
+export const checkout = async (checkoutData) => {
+  const response = await apiClient.post(`${PATH}/checkout`, checkoutData);
+  return response.data;
+};

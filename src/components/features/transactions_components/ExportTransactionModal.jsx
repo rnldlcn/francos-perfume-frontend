@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { X, FileText, FileSpreadsheet, FileOutput, Loader2 } from "lucide-react";
+import CloseButton from "@/components/shared/CloseButton";
+import { useExportReport } from "@/hooks/transaction_hooks/useExportReport";
+import { FileOutput, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { useState } from "react";
+
 
 const ExportTransactionModal = ({ isOpen, onClose }) => {
   const [selectedFormat, setSelectedFormat] = useState(null);
@@ -7,50 +10,18 @@ const ExportTransactionModal = ({ isOpen, onClose }) => {
   const [dateTo, setDateTo] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
-  // ==========================================
-  // 🔌 API TEMPLATE: EXPORT TRANSACTIONS
-  // ==========================================
+  const { exportExcel, exportPdf, isError } = useExportReport();
+
   const handleExport = async () => {
     if (!selectedFormat) return;
 
-    try {
-      setIsExporting(true);
-      
-      console.log(`Exporting as ${selectedFormat} from ${dateFrom || 'start'} to ${dateTo || 'end'}`);
+    setIsExporting(true);
+    if(selectedFormat === 'pdf') {
+      exportPdf();
+    }
 
-      // --- UNCOMMENT AND UPDATE WHEN BACKEND IS READY ---
-      // const queryParams = new URLSearchParams({
-      //   format: selectedFormat,
-      //   ...(dateFrom && { startDate: dateFrom }),
-      //   ...(dateTo && { endDate: dateTo }),
-      // });
-      //
-      // const response = await fetch(`YOUR_API_URL/transactions/export?${queryParams}`, {
-      //   method: 'GET',
-      // });
-      // 
-      // if (!response.ok) throw new Error("Export failed");
-      //
-      // // Download the file
-      // const blob = await response.blob();
-      // const url = window.URL.createObjectURL(blob);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = `transactions_export_${new Date().toISOString().split('T')[0]}.${selectedFormat}`;
-      // a.click();
-      // window.URL.revokeObjectURL(url);
-      // --------------------------------------------------
-
-      // Simulated delay for UI template
-      setTimeout(() => {
-        setIsExporting(false);
-        onClose(); // Close modal on success
-        setSelectedFormat(null); // Reset state
-      }, 1500);
-
-    } catch (error) {
-      console.error("Export failed:", error);
-      setIsExporting(false);
+    if(selectedFormat === 'xlsx') {
+      exportExcel();
     }
   };
 
@@ -59,14 +30,11 @@ const ExportTransactionModal = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-8 relative">
-        
+        <CloseButton 
+          onClick={onClose}
+        />
         {/* CLOSE BUTTON */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <X size={24} />
-        </button>
+        
 
         <h2 className="text-3xl font-bold text-center text-[#333] mb-8 tracking-tight">
           Export To:

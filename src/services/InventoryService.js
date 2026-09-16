@@ -1,35 +1,41 @@
-const API_URL = "http://localhost:5000/api"
+import { cleanFilters } from "@/utils/filterUtils.js";
+import apiClient from "./apiClient";
 
+const PATH = "/Inventory";
 
-export const fetchAllInventory = async (token) => {
-    // 🔧 FIXED: Added ?pageSize=500 to pull all inventory records instantly
-    const response = await fetch(`${API_URL}/Inventory/displayAll?pageSize=500`, {
-        method: 'GET',
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-        }
-    });
-    if (!response.ok) throw new Error(await response.text());
+export const getAllInventory = async (filter) => {
+  const cleanedFilter = cleanFilters(filter);
+  const response = await apiClient.get(`${PATH}`, {
+    params: cleanedFilter,
+  });
+  return response.data;
+};
 
-    return await response.json();
-}
+export const getInventoryItemDetails = async (productId) => {
+  const response = await apiClient.get(`${PATH}/${productId}`);
+  return response.data;
+};
 
-export const updateQuantity = async (itemId, newQuantity, token) => {
-    const response = await fetch(`${API_URL}/inventory/updateQuantity/${itemId}?qty=${newQuantity}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity: newQuantity })
-    });
+export const getInventoryBatches = async (productId, branchId) => {
+  const response = await apiClient.get(`${PATH}/batch`, {
+    params: { branchId, productId },
+  });
+  return response.data;
+};
 
+export const updateBatch = async (batchId, dto) => {
+  const response = await apiClient.patch(`${PATH}/batch/${batchId}`, {
+    product_id: dto.productId,
+    quantity: dto.quantity,
+    expiry_date: dto.targetDate,
+    reason: dto.reason,
+  });
+  return response.data;
+};
+
+/*
+ *  I don't know what is this for to be honest, but it's one of the controllers in the backend.
+ */ 
+export const addInventoryItem = async () => {
     
-    //console.log("API Response:", response);
-    if (!response.ok) throw new Error(await response.text());
-
-    return await response.json();
-}
-
-export const updateStock = async () => {
-
-}
+};

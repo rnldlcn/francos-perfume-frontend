@@ -27,6 +27,14 @@ export const DeliveryService = {
         return handleResponse(response);
     },
 
+    getAllDeliveries: async () => {
+        const token = sessionStorage.getItem('accessToken');
+        const response = await fetch(`${API_BASE_URL}/displayAll`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        return handleResponse(response);
+    },
+
     // 🔧 UPDATED: Now accepts a payload containing quantities and remarks
     receiveRequest: async (requestId, payload) => {
         const token = sessionStorage.getItem('accessToken');
