@@ -1,17 +1,7 @@
 import { useBarcode } from "@/hooks/product_hooks/useBarcode";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Printer, Download, Loader2 } from "lucide-react";
-import StatusBadge from "@/components/shared/StatusBadge";
 
-/**
- * BarcodePreview
- * ──────────────
- * Shows the selected product's barcode label with visual barcode lines,
- * print quantity controls, and action buttons.
- *
- * Extracted from BarcodePage so the page itself stays thin and delegates
- * to the hook for all state/actions.
- */
 export default function BarcodePreview() {
     const {
         selectedProduct,
@@ -38,7 +28,7 @@ export default function BarcodePreview() {
     const displayId = selectedProduct.product_display_id;
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full animate-fade-in">
             <h2 className="text-xl font-bold text-foreground mb-6">Barcode Preview</h2>
 
             {/* Product info header */}
@@ -56,19 +46,19 @@ export default function BarcodePreview() {
                 </div>
             </div>
 
-            {/* Barcode label card */}
+            {/* Barcode label card (Hardcoded to Black & White for Scannability) */}
             <div className="flex flex-col items-center justify-center mb-8">
-                <div className="bg-card border-2 border-dashed border-border p-6 rounded-xl flex flex-col items-center w-full max-w-xs">
-                    <p className="font-bold tracking-widest text-card-foreground mb-2 text-sm">
+                <div className="bg-white border-2 border-dashed border-border p-6 rounded-xl flex flex-col items-center w-full max-w-xs shadow-sm">
+                    <p className="font-bold tracking-widest text-black mb-2 text-sm">
                         {displayName.toUpperCase().slice(0, 24)}
                     </p>
 
-                    {/* CSS-simulated barcode lines */}
+                    {/* CSS-simulated barcode lines (Must be black) */}
                     <div className="flex h-20 w-full justify-between items-end px-2 mb-2">
                         {Array.from({ length: 35 }, (_, i) => (
                             <div
                                 key={i}
-                                className="bg-foreground"
+                                className="bg-black"
                                 style={{
                                     width: `${(i % 3 === 0 ? 3 : i % 2 === 0 ? 2 : 1)}px`,
                                     height: i % 4 === 0 ? "100%" : "85%",
@@ -77,18 +67,18 @@ export default function BarcodePreview() {
                         ))}
                     </div>
 
-                    <p className="font-mono text-base tracking-[0.25em] font-bold text-card-foreground">
+                    <p className="font-mono text-base tracking-[0.25em] font-bold text-black">
                         {displayBarcode}
                     </p>
 
                     {/* Print quantity */}
                     <div className="mt-6 flex items-center gap-3">
-                        <span className="text-sm font-bold text-muted-foreground">QTY:</span>
+                        <span className="text-sm font-bold text-gray-500">QTY:</span>
                         <input
                             type="number"
                             value={printQty}
                             onChange={(e) => setPrintQty(Math.max(1, parseInt(e.target.value) || 1))}
-                            className="w-16 border border-input bg-transparent rounded p-1 text-center font-bold text-foreground outline-none focus:ring-2 focus:ring-ring"
+                            className="w-16 border border-gray-300 bg-white rounded p-1 text-center font-bold text-black outline-none focus:ring-2 focus:ring-primary"
                             min="1"
                         />
                     </div>
@@ -100,7 +90,7 @@ export default function BarcodePreview() {
                 <Button
                     onClick={regenerateBarcode}
                     disabled={asyncState.isGenerating}
-                    className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold"
+                    className="w-full font-bold"
                 >
                     {asyncState.isGenerating ? <Loader2 size={18} className="mr-2 animate-spin" /> : <RefreshCw size={18} className="mr-2" />}
                     {asyncState.isGenerating ? "Generating..." : "Regenerate Barcode"}
@@ -108,7 +98,7 @@ export default function BarcodePreview() {
                 <Button
                     onClick={handlePrint}
                     disabled={asyncState.isPrinting}
-                    className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold"
+                    className="w-full font-bold"
                 >
                     {asyncState.isPrinting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Printer size={18} className="mr-2" />}
                     {asyncState.isPrinting ? "Printing..." : "Print Now"}
@@ -116,7 +106,7 @@ export default function BarcodePreview() {
                 <Button
                     onClick={handleSavePdf}
                     disabled={asyncState.isSaving}
-                    className="w-full bg-primary text-primary-foreground hover:opacity-90 font-bold"
+                    className="w-full font-bold"
                 >
                     {asyncState.isSaving ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Download size={18} className="mr-2" />}
                     {asyncState.isSaving ? "Saving..." : "Save as PDF"}

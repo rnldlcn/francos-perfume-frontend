@@ -3,11 +3,12 @@ import CreateDiscountModal from "@/components/features/discount_components/Creat
 import { discountColumns } from "@/components/features/discount_components/DiscountColumns";
 import DiscountInfoModal from "@/components/features/discount_components/DiscountInfoModal";
 import EditDiscountModal from "@/components/features/discount_components/EditDiscountModal";
+import DiscountTableSkeleton from "@/components/loaders/DiscountTableSkeleton";
 import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useDiscounts } from "@/hooks/discount_hooks/useDiscount";
-import { Eye, Plus, Loader2 } from "lucide-react"; // ADDED: Imported Loader2
+import { Eye, Plus } from "lucide-react"; 
 import { useState } from "react";
 
 const DiscountPage = () => {
@@ -58,10 +59,8 @@ const DiscountPage = () => {
   return (
     <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
 
-      {/* FIXED: Replaced text-custom-black with text-foreground */}
       <h1 className="text-3xl font-bold text-foreground mb-1 leading-none tracking-tight">Discount Management</h1>
       
-      {/* FIXED: Replaced text-gray-400 with text-muted-foreground */}
       <p className="text-muted-foreground text-sm mb-8">Create, remove, and change discounts</p>
         
         <div className="flex flex-col gap-4 mb-8">
@@ -92,15 +91,10 @@ const DiscountPage = () => {
         </div>
     </div>
 
-    {/* FIXED: Replaced text-custom-black with text-foreground */}
     <h2 className="text-2xl font-bold text-foreground mb-6">Discounts List</h2>
 
-    {/* ADDED: Loading animation guard for initial fetch */}
-    {asyncState?.isLoading && (!discounts || discounts.length === 0) ? (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] animate-fade-in">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground font-medium">Loading discounts...</p>
-      </div>
+    {asyncState?.isLoading ? (
+      <DiscountTableSkeleton rowCount={5} />
     ) : (
       <div className="overflow-y-auto h-screen min-h-100"
         onClick={(e) => e.stopPropagation()}>

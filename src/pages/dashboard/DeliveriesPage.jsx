@@ -1,5 +1,6 @@
 import { useAuth } from "@/auth/UseAuth";
 import DeliveryCard from "@/components/features/delivery_components/DeliveryCard";
+import DeliverySkeletonList from "@/components/loaders/DeliverySkeletonList";
 import { FilterDropDown } from "@/components/shared";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import PaginationBar from "@/components/shared/PaginationBar";
@@ -8,8 +9,8 @@ import StatusCard from "@/components/shared/StatusCard";
 import { Button } from "@/components/ui/button";
 import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
 import { cancelDelivery, dispatchDelivery, receiveDelivery } from "@/services/DeliveryService";
-import { ArrowDownLeft, ArrowUpRight, Clock, ListFilter, Loader2 } from "lucide-react"; // ADDED: Loader2
-import { useState } from "react";
+import { ArrowDownLeft, ArrowUpRight, Clock, ListFilter } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 const DeliveriesPage = () => {
@@ -28,8 +29,15 @@ const DeliveriesPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [config, setConfig] = useState(null);
 
-    const activeTab = searchParams.get("direction") || "FOR_DISPATCH";
+    // Extract active tab and search query directly from URL state
+    const activeTab = searchParams.get("direction") || "";
+    const searchQuery = searchParams.get("search") || "";
 
+    // Sync URL parameters with the backend filter hook
+    useEffect(() => {
+        updateFilter('direction', activeTab);
+        updateFilter('search', searchQuery);
+    }, [activeTab, searchQuery]);
 
     const handleTabChange = (direction) => {
              setSearchParams(prev => {
@@ -49,7 +57,6 @@ const DeliveriesPage = () => {
         });
         updateFilter("search", query);
     };
-
 
     const handleMarkInTransit = (deliveryId) => {
         setConfig({
@@ -144,7 +151,6 @@ const DeliveriesPage = () => {
     return (
         <div className="flex flex-col h-full animate-fade-in font-montserrat overflow-y-auto">
             <div className="mb-6">
-                {/* FIXED: Replaced text-custom-black with text-foreground */}
                 <h1 className="text-3xl font-bold text-foreground tracking-tight leading-none mb-1">
                     Deliveries
                 </h1>
@@ -210,7 +216,7 @@ const DeliveriesPage = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="w-full sm:max-w-xl">
                         <SearchBar
-                            value={filter.search}
+                            value={searchQuery}
                             onChange={handleSearchChange}
                         />
                     </div>
@@ -227,11 +233,7 @@ const DeliveriesPage = () => {
 
             <div className="space-y-4">
                 {asyncState.isLoading ? (
-                    // FIXED: Swapped static text for the standard Loader2 animation block
-                    <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
-                        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-                        <p className="text-muted-foreground font-medium">Loading deliveries...</p>
-                    </div>
+                    <DeliverySkeletonList rowCount={4} />
                 ) : deliveries.length === 0 ? (
                     <div className="text-center py-16 text-muted-foreground">
                         No deliveries found.

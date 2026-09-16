@@ -1,8 +1,7 @@
 import { useBarcode } from "@/hooks/product_hooks/useBarcode";
 import { SearchBar } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-// FIXED: Added missing Loader2, CheckCircle, and XCircle imports
-import { Plus, RefreshCw, Printer, Download, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Minus, RefreshCw, Printer, Download, Loader2 } from 'lucide-react';
 
 export default function BarcodeProductList() {
   const {
@@ -28,7 +27,6 @@ export default function BarcodeProductList() {
   if (asyncState.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-4">
-        {/* FIXED: Standardized loading animation */}
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-muted-foreground">Loading products...</p>
       </div>
@@ -36,13 +34,11 @@ export default function BarcodeProductList() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full flex flex-col">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
         <div>
-          {/* FIXED: text-custom-black to text-foreground */}
           <h2 className="font-bold text-lg text-foreground">Select Product</h2>
-          {/* FIXED: text-gray-500 to text-muted-foreground */}
           <p className="text-sm text-muted-foreground">
             Search by name, display ID, or barcode
           </p>
@@ -50,10 +46,9 @@ export default function BarcodeProductList() {
         <div className="flex gap-2">
           <Button
             onClick={() => {
-              // TODO: implement create product flow if needed
               alert("Create product functionality will be implemented in a future update.");
             }}
-            className="w-full sm:w-auto shrink-0"
+            className="w-full sm:w-auto shrink-0 font-bold"
           >
             <Plus className="h-4 w-4 mr-2" />
             Create New Product
@@ -62,14 +57,16 @@ export default function BarcodeProductList() {
       </div>
 
       {/* Search Bar */}
-      <SearchBar
-        value={asyncState.isLoading ? "" : (selectedProduct ? selectedProduct.product_name || "" : "")}
-        onChange={handleSearchChange}
-        placeholder="Search products..."
-      />
+      <div className="shrink-0">
+        <SearchBar
+            value={asyncState.isLoading ? "" : (selectedProduct ? selectedProduct.product_name || "" : "")}
+            onChange={handleSearchChange}
+            placeholder="Search products..."
+        />
+      </div>
 
       {/* Product List */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar min-h-0">
         {allProducts.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No products found.</p>
         ) : (
@@ -82,14 +79,11 @@ export default function BarcodeProductList() {
                   onClick={() => selectProduct(product)}
                   className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all ${
                     isSelected
-                      // FIXED: Used semantic primary colors for selected state
                       ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20"
-                      // FIXED: Used standard card and border variables for default state
-                      : "border-border bg-card hover:border-primary/50"
+                      : "border-border bg-background hover:border-primary/50 hover:bg-accent/30"
                   }`}
                 >
-                  {/* FIXED: bg-white and border-gray-100 to bg-background and border-border */}
-                  <div className="h-16 w-16 bg-background border border-border rounded flex items-center justify-center shrink-0 p-1">
+                  <div className="h-16 w-16 bg-card border border-border rounded flex items-center justify-center shrink-0 p-1">
                     <img
                       src={product.product_image_url || "/assets/FrancoPerfumeLogo.png"}
                       alt="Perfume"
@@ -121,7 +115,7 @@ export default function BarcodeProductList() {
 
       {/* Selected Product Actions */}
       {selectedProduct && (
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="pt-4 border-t border-border shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="font-bold text-lg text-foreground">{selectedProduct.product_name}</h3>
@@ -134,7 +128,6 @@ export default function BarcodeProductList() {
                 disabled={asyncState.isGenerating}
                 className="w-24 h-9"
               >
-                {/* FIXED: Standardized action loading states */}
                 {asyncState.isGenerating ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
@@ -176,27 +169,26 @@ export default function BarcodeProductList() {
             </label>
             <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => setPrintQty((prev) => Math.max(1, prev - 1))}
                 disabled={printQty <= 1}
-                className="w-8 h-8"
+                className="w-8 h-8 p-0"
               >
-                <CheckCircle size={16} />
+                <Minus size={16} />
               </Button>
               <input
                 type="number"
                 value={printQty}
                 onChange={(e) => setPrintQty(Math.max(1, parseInt(e.target.value) || 1))}
-                // FIXED: Set border-input, bg-transparent, and text-foreground for dark mode input
-                className="w-12 text-center border border-input bg-transparent text-foreground rounded outline-none focus:ring-2 focus:ring-ring"
+                className="w-14 h-8 text-center border border-input bg-background text-foreground rounded outline-none focus:ring-2 focus:ring-primary font-bold"
                 min="1"
               />
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => setPrintQty((prev) => prev + 1)}
-                className="w-8 h-8"
+                className="w-8 h-8 p-0"
               >
-                <XCircle size={16} />
+                <Plus size={16} />
               </Button>
             </div>
           </div>

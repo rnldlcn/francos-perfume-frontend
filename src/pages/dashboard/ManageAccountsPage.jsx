@@ -2,6 +2,7 @@ import { accountColumns } from "@/components/features/accounts_components/Accoun
 import AccountInfoModal from "@/components/features/accounts_components/AccountInfoModal";
 import CreateAccountModal from "@/components/features/accounts_components/CreateAccountModal";
 import EditAccountModal from "@/components/features/accounts_components/EditAccountModal";
+import AccountTableSkeleton from "@/components/loaders/AccountTableSkeleton";
 import { FilterDropDown } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
@@ -57,11 +58,9 @@ const ManageAccountsPage = () => {
 
   return (
     <div className="flex flex-col animate-fade-in font-montserrat h-screen overflow-y-auto">
-      {/* FIXED: Replaced text-custom-black with text-foreground */}
       <h1 className="text-3xl font-bold text-foreground mb-1 tracking-tight leading-none">
         Manage Accounts
       </h1>
-      {/* FIXED: Replaced text-foreground with text-muted-foreground */}
       <p className="text-muted-foreground text-sm mb-8">
         Manage, create, and modify accounts of each user
       </p>
@@ -94,24 +93,27 @@ const ManageAccountsPage = () => {
       </div>
     </div>
 
-    {/* FIXED: Replaced text-custom-black with text-foreground */}
     <h2 className="text-2xl font-bold text-foreground mb-6">Accounts List</h2>
 
-    <div className="overflow-y-auto h-screen min-h-100"
-      onClick={(e) => e.stopPropagation()}>
-      <DataTable 
-        columns={accountColumns}
-        data={accounts}
-        keyField="employeeId"
-        asyncState={asyncState}
-        pagination={pagination}
-        filter={filter}
-        updateFilter={updateFilter}
-        selectedItem={selectedAccount}
-        onRowClick={handleRowClick}
-        onRowDoubleClick={() => setIsAccountInfoModalOpen(true)}
-      />
-    </div>
+    {asyncState?.isLoading ? (
+      <AccountTableSkeleton rowCount={10} />
+    ) : (
+      <div className="overflow-y-auto h-screen min-h-100"
+        onClick={(e) => e.stopPropagation()}>
+        <DataTable 
+          columns={accountColumns}
+          data={accounts}
+          keyField="employeeId"
+          asyncState={asyncState}
+          pagination={pagination}
+          filter={filter}
+          updateFilter={updateFilter}
+          selectedItem={selectedAccount}
+          onRowClick={handleRowClick}
+          onRowDoubleClick={() => setIsAccountInfoModalOpen(true)}
+        />
+      </div>
+    )}
 
     <CreateAccountModal 
       isOpen={isCreateAccountModalOpen} 
