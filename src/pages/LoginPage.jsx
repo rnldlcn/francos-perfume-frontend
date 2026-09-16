@@ -1,7 +1,7 @@
 import FormField from '@/components/shared/FormField';
 import { Button } from '@/components/ui/button';
 import { useLogin } from '@/hooks/useLogin';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import logo from '../assets/FrancoPerfumeLogo.png';
 
 const LoginPage = () => {
@@ -79,9 +79,16 @@ const LoginPage = () => {
                 required
             />
 
-            {/* Added w-full and explicit semantic colors */}
             <Button type="submit" disabled={isLoading} className="mt-2 w-full bg-primary text-primary-foreground hover:opacity-90">
-                {isLoading ? "Logging in..." : "Login"}
+                {isLoading ? (
+                  <>
+                    {/* ADDED: Standardized spinner animation */}
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
             </Button>
         </form>
     

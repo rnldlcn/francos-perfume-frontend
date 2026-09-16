@@ -1,7 +1,8 @@
 import { useBarcode } from "@/hooks/product_hooks/useBarcode";
 import { SearchBar } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw, Printer, Download } from 'lucide-react';
+// FIXED: Added missing Loader2, CheckCircle, and XCircle imports
+import { Plus, RefreshCw, Printer, Download, Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 export default function BarcodeProductList() {
   const {
@@ -26,8 +27,10 @@ export default function BarcodeProductList() {
 
   if (asyncState.isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <p className="text-gray-400">Loading products...</p>
+      <div className="flex flex-col items-center justify-center py-12 gap-4">
+        {/* FIXED: Standardized loading animation */}
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading products...</p>
       </div>
     );
   }
@@ -37,8 +40,10 @@ export default function BarcodeProductList() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="font-bold text-lg text-custom-black">Select Product</h2>
-          <p className="text-sm text-gray-500">
+          {/* FIXED: text-custom-black to text-foreground */}
+          <h2 className="font-bold text-lg text-foreground">Select Product</h2>
+          {/* FIXED: text-gray-500 to text-muted-foreground */}
+          <p className="text-sm text-muted-foreground">
             Search by name, display ID, or barcode
           </p>
         </div>
@@ -66,7 +71,7 @@ export default function BarcodeProductList() {
       {/* Product List */}
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
         {allProducts.length === 0 ? (
-          <p className="text-center text-gray-400 py-8">No products found.</p>
+          <p className="text-center text-muted-foreground py-8">No products found.</p>
         ) : (
           <>
             {allProducts.map((product) => {
@@ -77,11 +82,14 @@ export default function BarcodeProductList() {
                   onClick={() => selectProduct(product)}
                   className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-all ${
                     isSelected
-                      ? "border-gray-400 bg-gray-50 shadow-sm ring-1 ring-gray-200"
-                      : "border-gray-100 bg-white hover:border-gray-300"
+                      // FIXED: Used semantic primary colors for selected state
+                      ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/20"
+                      // FIXED: Used standard card and border variables for default state
+                      : "border-border bg-card hover:border-primary/50"
                   }`}
                 >
-                  <div className="h-16 w-16 bg-white border border-gray-100 rounded flex items-center justify-center shrink-0 p-1">
+                  {/* FIXED: bg-white and border-gray-100 to bg-background and border-border */}
+                  <div className="h-16 w-16 bg-background border border-border rounded flex items-center justify-center shrink-0 p-1">
                     <img
                       src={product.product_image_url || "/assets/FrancoPerfumeLogo.png"}
                       alt="Perfume"
@@ -89,18 +97,18 @@ export default function BarcodeProductList() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-800 truncate">{product.product_name}</h3>
-                    <p className="text-xs text-gray-500 mb-1">{product.product_display_id}</p>
-                    <p className="text-[11px] text-gray-400">
-                      Barcode: <span className="font-mono text-gray-600">{product.product_barcode || "N/A"}</span>
+                    <h3 className="font-bold text-foreground truncate">{product.product_name}</h3>
+                    <p className="text-xs text-muted-foreground mb-1">{product.product_display_id}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Barcode: <span className="font-mono text-foreground">{product.product_barcode || "N/A"}</span>
                     </p>
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-muted-foreground">
                       Date Created: {new Date(product.product_date_created).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[10px] text-gray-400 mb-1">Last Generated:</p>
-                    <p className="text-[11px] text-gray-600 font-medium">
+                    <p className="text-[10px] text-muted-foreground mb-1">Last Generated:</p>
+                    <p className="text-[11px] text-foreground font-medium">
                       {lastGenerated || "Never"}
                     </p>
                   </div>
@@ -113,11 +121,11 @@ export default function BarcodeProductList() {
 
       {/* Selected Product Actions */}
       {selectedProduct && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-bold text-lg text-gray-800">{selectedProduct.product_name}</h3>
-              <p className="text-sm text-gray-500">{selectedProduct.product_display_id}</p>
+              <h3 className="font-bold text-lg text-foreground">{selectedProduct.product_name}</h3>
+              <p className="text-sm text-muted-foreground">{selectedProduct.product_display_id}</p>
             </div>
             <div className="text-right space-x-3">
               <Button
@@ -126,8 +134,9 @@ export default function BarcodeProductList() {
                 disabled={asyncState.isGenerating}
                 className="w-24 h-9"
               >
+                {/* FIXED: Standardized action loading states */}
                 {asyncState.isGenerating ? (
-                  <RefreshCw size={16} className="animate-spin" />
+                  <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <RefreshCw size={16} />
                 )}
@@ -139,7 +148,7 @@ export default function BarcodeProductList() {
                 className="w-24 h-9"
               >
                 {asyncState.isPrinting ? (
-                  <Printer size={16} className="animate-spin" />
+                  <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <Printer size={16} />
                 )}
@@ -151,7 +160,7 @@ export default function BarcodeProductList() {
                 className="w-24 h-9"
               >
                 {asyncState.isSaving ? (
-                  <Download size={16} className="animate-spin" />
+                  <Loader2 size={16} className="animate-spin" />
                 ) : (
                   <Download size={16} />
                 )}
@@ -161,9 +170,9 @@ export default function BarcodeProductList() {
 
           {/* Print Quantity */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
               Print Quantity:
-              <span className="text-xs text-gray-500">({printQty} label{printQty !== 1 ? "s" : ""})</span>
+              <span className="text-xs text-muted-foreground">({printQty} label{printQty !== 1 ? "s" : ""})</span>
             </label>
             <div className="flex items-center gap-2">
               <Button
@@ -178,7 +187,8 @@ export default function BarcodeProductList() {
                 type="number"
                 value={printQty}
                 onChange={(e) => setPrintQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-12 text-center border border-gray-300 rounded"
+                // FIXED: Set border-input, bg-transparent, and text-foreground for dark mode input
+                className="w-12 text-center border border-input bg-transparent text-foreground rounded outline-none focus:ring-2 focus:ring-ring"
                 min="1"
               />
               <Button
