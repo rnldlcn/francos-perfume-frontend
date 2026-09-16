@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { useRequest } from '@/hooks/request_hooks/useRequest';
 import { createRequest } from '@/services/RequestService';
@@ -149,7 +148,7 @@ const CreateTransferRequestPage = () => {
                 <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
                     <ArrowLeft size={16} /> Back
                 </Button>
-                <h1 className="text-2xl font-bold text-custom-black">Create Transfer Request</h1>
+                <h1 className="text-2xl font-bold text-foreground">Create Transfer Request</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

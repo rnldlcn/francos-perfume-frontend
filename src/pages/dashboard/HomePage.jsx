@@ -1,7 +1,8 @@
+import DashboardSkeleton from "@/components/loaders/DashboardSkeleton";
 import { Boxes, Clock, TrendingUpDownIcon, TriangleAlertIcon } from "lucide-react";
 import StatusCard from "../../components/shared/StatusCard";
 
-const DashboardHome = ({ role }) => {
+const DashboardHome = ({ role, isLoading = false }) => {
 
   const isManager = role === 'manager';
   
@@ -21,39 +22,41 @@ const DashboardHome = ({ role }) => {
   };
 
   return (
-    <div className="animate-fade-in">
-      <h1 className="text-[32px] font-bold text-custom-black mb-2 leading-none tracking-tight">
-        Dashboard
-      </h1>
-      <p className="text-custom-gray text-sm mb-8">System overview and quick metrics.</p>
+    <div className="animate-fade-in font-montserrat flex flex-col h-full">
       
-      {
-        /* 
-          ADD A STATEMENT THAT CHANGES THE COLORS OF THE STATUS DEPENDING WHETHER ITS POSITIVE OR NOT
-          THIS IS TO BE DONE IN THE FUTURE
-        */
-      }
-
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
-        {cards.map((card, index) => (
-          <StatusCard 
-            key={index}
-            title={card.title}
-            mainValue={card.mainValue}
-            subText={card.subText}
-            Icon={card.Icon}
-            color={card.color}
-            secondValue={card.secondValue}
-            thirdValue={card.thirdValue}
-            secondSubText={card.secondSubText}
-          />
-        ))}
-      </div>
-  
-      <div className="h-64 mt-8 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 bg-white">
-        Metrics Dashboard Placeholder
-        
-      </div>
+      {/* Header stays static outside the loading check */}
+      <header className="mb-8">
+        <h1 className="text-[32px] font-bold text-foreground mb-2 leading-none tracking-tight">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground text-sm">System overview and quick metrics.</p>
+      </header>
+      
+      {isLoading ? (
+        <DashboardSkeleton cardCount={isManager ? 4 : 3} />
+      ) : (
+        <>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
+            {cards.map((card, index) => (
+              <StatusCard 
+                key={index}
+                title={card.title}
+                mainValue={card.mainValue}
+                subText={card.subText}
+                Icon={card.Icon}
+                color={card.color}
+                secondValue={card.secondValue}
+                thirdValue={card.thirdValue}
+                secondSubText={card.secondSubText}
+              />
+            ))}
+          </div>
+      
+          <div className="h-64 mt-8 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-muted-foreground bg-card">
+            Metrics Dashboard Placeholder
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
-
 import { transactionColumns } from '@/components/features/transactions_components/TransactionColumns';
+import TransactionTableSkeleton from '@/components/loaders/TransactionTableSkeleton';
 import { SearchBar } from '@/components/shared';
 import DataTable from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
@@ -28,35 +28,35 @@ export default function TransactionsPage() {
     }
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat flex flex-col">
+        <div className="bg-background min-h-screen font-montserrat flex flex-col animate-fade-in relative">
             
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h1 className="text-[32px] font-bold text-custom-black leading-none mb-2">Transaction History</h1>
-                    <p className="text-custom-gray text-sm">View all POS sales.</p>
+                    <h1 className="text-[32px] font-bold text-foreground leading-none mb-2">Transaction History</h1>
+                    <p className="text-muted-foreground text-sm">View all POS sales.</p>
                 </div>
             </div>
 
-            {/* add filter and search here */}
-            <div className="relative w-full md:w-96 shrink-0">
-
+            <div className="relative w-full md:w-96 shrink-0 mb-6">
                 <SearchBar
                     value={searchQuery}
                     onChange={handleSearchChange}
                 />
-
-
             </div>
 
-            <DataTable
-                columns={transactionColumns}
-                data={transactions}
-                keyField="salesOrderId"
-                asyncState={asyncState}
-                pagination={pagination}
-                filter={filter}
-                updateFilter={updateFilter}
-            />
+            {asyncState?.isLoading ? (
+                <TransactionTableSkeleton rowCount={10} />
+            ) : (
+                <DataTable
+                    columns={transactionColumns}
+                    data={transactions}
+                    keyField="salesOrderId"
+                    asyncState={asyncState}
+                    pagination={pagination}
+                    filter={filter}
+                    updateFilter={updateFilter}
+                />
+            )}
 
             <div className="relative flex justify-between gap-6 mt-4">
                 <Button
@@ -74,6 +74,7 @@ export default function TransactionsPage() {
                     Refresh Status
                 </Button>
             </div>
+            
             <ExportTransactionModal 
                 isOpen={isExportModalOpen} 
                 onClose={() => setIsExportModalOpen(false)}
