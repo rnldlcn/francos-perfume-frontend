@@ -14,11 +14,19 @@ apiClient.interceptors.request.use(
       if (config.url.includes("/auth/login")) {
         return config;
       }
-      
-      const token = sessionStorage.getItem("accessToken");
-      if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+
+    const userData = sessionStorage.getItem("user");
+
+    if (userData) {
+      try {
+        const { accessToken } = JSON.parse(userData);
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+      } catch (error) {
+        console.error("Failed to parse user session token:", error);
       }
+    }
         return config;
     },
     (error) => Promise.reject(error)

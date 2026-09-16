@@ -1,7 +1,7 @@
 import { useAuth } from "@/auth/UseAuth";
 import InventoryTable from "@/components/features/inventory_components/InventoryTable";
 import { Button } from "@/components/ui/button";
-import { formatDateForInput } from "@/utils/dateFormatUtils";
+import { formatDateForInput } from "@/utils/formattingUtils";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import EditBatchModal from "../../components/features/inventory_components/EditBatchModal";
@@ -63,14 +63,13 @@ const InventoryPage = () => {
             />
           </div>
 
-        {user.trueRole !== 'MANAGER' && (
+        {user.trueRole === 'OWNER' && (
           <Button
-            variant="primary" 
             onClick={() => setIsCreateNewProductModalOpen(true)}
             className="w-full sm:w-auto shrink-0"
           >
-            <Plus className="h-5 w-5 mr-2" />
-            Create New Perfume
+            <Plus className="h-5 w-5" />
+            Add Stock
           </Button>
         )}
       </div>

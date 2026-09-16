@@ -1,6 +1,6 @@
-import { addNewAccount, getAccount, getAccountFilters, getAllAccounts, resetAccountPassword, toggleAccountStatus, updateAccountDetails } from "@/services/accountService";
-import { archiveAccount } from "@/services/archiveService";
-import { buildFilterOptions } from "@/utils/filterUtils";
+import { addNewAccount, getAccountDetails, getAccountFilters, getAllAccounts, patchAccountDetails, resetAccountPassword } from "@/services/AccountService";
+import { archiveAccount } from "@/services/ArchiveService";
+import { buildFilterOptions } from "@/utils/formattingUtils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useFilter } from "../useFilter";
 
@@ -26,6 +26,7 @@ export const useAccount = () => {
         branchLocation: '',
         accountStatus: '',
         employeeRole: '',
+        employeeShift: '',
         pageCount: 1,
         pageSize: 10,
     });
@@ -33,6 +34,7 @@ export const useAccount = () => {
     const [filterOptions, setFilterOptions] = useState({
         accountStatus: [],
         employeeRole: [],
+        employeeShift: [],
         branchLocation: [],
     });
 
@@ -40,6 +42,7 @@ export const useAccount = () => {
         { key: "employeeRole", label: "Filter: Role", allLabel: "All Roles" },
         { key: "accountStatus", label: "Filter: Status", allLabel: "All Statuses" },
         { key: "branchLocation", label: "Filter: Branch", allLabel: "All Branches" },
+        { key: "employeeShift", label: "Filter: Shift", allLabel: "All Shifts" },
     ]
 
     const fetchAllAccounts = useCallback(() => {
@@ -74,32 +77,32 @@ export const useAccount = () => {
         return () => clearTimeout(timer); 
     }, [fetchAllAccounts])
 
-    const fetchAccount = useCallback(async (employeeId) => {
+    const fetchAccountDetails = useCallback(async (employeeId) => {
         try {
-            const data = await getAccount(employeeId);
+            const data = await getAccountDetails(employeeId);
             return data;
         } catch (err) {
-            setAsyncState({  error: err });
+            setAsyncState({ error: err });
         }
     }, [])
 
     const updateDetails = async (id, dto) => {
         try {
-            const data = updateAccountDetails(id, dto);
+            const data = patchAccountDetails(id, dto);
             fetchAllAccounts();
             return data;
         } catch (err) {
-            setAsyncState({  error: err });
+            setAsyncState({ error: err });
         }
     };
 
-    const addAccount = async (dto) => {
+    const createAccount = async (dto) => {
         try {
-            const data = addNewAccount(dto);
-            fetchAllAccounts();
+            const data = await addNewAccount(dto);
+            await fetchAllAccounts();
             return data;
         } catch (err) {
-            setAsyncState({  error: err });
+            setAsyncState({ error: err });
         }
     };
 
@@ -125,7 +128,7 @@ export const useAccount = () => {
         // TO BE ADDED
     };
 
-    const toggleStatus = useCallback(async (id) => {
+    const toggleAccountStatus = useCallback(async (id) => {
         try {
             await toggleAccountStatus(id);
             fetchAllAccounts();
@@ -139,7 +142,6 @@ export const useAccount = () => {
 
     const archive = useCallback(async (id) => {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
-
         try {
             await archiveAccount(id);
             fetchAllAccounts();
@@ -151,9 +153,8 @@ export const useAccount = () => {
         }
     }, [fetchAllAccounts]);
 
-    const fetchFilters = useCallback(async () => {
+    const fetchAccountFilters = useCallback(async () => {
         setAsyncState((prev) => ({ ...prev, isLoading: true, error: null }));
-        
         try {
             const data = await getAccountFilters();
             setFilterOptions(buildFilterOptions(data, ACCOUNT_FILTER_SCHEMA));
@@ -165,8 +166,8 @@ export const useAccount = () => {
     }, []);
 
     useEffect(() => {
-        fetchFilters();
-    }, [fetchFilters]);
+        fetchAccountFilters();
+    }, [fetchAccountFilters]);
 
     return { 
         accounts, 
@@ -174,11 +175,12 @@ export const useAccount = () => {
         pagination,
         filter,
         updateFilter,
-        fetchAccount,
+        fetchAccount: fetchAccountDetails,
         archive,
-        toggleStatus,
+        toggleStatus: toggleAccountStatus,
         resetPassword,
         filterOptions,
-        updateDetails,
+        updateDetails: updateDetails,
+        createAccount,
     };
 }

@@ -8,18 +8,14 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
 
 const ConfirmDialog = ({ isOpen, onClose, config }) => {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
     if (!config) return null;
 
     const handleConfirm = async (e) => {
         e.preventDefault();
         e.stopPropagation();
         try {
-            setIsSubmitting(true);
             if (config.onConfirm) {
                 await config.onConfirm();
             }
@@ -27,8 +23,6 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
         } catch (error) {
             // CHANGE THIS TO HAVE AN ERROR
             console.error("Confirmation action failed:", error);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -38,6 +32,8 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
         onClose();
     }
 
+    const confirmVariant = config.confirmVariant || "destructive";
+
 
     return (
         <AlertDialog
@@ -45,7 +41,7 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
             onOpenChange={(open) => !open && onClose()}
         >
             <AlertDialogContent>
-                
+
                 <AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
                     <AlertDialogTitle className="text-center justify-center font-bold">{config.title}</AlertDialogTitle>
                     <AlertDialogDescription className="mt-2 text-justify"><span className="text-custom-gray">{config.description || null}</span></AlertDialogDescription>
@@ -58,12 +54,12 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
                             variant="outline"
                             className="w-full"
                         >
-                            Cancel
+                            {config.cancelText || "Cancel"}
                         </AlertDialogCancel>
-                        
+
                         <AlertDialogAction
                             onClick={handleConfirm}
-                            variant="destructive"
+                            variant={confirmVariant}
                             className="w-full"
                         >
                             {config.confirmText || "Confirm"}

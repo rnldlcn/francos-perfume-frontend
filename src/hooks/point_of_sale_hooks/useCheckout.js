@@ -1,5 +1,5 @@
 import { useAuth } from "@/auth/UseAuth";
-import { checkout } from "@/services/pointOfSaleService";
+import { checkout } from "@/services/PointOfSaleService";
 import { buildPointOfSaleDTO, extractReceiptData } from "@/utils/pointOfSaleDTO";
 import { useState } from "react";
 

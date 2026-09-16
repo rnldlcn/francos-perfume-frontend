@@ -1,137 +1,172 @@
-import React, { useState, useEffect } from "react";
-import { UseAuth } from "../../services/UseAuth";
-// Assuming you use react-router for navigation; adjust if you use something else
-import { useParams, useNavigate } from "react-router-dom"; 
+import { Button } from "@/components/ui/button";
+import { useDelivery } from "@/hooks/delivery_hooks/useDelivery";
+import { ArrowLeft, Truck, XCircle, CheckCircle, Eye } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import DeliveryInformation from "./delivery_detail_components/DeliveryInformation";
 
-const DeliveryDetailsPage = () => {
-  const { deliveryId } = useParams(); // Gets the ID from the URL (e.g., /deliveries/1)
-  const navigate = useNavigate();
-  const { user } = UseAuth();
+export default function DeliveryDetailsPage() {
+    const { deliveryId } = useParams();
+    const navigate = useNavigate();
+    const { fetchDeliveryDetails } = useDelivery();
 
-  const [delivery, setDelivery] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedDelivery, setSelectedDelivery] = useState(null);
 
-  // Fetch Delivery Details
-  useEffect(() => {
-    const fetchDelivery = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/api/Deliveries/${deliveryId}`, {
-          headers: { 'Authorization': `Bearer ${user?.accessToken}` }
+    useEffect(() => {
+        if (!deliveryId) return;
+
+        let isMounted = true;
+        fetchDeliveryDetails(deliveryId).then((data) => {
+            if (isMounted && data) {
+                setSelectedDelivery(data);
+            }
         });
-        if (!response.ok) throw new Error("Failed to fetch delivery details");
-        
-        const data = await response.json();
-        setDelivery(data);
-      } catch (error) {
-        console.error("Error fetching delivery:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
-    fetchDelivery();
-  }, [deliveryId, user?.accessToken]);
+        return () => {
+            isMounted = false;
+        };
+    }, [deliveryId, fetchDeliveryDetails]);
 
-  // Handle Action (Accept or Cancel)
-  const handleAction = async (actionStatus) => {
-    if (!window.confirm(`Are you sure you want to ${actionStatus.toLowerCase()} this delivery?`)) return;
-    
-    setIsProcessing(true);
-    try {
-      // Calls either /accept or /cancel endpoint
-      const endpoint = actionStatus === 'COMPLETED' ? 'accept' : 'cancel';
-      const response = await fetch(`http://localhost:5000/api/Deliveries/${deliveryId}/${endpoint}`, {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error(await response.text());
-
-      alert(`Delivery successfully ${actionStatus === 'COMPLETED' ? 'accepted' : 'cancelled'}.`);
-      navigate('/deliveries'); // Go back to the main deliveries list
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    } finally {
-      setIsProcessing(false);
+    if (!selectedDelivery) {
+        return (
+            <div className="p-6 text-custom-gray font-montserrat">
+                Loading delivery details...
+            </div>
+        );
     }
-  };
 
-  if (isLoading) return <div className="p-10 font-montserrat">Loading delivery details...</div>;
-  if (!delivery) return <div className="p-10 font-montserrat text-red-500">Delivery not found.</div>;
+    const isInbound = selectedDelivery.direction === "INBOUND";
+    const isOutbound = selectedDelivery.direction === "OUTBOUND";
+    const isForDispatch = !isInbound && !isOutbound; // Backend sends a generic status before dispatch
 
-  return (
-    <div className="flex flex-col h-full animate-fade-in font-montserrat p-8 bg-[#F4F7FB]">
-      
-      {/* HEADER SECTION */}
-      <div className="flex items-center gap-6 mb-8">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="bg-[#E3DFD6] hover:bg-[#d4c2ab] text-[#333] px-4 py-1.5 rounded-md font-medium text-sm transition-colors"
-        >
-          ‹ Back
-        </button>
-        <h1 className="text-[32px] font-bold text-[#333] tracking-tight leading-none">
-          {delivery.delivery_display_id}
-        </h1>
-        {/* INBOUND BADGE */}
-        <span className="bg-[#FFF4E5] border border-[#FFD599] text-[#E69900] px-4 py-1 rounded-full text-xs font-bold tracking-wider">
-          {delivery.delivery_status || 'INBOUND'}
-        </span>
-      </div>
+    const totalProducts = selectedDelivery.items?.length || 0;
+    const totalUnits = selectedDelivery.items?.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-      {/* CONTENT CARD */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 w-full max-w-4xl">
-        <h2 className="text-xl font-bold text-[#333] mb-6">Products to be Sent</h2>
+    return (
+        <div className="p-6 min-h-screen font-montserrat">
+            <div className="flex items-center gap-4 mb-6">
+                <Button
+                    variant="outline"
+                    onClick={() => navigate("/home/deliveries")}
+                    className="flex items-center gap-2"
+                >
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
+                <h1 className="text-2xl font-bold text-custom-black">
+                    {selectedDelivery.deliveryDisplayId}
+                </h1>
+                <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase ${
+                    isInbound
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-purple-100 text-purple-700"
+                }`}>
+                    {selectedDelivery.direction}
+                </span>
+            </div>
 
-        {/* ITEMS TABLE */}
-        <div className="overflow-hidden rounded-lg border border-gray-100 mb-8">
-          <table className="w-full text-sm text-left">
-            <thead className="text-gray-400 font-medium border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4">ID</th>
-                <th className="px-6 py-4">Perfume Name</th>
-                <th className="px-6 py-4">Qty to be Sent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {delivery.items?.map((item, index) => (
-                <tr key={item.product_id} className={index % 2 === 0 ? "bg-[#FBF9F6]" : "bg-white"}>
-                  {/* Using product_display_id to match your database (e.g., PROD-001) */}
-                  <td className="px-6 py-4 text-gray-500">{item.product_display_id}</td>
-                  <td className="px-6 py-4 text-[#333] font-medium">{item.product_name}</td>
-                  <td className="px-6 py-4 text-gray-500">{item.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <DeliveryInformation delivery={selectedDelivery} />
+
+                    {/* Products Table */}
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Products</h2>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b border-gray-100 text-muted-foreground">
+                                        <th className="pb-3 text-left font-medium">ID</th>
+                                        <th className="pb-3 text-left font-medium">Perfume Name</th>
+                                        <th className="pb-3 text-center font-medium">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(selectedDelivery.items || []).map((item, index) => (
+                                        <tr
+                                            key={item.deliveryItemId || index}
+                                            className="border-b border-gray-50 last:border-0"
+                                        >
+                                            <td className="py-4 text-muted-foreground">{item.productDisplayId}</td>
+                                            <td className="py-4 font-medium text-custom-black">{item.productName}</td>
+                                            <td className="py-4 text-center font-bold">{item.quantity}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sidebar: Summary + Actions */}
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Summary</h2>
+                        <div className="space-y-2 text-sm font-medium">
+                            <div className="flex justify-between">
+                                <span className="text-gray-400">Products:</span>
+                                <span className="font-bold text-gray-900">{totalProducts}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-gray-400">Total Units:</span>
+                                <span className="font-bold text-gray-900">{totalUnits}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {isForDispatch && (
+                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                            <h2 className="text-base font-bold text-gray-900">Required Action</h2>
+                            <p className="text-xs text-gray-500">Mark as in transit to notify the receiving branch.</p>
+                            <Button
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => navigate("/home/deliveries")}
+                            >
+                                <Truck className="w-4 h-4 mr-2" /> Mark as In Transit
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="w-full"
+                                onClick={() => navigate("/home/deliveries")}
+                            >
+                                <XCircle className="w-4 h-4 mr-2" /> Cancel Request
+                            </Button>
+                        </div>
+                    )}
+
+                    {isInbound && (
+                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                            <h2 className="text-base font-bold text-gray-900">Required Action</h2>
+                            <p className="text-xs text-gray-500">Accept or reject this inbound request.</p>
+                            <Button
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={() => navigate("/home/deliveries")}
+                            >
+                                <CheckCircle className="w-4 h-4 mr-2" /> Accept Request
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                className="w-full"
+                                onClick={() => navigate("/home/deliveries")}
+                            >
+                                <XCircle className="w-4 h-4 mr-2" /> Reject Request
+                            </Button>
+                        </div>
+                    )}
+
+                    {isOutbound && (
+                        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-3">
+                            <h2 className="text-base font-bold text-gray-900">Required Action</h2>
+                            <p className="text-xs text-gray-500">View or follow up on this outbound delivery.</p>
+                            <Button
+                                className="w-full bg-custom-primary text-custom-black hover:bg-custom-primary/80"
+                                onClick={() => navigate("/home/deliveries")}
+                            >
+                                <Eye className="w-4 h-4 mr-2" /> View Details
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-
-        {/* ACTION BUTTONS */}
-        {delivery.delivery_status === 'INBOUND' && (
-          <div className="flex gap-4">
-            <button 
-              onClick={() => handleAction('COMPLETED')}
-              disabled={isProcessing}
-              className="flex-1 bg-[#5A9B5C] hover:bg-[#4a804c] text-white py-3 rounded-md font-medium transition-colors disabled:opacity-50"
-            >
-              ✓ Accept Request
-            </button>
-            <button 
-              onClick={() => handleAction('CANCELLED')}
-              disabled={isProcessing}
-              className="flex-1 bg-[#8B2332] hover:bg-[#731c28] text-white py-3 rounded-md font-medium transition-colors disabled:opacity-50"
-            >
-              ⊗ Cancel Request
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default DeliveryDetailsPage;
+    );
+}

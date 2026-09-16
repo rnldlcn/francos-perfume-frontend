@@ -1,17 +1,17 @@
 import { useAuth } from "@/auth/UseAuth";
 import {
-  Archive,
-  Barcode,
-  Boxes,
-  ChartNoAxesCombined,
-  FileClock,
-  HandHelping,
-  LayoutDashboard,
-  Logs,
-  ShoppingBag,
-  Tag,
-  Truck,
-  UserPen
+    Archive,
+    Barcode,
+    Boxes,
+    ChartNoAxesCombined,
+    FileClock,
+    HandHelping,
+    LayoutDashboard,
+    Logs,
+    ShoppingBag,
+    Tag,
+    Truck,
+    UserPen
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/FrancoPerfumeLogo.png";
@@ -23,11 +23,11 @@ const SideBar = () => {
 
   const companyPictureAlt = "Franco's Logo";
   
-  const normalizedRole = user?.trueRole?.toLowerCase() || "";
-  const isManager = normalizedRole === "manager";
-  const isOwner = normalizedRole === "owner";
-  const isAdmin = normalizedRole === "admin";
-  const isStaff = normalizedRole === "staff";
+  const normalizedRole = user?.trueRole || "";
+  const isManager = normalizedRole === "MANAGER";
+  const isOwner = normalizedRole === "OWNER";
+  const isAdmin = normalizedRole === "ADMIN";
+  const isStaff = normalizedRole === "STAFF";
 
   const hasManagementAccess = isManager || isOwner;
   const hasFullAccess = isManager || isOwner || isAdmin;
@@ -35,7 +35,6 @@ const SideBar = () => {
   const getTabClass = (path) => {
     const isActive = location.pathname.startsWith(path); 
     
-    // Exact match for home, startsWith for others
     const isActuallyActive = path === "/home" 
     ? location.pathname === "/home" 
     : isActive;

@@ -1,92 +1,113 @@
-import { AlertTriangle, Check, Clock, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from "../../../auth/useAuth";
-import { RequestService } from '../../../services/requestService';
+import DataTable from "@/components/shared/DataTable";
+import { Button } from "@/components/ui/button";
+import { useRequest } from "@/hooks/request_hooks/useRequest";
+import { approveRequest, cancelRequest, rejectRequest } from "@/services/RequestService";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import RequestInformation from "./request_detail_components/RequestInformation";
+import RequestTimeline from "./request_detail_components/RequestTimeline";
+import { requestedProductsColumns } from "./request_detail_components/RequestedProductsColumns";
 
 export default function RequestDetailsPage() {
-    const { id } = useParams(); 
-    const navigate = useNavigate();
-    const { user } = useAuth(); 
+    const { 
+        fetchRequestDetails,
+    } = useRequest();
 
-    // --- STATE ---
-    const [request, setRequest] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { requestId } = useParams();
+    const navigate = useNavigate();
+    const [requestPayload, setRequestPayload] = useState({});
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
-    // Line item state for checkboxes and quantities
-    const [lineItems, setLineItems] = useState([]);
 
-    // Modal States
-    const [showCancelModal, setShowCancelModal] = useState(false);
-    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [selectedRequest, setRequestDetails] = useState(null);
+    const [itemApprovals, setItemApprovals] = useState({});
 
-    // --- FETCH DATA ---
     useEffect(() => {
-        loadRequestDetails();
-    }, [id]);
+        if (requestId) {
+            fetchRequestDetails(requestId).then((data) => {
+                if (data) {
+                    setRequestDetails(data);
+                    const initialApprovals = {};
+                    (data.items || []).forEach((item) => {
+                        initialApprovals[item.requestItemId] = {
+                            isApproved: true,
+                            approvedQty: item.requestedQty,
+                        };
+                    });
+                    setItemApprovals(initialApprovals);
+                }
+            });
+        }
+    }, [requestId, fetchRequestDetails]);
 
-    const loadRequestDetails = async () => {
-        setLoading(true);
+    const handleApproveToggle = (requestItemId, isApproved) => {
+        setItemApprovals((prev) => {
+            const requestedQty = selectedRequest?.items?.find((item) => item.requestItemId === requestItemId)?.requestedQty || 0;
+
+            return {
+                ...prev,
+                [requestItemId]: {
+                    ...prev[requestItemId],
+                    isApproved,
+                    approvedQty: isApproved ? (prev[requestItemId]?.approvedQty || requestedQty) : 0,
+                },
+            };
+        });
+    };
+
+    const handleQtyChange = (requestItemId, approvedQty) => {
+        const requestedQty = selectedRequest.items.find(
+            item => item.requestItemId === requestItemId
+        ).requestedQty || 0;
+
+        const maximumQtyAllowed = Math.min(approvedQty, requestedQty);
+    
+        setItemApprovals((prev) => ({
+                ...prev,
+                [requestItemId]: { 
+                    ...prev[requestItemId]  , 
+                    approvedQty: maximumQtyAllowed,
+                    isApproved: maximumQtyAllowed > 0
+                },
+            }));
+    };
+
+
+    const allProductsApproved = Object.values(itemApprovals).some((item) => item.isApproved);
+
+    const isPending = selectedRequest?.requestStatus === "PENDING";
+
+    const handleRejectRequest = async () => {
+        if (!remarks.trim()) return;
+        setIsSubmitting(true);
         try {
-            const data = await RequestService.getRequestDetails(id);
-            setRequest(data);
-            
-            setLineItems(data.items.map(item => ({
-                ...item,
-                // 🔧 FIXED: Defaults to false so the user is forced to review and check them manually
-                isApproved: false, 
-                approved_qty: item.requested_qty 
-            })));
-
-        } catch (error) {
-            console.error("Failed to fetch request details:", error);
-            alert("Could not load request details. Please try again.");
-            navigate('/home/requests');
+            await rejectRequest(requestId, remarks);
+            navigate(0);
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
-    // --- HANDLERS ---
-    const handleLineItemToggle = (itemId, checked) => {
-        setLineItems(prev => prev.map(item => {
-            if (item.request_item_id === itemId) {
-                return { ...item, isApproved: checked, approved_qty: checked ? item.requested_qty : 0 };
-            }
-            return item;
-        }));
-    };
-
-    const handleLineItemQtyChange = (itemId, newQty) => {
-        setLineItems(prev => prev.map(item => 
-            item.request_item_id === itemId ? { ...item, approved_qty: parseInt(newQty) || 0 } : item
-        ));
-    };
-
-    const handleAction = async (action) => {
+    const handleApproveRequest = async () => {
         setIsSubmitting(true);
-        setShowApproveModal(false);
         try {
-            if (action === 'APPROVE') {
-                // Note: If your API supports it, you should also pass the modified lineItems here
-                await RequestService.approveRequest(id, remarks || "Approved via Dashboard");
-            } else {
-                if (!remarks) {
-                    alert("Remarks are required to reject a request.");
-                    setIsSubmitting(false);
-                    return;
-                }
-                await RequestService.rejectRequest(id, remarks);
-            }
-            
-            alert(`Request ${action}D successfully!`);
-            navigate('/home/requests'); 
-            
-        } catch (error) {
-            console.error(error);
-            alert(`Failed to ${action} request: ${error.message}`);
+
+            const payload = (selectedRequest?.items || []).map((item) => {
+            const approvalState = itemApprovals[item.requestItemId];
+            return {
+                    remarks: remarks || "N/A",
+                    productId: item.productId,
+                    requestedItemId: item.requestItemId,
+                    isApproved: approvalState?.isApproved ?? true,
+                    requestedItemQty: approvalState?.isApproved 
+                        ? (approvalState?.approvedQty ?? item.requestedQty) 
+                        : 0,
+                };
+            });
+            console.log(payload);
+            await approveRequest(requestId, payload);
+            navigate(0);
         } finally {
             setIsSubmitting(false);
         }
@@ -94,432 +115,83 @@ export default function RequestDetailsPage() {
 
     const handleCancelRequest = async () => {
         setIsSubmitting(true);
-        setShowCancelModal(false);
         try {
-            if(RequestService.cancelRequest) {
-                await RequestService.cancelRequest(id);
-            } else {
-                await RequestService.rejectRequest(id, "Cancelled by Requesting Branch");
-            }
-            alert("Request CANCELLED successfully!");
-            navigate('/home/requests');
-        } catch (error) {
-            console.error(error);
-            alert(`Failed to cancel request: ${error.message}`);
+            await cancelRequest(requestId);
+            navigate("/home/requests");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // --- DERIVED STATE ---
-    if (loading || !request) return <div className="p-10 text-center text-gray-500 font-montserrat">Loading Request Details...</div>;
-
-    // 🔧 WAREHOUSE LOGIC: Determine if the Owner/Warehouse created this push request
-    const isWarehousePush = request.requested_from === 'WAREHOUSE' || request.from_branch_name === 'WAREHOUSE';
-
-    const totalProducts = lineItems.length;
-    const totalRequestedUnits = lineItems.reduce((sum, item) => sum + item.requested_qty, 0);
-    const totalApprovedUnits = lineItems.reduce((sum, item) => sum + item.approved_qty, 0);
-
-    // 🔧 VALIDATION: Ensure ALL products are explicitly checked AND have a valid quantity
-    const allProductsApproved = lineItems.length > 0 && lineItems.every(item => item.isApproved && item.approved_qty > 0);
-
-    // --- SECURITY LOGIC: Determine if buttons should show ---
-    const activeApproval = request.approvals.find(a => a.status === 'PENDING');
-    let canApprove = false;
-    const userBranchId = parseInt(sessionStorage.getItem('branchId')); 
-
-    if (activeApproval && user) {
-        const role = user.activeRole.toUpperCase();
-        
-        if (activeApproval.stage === 'OWNER' && role === 'OWNER') {
-            canApprove = true;
-        } 
-        else if (role === 'MANAGER') {
-            if (activeApproval.stage === 'REQUESTING_MANAGER' && userBranchId === request.to_branch_id) {
-                canApprove = true;
-            } 
-            else if (activeApproval.stage === 'FULFILLING_MANAGER' && userBranchId === request.from_branch_id) {
-                canApprove = true;
-            }
-        }
+    if (!selectedRequest) {
+        return <div className="p-6 text-custom-gray font-montserrat">Loading request details...</div>;
     }
 
-    const isReceivingBranch = userBranchId === request.to_branch_id;
-    const isPastDispatch = request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED' || request.request_status === 'DISPATCHED';
-    const isAlreadyClosed = request.request_status === 'REJECTED' || request.request_status === 'CANCELLED';
-    
-    const canCancel = isReceivingBranch && !isPastDispatch && !isAlreadyClosed;
-
     return (
-        <div className="p-6 bg-gray-50 min-h-screen font-montserrat relative">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+        <div className="p-6 min-h-screen font-montserrat">
+            <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                    <button 
-                        onClick={() => navigate(-1)}
-                        className="px-4 py-2 bg-amber-100 text-amber-800 rounded font-semibold hover:bg-amber-200 transition-colors"
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate("/home/requests")}
+                        className="flex items-center gap-2"
                     >
-                        &lt; Back
-                    </button>
-                    <h1 className="text-2xl font-bold text-gray-800">{request.request_display_id}</h1>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-bold border border-blue-200">
-                        {request.request_status}
+                        <ArrowLeft className="w-4 h-4" /> Back
+                    </Button>
+                    <h1 className="text-2xl font-bold text-custom-black">
+                        {selectedRequest.requestDisplayId}
+                    </h1>
+                    <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full uppercase">
+                        {selectedRequest.requestStatus}
                     </span>
                 </div>
 
-                {canCancel && (
-                    <button 
-                        onClick={() => setShowCancelModal(true)}
-                        className="px-4 py-2 bg-red-700 text-white rounded font-bold hover:bg-red-800 transition-colors flex items-center gap-2 shadow-sm"
+                {isPending && (
+                    <Button 
+                        variant="destructive" 
+                        onClick={() => handleCancelRequest(requestId)}
                     >
-                        <X size={18} /> Cancel Request
-                    </button>
+                        Cancel Request
+                    </Button>
                 )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* LEFT COLUMN */}
                 <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* Request Information Card */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold mb-4 text-gray-800">Request Information</h2>
-                        <div className="grid grid-cols-4 gap-4 mb-6 text-sm">
-                            <div>
-                                <p className="text-gray-400 mb-1">From Branch</p>
-                                <p className="font-semibold">{request.requested_from || request.from_branch_name}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-400 mb-1">To Branch</p>
-                                <p className="font-semibold">{request.delivered_to || request.to_branch_name}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-400 mb-1">Created By</p>
-                                <p className="font-semibold">{request.employee_display_id}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-400 mb-1">Date Created</p>
-                                <p className="font-semibold">{new Date(request.request_date_submitted).toLocaleString()}</p>
-                            </div>
-                        </div>
 
-                        {request.request_message && (
-                            <div className="bg-[#EAEBFA] p-4 rounded-lg flex gap-3">
-                                <div className="text-[#5B63D3] mt-1"><Clock size={20} /></div>
-                                <div>
-                                    <p className="text-sm font-bold text-[#5B63D3] mb-1">Request Message</p>
-                                    <p className="text-sm text-[#5B63D3]/80 whitespace-pre-wrap">{request.request_message}</p>
-                                </div>
-                            </div>
-                        )}
-                        
-                        {request.request_comment && (
-                            <div className="bg-red-50 p-4 rounded-lg flex gap-3 mt-3 border border-red-100">
-                                <div className="text-red-500 mt-1"><X size={20} /></div>
-                                <div>
-                                    <p className="text-sm font-bold text-red-700 mb-1">Rejection Remarks</p>
-                                    <p className="text-sm text-red-600 whitespace-pre-wrap">{request.request_comment}</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <RequestInformation 
+                        request={selectedRequest} 
+                    />
 
-                    {/* Requested Products Table */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        {/* 🔧 FIXED: Dynamic Title */}
-                        <h2 className="text-lg font-bold mb-4 text-gray-800">
-                            {isWarehousePush ? "Products to be Sent" : "Requested Products"}
-                        </h2>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="text-gray-400 border-b border-gray-100">
-                                        <th className="pb-3 font-medium">ID</th>
-                                        <th className="pb-3 font-medium">Product Name</th>
-                                        {/* 🔧 FIXED: Added Available column */}
-                                        <th className="pb-3 font-medium text-center">Available</th>
-                                        <th className="pb-3 font-medium text-center">Requested</th>
-                                        <th className="pb-3 font-medium text-center">Approve?</th>
-                                        <th className="pb-3 font-medium text-center">Approved Qty</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {lineItems.map(item => (
-                                        <tr key={item.request_item_id} className="border-b border-gray-50 last:border-0">
-                                            <td className="py-4">
-                                                <span className="bg-gray-100 px-2 py-1 rounded text-gray-600 font-medium">
-                                                    {item.product_display_id}
-                                                </span>
-                                            </td>
-                                            <td className="py-4 text-gray-700 font-medium">{item.product_name}</td>
-                                            <td className="py-4 text-center text-gray-500">{item.available_qty || 50}</td>
-                                            <td className="py-4 text-center font-bold text-gray-800">{item.requested_qty}</td>
-                                            
-                                            {/* 🔧 FIXED: Replaced button with a proper native Checkbox */}
-                                            <td className="py-4 text-center">
-                                                <input 
-                                                    type="checkbox" 
-                                                    className="w-5 h-5 accent-[#5A9B5C] cursor-pointer rounded border-gray-300 mx-auto block"
-                                                    checked={item.isApproved}
-                                                    disabled={!canApprove}
-                                                    onChange={(e) => handleLineItemToggle(item.request_item_id, e.target.checked)}
-                                                />
-                                            </td>
-
-                                            {/* 🔧 FIXED: Quantity Input linked to Checkbox */}
-                                            <td className="py-4 text-center">
-                                                <input 
-                                                    type="number" 
-                                                    disabled={!item.isApproved || !canApprove}
-                                                    value={item.approved_qty}
-                                                    onChange={(e) => handleLineItemQtyChange(item.request_item_id, e.target.value)}
-                                                    className={`w-20 text-center p-1.5 border rounded-md outline-none mx-auto block font-medium transition-colors ${
-                                                        item.isApproved ? 'bg-[#F4FBF4] border-[#5A9B5C] text-green-800' : 'bg-gray-50 border-gray-200 text-gray-400'
-                                                    } ${!canApprove && 'opacity-50 cursor-not-allowed'}`}
-                                                    min="0"
-                                                    max={item.requested_qty}
-                                                />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Requested Products</h2>
+                        <DataTable
+                            columns={requestedProductsColumns(
+                                itemApprovals, 
+                                handleApproveToggle, 
+                                handleQtyChange
+                            )}
+                            data={selectedRequest.items || []}
+                            keyField="requestItemId"
+                            showPagination={false}
+                            showSearch={false}
+                        />
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN */}
-                <div className="space-y-6">
-                    
-                    {/* Approval Timeline */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold mb-6 text-gray-800">Approval Timeline</h2>
-                        <div className="relative border-l-2 border-dashed border-gray-200 ml-3 space-y-8">
-                            
-                            {/* Dynamic Database Approvals */}
-                            {request.approvals
-                                // 🔧 FIXED: Filters out Fulfilling Manager entirely if it's a push from Warehouse
-                                .filter(approval => !(isWarehousePush && approval.stage === 'FULFILLING_MANAGER'))
-                                .map((approval, index) => {
-                                    
-                                    // 🔧 FIXED: Rename the stage to "Receiving Manager" for warehouse pushes
-                                    let stageName = approval.stage.toLowerCase().replace('_', ' ');
-                                    if (isWarehousePush && approval.stage === 'REQUESTING_MANAGER') {
-                                        stageName = 'receiving manager';
-                                    }
-
-                                    return (
-                                        <div key={index} className="relative pl-6">
-                                            <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
-                                                approval.status === 'APPROVED' ? 'bg-green-100 text-green-600' : 
-                                                approval.status === 'REJECTED' ? 'bg-red-100 text-red-600' :
-                                                approval.status === 'PENDING' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-400'
-                                            }`}>
-                                                <Clock size={12} />
-                                            </div>
-                                            
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <p className="font-semibold text-sm text-gray-800 capitalize">
-                                                        {stageName} Review
-                                                    </p>
-                                                    <p className="text-xs text-gray-400 mt-1">
-                                                        {approval.status === 'APPROVED' ? `Approved by ${approval.approver || 'System'}` : 
-                                                         approval.status === 'REJECTED' ? `Rejected by ${approval.approver || 'System'}` : 
-                                                         'Waiting for approval'}
-                                                    </p>
-                                                </div>
-                                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                                    approval.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 
-                                                    approval.status === 'REJECTED' ? 'bg-red-100 text-red-700' : 
-                                                    'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                                }`}>
-                                                    {approval.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    );
-                            })}
-
-                            {/* Static Step: For Dispatch */}
-                            <div className="relative pl-6">
-                                <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
-                                    (request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') 
-                                        ? 'bg-green-100 text-green-600' 
-                                        : 'bg-yellow-100 text-yellow-600'
-                                }`}>
-                                    {(request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') ? <Check size={12} /> : <Clock size={12} />}
-                                </div>
-                                
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="font-semibold text-sm text-gray-800">For Dispatch</p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {(request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') 
-                                                ? 'Dispatched and on the way' 
-                                                : 'Waiting for dispatch'}
-                                        </p>
-                                    </div>
-                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                        (request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') 
-                                            ? 'bg-green-100 text-green-700' 
-                                            : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                    }`}>
-                                        {(request.request_status === 'IN TRANSIT' || request.request_status === 'COMPLETED') ? 'DISPATCHED' : 'PENDING'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Static Step: Stock Received */}
-                            <div className="relative pl-6">
-                                <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full flex items-center justify-center ${
-                                    request.request_status === 'COMPLETED' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                                }`}>
-                                    {request.request_status === 'COMPLETED' ? <Check size={12} /> : <Clock size={12} />}
-                                </div>
-                                
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="font-semibold text-sm text-gray-800">Stock Received</p>
-                                        <p className="text-xs text-gray-400 mt-1">
-                                            {request.request_status === 'COMPLETED' ? 'Delivery acknowledged' : 'Waiting to be received'}
-                                        </p>
-                                    </div>
-                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full uppercase ${
-                                        request.request_status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
-                                    }`}>
-                                        {request.request_status === 'COMPLETED' ? 'COMPLETED' : 'PENDING'}
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    {/* Summary */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold mb-4 text-gray-800">Summary</h2>
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Products:</span>
-                                <span className="font-bold text-gray-800">{totalProducts}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-gray-500">Total Units:</span>
-                                <span className="font-bold text-gray-800">{totalRequestedUnits}</span>
-                            </div>
-                            <div className="flex justify-between pt-3 border-t border-gray-100">
-                                <span className="text-green-600 font-semibold">Approved Units:</span>
-                                <span className="font-bold text-green-600">{totalApprovedUnits}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    {canApprove && (
-                        <div className="bg-white p-6 rounded-lg shadow-sm border border-yellow-300">
-                            <h2 className="text-lg font-bold mb-2 text-gray-800">Required Action</h2>
-                            <p className="text-xs text-gray-500 mb-4">You are authorized to review this stage.</p>
-                            
-                            <textarea 
-                                placeholder="Add remarks (required for rejection)..." 
-                                className="w-full p-3 border border-gray-200 rounded-lg mb-4 text-sm outline-none focus:border-blue-300 resize-none h-20"
-                                value={remarks}
-                                onChange={(e) => setRemarks(e.target.value)}
-                            />
-
-                            <div className="space-y-3">
-                                {/* 🔧 FIXED: Approve button only renders if all checkboxes are ticked and quantities are valid */}
-                                {allProductsApproved && (
-                                    <button 
-                                        onClick={() => setShowApproveModal(true)}
-                                        disabled={isSubmitting}
-                                        className="w-full py-3 bg-green-50 text-green-700 font-bold rounded-lg border border-green-200 hover:bg-green-100 transition-colors flex justify-center items-center gap-2"
-                                    >
-                                        <Check size={18} /> Approve Request
-                                    </button>
-                                )}
-                                <button 
-                                    onClick={() => handleAction('REJECT')}
-                                    disabled={isSubmitting}
-                                    className="w-full py-3 bg-red-50 text-red-700 font-bold rounded-lg border border-red-200 hover:bg-red-100 transition-colors flex justify-center items-center gap-2"
-                                >
-                                    <X size={18} /> Reject Request
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
+                <div>
+                    <RequestTimeline
+                        selectedRequest={selectedRequest}
+                        setRequestPayload={setRequestPayload}
+                        isPending={isPending}
+                        allProductsApproved={allProductsApproved}
+                        handleRejectRequest={handleRejectRequest}
+                        handleApproveRequest={handleApproveRequest}
+                        remarks={remarks}
+                        setRemarks={setRemarks}
+                    />
                 </div>
             </div>
-
-            {/* --- CANCEL CONFIRMATION MODAL --- */}
-            {showCancelModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 mx-auto">
-                            <AlertTriangle className="text-red-600" size={24} />
-                        </div>
-                        <h2 className="text-xl font-bold text-center text-gray-800 mb-2">Cancel Transfer Request?</h2>
-                        <p className="text-center text-gray-600 mb-6">
-                            Are you sure you want to cancel <strong>{request?.request_display_id}</strong>? This action cannot be undone and will terminate the request entirely.
-                        </p>
-                        
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={() => setShowCancelModal(false)}
-                                disabled={isSubmitting}
-                                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition-colors"
-                            >
-                                No, Keep It
-                            </button>
-                            <button 
-                                onClick={handleCancelRequest}
-                                disabled={isSubmitting}
-                                className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-md hover:bg-red-700 transition-colors"
-                            >
-                                {isSubmitting ? "Cancelling..." : "Yes, Cancel Request"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* --- APPROVE CONFIRMATION MODAL --- */}
-            {showApproveModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-4 mx-auto">
-                            <Check className="text-green-600" size={24} />
-                        </div>
-                        <h2 className="text-xl font-bold text-center text-gray-800 mb-2">Confirm Approval</h2>
-                        <p className="text-center text-gray-600 mb-6">
-                            You have checked all products for <strong>{request?.request_display_id}</strong>. Are you sure you want to officially approve this stage of the request?
-                        </p>
-                        
-                        <div className="flex gap-3">
-                            <button 
-                                onClick={() => setShowApproveModal(false)}
-                                disabled={isSubmitting}
-                                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-md hover:bg-gray-200 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={() => handleAction('APPROVE')}
-                                disabled={isSubmitting}
-                                className="flex-1 py-2.5 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 transition-colors"
-                            >
-                                {isSubmitting ? "Approving..." : "Yes, Approve"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
         </div>
     );
 }

@@ -9,13 +9,14 @@ import {
     TrendingUp,
     X,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import StatusCard from "../../components/shared/StatusCard";
+import { useForecast } from "@/hooks/forecast_hooks/useForecast";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SALES FORECAST — HOW THE DATA WORKS
@@ -317,6 +318,9 @@ const ForecastChart = ({ data }) => {
    ForecastPage — Main Page Component
    ───────────────────────────────────────────────────────────────────────── */
 const ForecastPage = () => {
+  // ── Backend forecast hook (POSTs to /api/Forecasting/{stocks,revenue,ai})
+  const { forecastData, asyncState, fetchForecast } = useForecast();
+
   // ── Chart data state — starts with demo data, replaced on CSV import ────
   const [chartData, setChartData]               = useState(DEFAULT_CHART_DATA);
   const [perfumeForecasts, setPerfumeForecasts] = useState(DEFAULT_PERFUME_FORECASTS);
@@ -336,6 +340,32 @@ const ForecastPage = () => {
   const fileInputRef = useRef(null);
 
   const visiblePerfumes = showAll ? perfumeForecasts : perfumeForecasts.slice(0, 2);
+
+  // Refetch forecast on demand (e.g., when the user changes branch/product filters)
+  const handleRefreshForecast = () => {
+    const now = new Date();
+    fetchForecast({
+      year: now.getFullYear(),
+      month: now.getMonth() + 1, // 1-indexed to match the backend DTO
+      productId: 0,
+      discountPercent: 0,
+      discountAmount: 0,
+      hasDiscount: false,
+      isPercentageDiscount: false,
+    });
+  };
+
+  // When the backend's revenue forecast arrives, swap it in for the chart.
+  // Expected shape from POST /api/Forecasting/revenue:
+  //   { data: [{ month, value, upper, lower, isActual }, ...] } or array directly
+  useEffect(() => {
+    const revenue = forecastData?.revenue;
+    if (!revenue) return;
+    const incoming = Array.isArray(revenue) ? revenue : revenue.data;
+    if (Array.isArray(incoming) && incoming.length > 0) {
+      setChartData(incoming);
+    }
+  }, [forecastData]);
 
   // ── CSV import handler ───────────────────────────────────────────────────
   // This is the key function — it runs entirely in the browser, no server needed.
@@ -409,9 +439,25 @@ const ForecastPage = () => {
       <h1 className="text-[32px] font-bold text-custom-black mb-2 leading-none tracking-tight">
         Sales Forecast
       </h1>
-      <p className="text-custom-gray text-sm mb-8">
+      <p className="text-custom-gray text-sm mb-4">
         Predictive analytics and trend analysis for inventory planning
       </p>
+
+      {/* ── BACKEND STATUS (driven by useForecast) ──────────────────────────── */}
+      {asyncState.isLoading && (
+        <div className="mb-6 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-700">
+          Loading forecast from /api/Forecasting...
+        </div>
+      )}
+      {asyncState.error && (
+        <div className="mb-6 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center gap-2">
+          <AlertTriangle size={13} />
+          <span>
+            <strong>Forecast API error:</strong> {asyncState.error?.message || "Unknown error"}.
+            Showing sample data below.
+          </span>
+        </div>
+      )}
 
       {/* ── DATA SOURCE CARD ────────────────────────────────────────────────── */}
       {/*
@@ -485,6 +531,17 @@ const ForecastPage = () => {
                   Clear
                 </Button>
               )}
+
+              {/* Refresh forecast from the backend /api/Forecasting endpoints */}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleRefreshForecast}
+                disabled={asyncState.isFetching}
+                className="gap-2"
+              >
+                Refresh Forecast
+              </Button>
             </div>
           </div>
 

@@ -1,4 +1,5 @@
-import { useAuth } from '@/auth/useAuth';
+import { useAuth } from '@/auth/UseAuth';
+import { formatDateForTable } from '@/utils/formattingUtils';
 import { useEffect, useState } from 'react';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -10,27 +11,15 @@ const Header = () => {
   
   useEffect(() => {
     try {
-      // Set the current date safely
-      const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-      const formattedDate = new Intl.DateTimeFormat('en-CA', options).format(new Date());
-      setCurrentDate(formattedDate.replace(/-/g, '/'));
+      setCurrentDate(formatDateForTable(new Date()));
 
-      // Retrieve the predetermined branch ID
-      const branchId = sessionStorage.getItem('branchId');
-      
-      switch(branchId) {
-        case "1": setUserLocation("Warehouse"); break;
-        case "2": setUserLocation("Sta. Lucia"); break;
-        case "3": setUserLocation("Riverbanks"); break;
-        default: setUserLocation("Unknown Location");
-      }
+      setUserLocation(user.branchLocation);
     } catch (error) {
       console.error("Header initialization error:", error);
       setUserLocation("Error loading location");
     }
-  }, []);
+  }, [user.branchLocation]);
 
-  // CRITICAL FIX: If user is undefined or still loading, don't crash the header!
   if (!user) {
      return (
        <header className="h-16 bg-white border-b border-custom-gray-2 flex items-center justify-between px-8 shadow-sm z-10 shrink-0 font-montserrat">
@@ -42,7 +31,7 @@ const Header = () => {
   return (
     <>
       <header className="h-16 bg-white border-b border-custom-gray-2 flex items-center justify-between px-8 shadow-sm z-10 shrink-0 font-montserrat">
-        <div className="flex gap-8 text-[14px] text-custom-gray items-center">
+        <div className="flex gap-8 text-sm text-custom-gray items-center">
            <p><span className="font-semibold text-custom-black">Date:</span> {currentDate}</p>
 
            <div className="flex items-center gap-2">

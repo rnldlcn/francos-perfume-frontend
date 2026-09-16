@@ -1,7 +1,7 @@
+import { archivedAccountColumns, archivedProductColumns } from "@/components/features/archive_components/ArchiveColumns";
 import DataTable from "@/components/shared/DataTable";
 import { useAccountArchive } from "@/hooks/archive_hooks/useAccountArchive";
 import { useProductArchive } from "@/hooks/archive_hooks/useProductArchive";
-import { archivedAccountColumns, archivedProductColumns } from "@/utils/columns";
 
 const ArchivesPage = () => {
   const { 

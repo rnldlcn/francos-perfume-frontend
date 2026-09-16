@@ -1,9 +1,10 @@
 
+import { transactionColumns } from '@/components/features/transactions_components/TransactionColumns';
+import { SearchBar } from '@/components/shared';
 import DataTable from '@/components/shared/DataTable';
 import { Button } from '@/components/ui/button';
 import { useTransaction } from '@/hooks/transaction_hooks/useTransaction';
-import { transactionColumns } from '@/utils/columns';
-import { FileDown, RefreshCcw, Search } from 'lucide-react';
+import { FileDown, RefreshCcw } from 'lucide-react';
 import { useState } from 'react';
 import ExportTransactionModal from "../../components/features/transactions_components/ExportTransactionModal";
 
@@ -39,7 +40,7 @@ export default function TransactionsPage() {
             {/* add filter and search here */}
             <div className="relative w-full md:w-96 shrink-0">
 
-                <Search className="relative left-3 top-1/2 -translate-y-1/2 text-gray-400" 
+                <SearchBar
                     value={searchQuery}
                     onChange={handleSearchChange}
                 />

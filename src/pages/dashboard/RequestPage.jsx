@@ -1,168 +1,164 @@
 
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@/auth/UseAuth";
+import { requestColumns } from "@/components/features/request_components/RequestColumns";
+import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
-import { useAuth } from "../../auth/UseAuth";
-import FilterBar from "../../components/shared/FilterDropDown";
-import SearchBar from "../../components/shared/SearchBar";
-import StatusBadge from "../../components/shared/StatusBadge";
-import { RequestService } from "../../services/requestService";
-
-const statusOptions = [
-  { key: "status", label: "Filter: Status", options: ["All Statuses", "PENDING MANAGER", "PENDING OWNER", "APPROVED", "REJECTED"] },
-];
+import { Button } from "@/components/ui/button";
+import { useRequest } from "@/hooks/request_hooks/useRequest";
+import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const RequestPage = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate(); 
-  
-  // --- STATE ---
-  const [requests, setRequests] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState({ status: "All Statuses" });
+    const navigate = useNavigate(); 
+    const { user } = useAuth();
+    const {
+        requests,
+        asyncState,
+        pagination,
+        filter,
+        updateFilter,
+        filterOptions,
+    } = useRequest();
+    
+    const [searchParams, setSearchParams] = useSearchParams();
 
-  // --- DATABASE FETCH (API INTEGRATION) ---
-  useEffect(() => {
-    const fetchRequests = async () => {
-      setIsLoading(true);
-      try {
-        // LIVE API CALL - Matches your RequestController.DisplayRequests method
-        const response = await RequestService.getAllRequests();
-        
-        // The C# controller returns: { totalRequests, totalPages, page, pageSize, data: [...] }
-        setRequests(response.data || []); 
-      } catch (error) {
-        console.error("Database connection error:", error);
-        alert("Failed to load requests from the database.");
-      } finally {
-        setIsLoading(false);
-      }
+    const searchQuery = searchParams.get('search') || '';
+    const activeTab = searchParams.get('direction') || '';
+
+    const [selectedRequest, setSelectedRequest] = useState(null);
+
+    useEffect(() => {
+        updateFilter('direction', activeTab);
+        updateFilter('search', searchQuery);
+    }, [activeTab, searchQuery]);
+
+    const handleTabChange = (direction) => {
+        setSearchParams(prev => {
+            if (direction) prev.set("direction", direction);
+            else prev.delete("direction");
+            return prev;
+        });
+        updateFilter('direction', direction);
     };
 
-    fetchRequests();
-  }, [user?.accessToken]);
+    const handleRowClick = async (row) => {
+        if (selectedRequest?.requestId === row.requestId) {
+            setSelectedRequest(null);
+            return;
+        }
 
-  // --- TABLE COLUMNS (Updated to match DisplayRequestDTO.cs) ---
-  const columns = [
-    {
-      header: 'REQ ID',
-      accessorKey: 'request_display_id', // Mapped to C# DTO
-      enableSorting: true
-    },
-    {
-      header: 'From → To',
-      id: 'from_to',
-      cell: ({ row }) => `${row.original.requested_from} → ${row.original.delivered_to}` // Mapped to C# DTO
-    },
-    {
-      header: 'Status',
-      accessorKey: 'request_status', // Mapped to C# DTO
-      // 🔧 FIXED: Replaced the bulky switch statement with your clean component
-      cell: ({ row }) => <StatusBadge status={row.original.request_status} />
-    },
-    {
-      header: 'Total Items',
-      accessorKey: 'item_count', // Mapped to C# DTO
-      cell: ({ row }) => `${row.original.item_count} items`
-    },
-    {
-      header: 'Created By',
-      accessorKey: 'employee_display_id', // Mapped to C# DTO
-      enableSorting: true
-    },
-    {
-      header: 'Date Created',
-      accessorKey: 'request_date_submitted', // Mapped to C# DTO
-      enableSorting: true,
-      cell: ({ row }) => new Date(row.original.request_date_submitted).toLocaleDateString()
-    },
-    {
-      header: 'Action',
-      id: 'actions',
-      cell: ({ row }) => {
-        const item = row.original;
-        return (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 text-xs bg-[#E5D5C1]/20 hover:bg-[#E5D5C1]/40 border-transparent text-[#333]" 
-            // Navigates using the database INT ID for the backend lookup
-            onClick={() => navigate(`/home/requests/${item.request_id}`)}
-          >
-            <Eye size={14} className="mr-1.5 opacity-70"/> View Details
-          </Button>
-        )
-      }
-    }
-  ];
+        setSelectedRequest(row);    
+    };
 
-  // --- FILTER ENGINE ---
-  const filteredData = requests.filter((item) => {
-    const searchLower = searchQuery.toLowerCase();
-    
-    // Updated to search against the correct C# DTO properties
-    const matchesSearch = 
-      (item.request_display_id?.toLowerCase() || "").includes(searchLower) || 
-      (item.requested_from?.toLowerCase() || "").includes(searchLower) || 
-      (item.delivered_to?.toLowerCase() || "").includes(searchLower) ||
-      (item.employee_display_id?.toLowerCase() || "").includes(searchLower);
-      
-    const matchesStatus = !filters.status || filters.status === "All Statuses" || item.request_status === filters.status;
+    const handleViewRequest = (row) => {
+        const targetRequest = row || selectedRequest;
+        if (targetRequest) {
+            // change it to requestDisplayId eventually for better user exp
+            navigate(`/home/requests/${targetRequest.requestId}`);
+        }
+    };
 
-    return matchesSearch && matchesStatus;
-  });
+    const handleSearchChange = (query) => {
+        setSearchParams(prev => {
+            if (query) prev.set('search', query);
+            else prev.delete("search");
+            return prev;
+        });
+        updateFilter('search', query);
+    };
 
-  return (
-    <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
-      
-      {/* HEADER */}
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <h1 className="text-[32px] font-bold text-[#333] mb-1 leading-none tracking-tight">Requests</h1>
-          <p className="text-gray-500 text-sm">View and manage inventory transfer requests</p>
+    return (
+        <div className="flex flex-col h-full animate-fade-in relative font-montserrat">
+        <div className="flex justify-between items-end mb-6">
+
+            <div>
+                <h1 className="text-3xl font-bold text-custom-black mb-1 leading-none tracking-tight">Requests</h1>
+                <p className="text-foreground text-sm">View and manage inventory transfer requests</p>
+            </div>
+
+                <Button 
+                variant="default"
+                onClick={() => navigate('/home/requests/create')} 
+                >
+                    <Plus className="w-4 h-4"/> New Transfer
+                </Button>
         </div>
 
-        {/* DIRECT ROUTING BUTTON TO CREATE PAGE */}
-        <Button 
-          variant="primary" 
-          className="bg-[#E5D5C1] hover:bg-[#d4c2ab] text-[#333] shadow-sm px-4 font-semibold"
-          onClick={() => navigate('/home/new-transfer')} 
-        >
-          <span className="text-lg leading-none mr-2">+</span> New Transfer
-        </Button>
-      </div>
+        <div className="w-full justify-between items-center gap-3 mb-2 grid grid-cols-3">
 
-      {/* FILTER SECTION */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="w-full max-w-xl">
-          <SearchBar 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e?.target ? e.target.value : e)} 
-            placeholder="Search by ID, branch, or creator"
-          />
+            <Button
+                variant={activeTab === "INBOUND" ? "default" : "outline"}
+                disabled={user.branchLocation === "WAREHOUSE"}
+                onClick={() => handleTabChange("INBOUND")}
+            >
+                <ArrowDownLeft className="w-4 h-4" />
+                    Inbound
+            </Button>
+
+            <Button
+                variant={activeTab === "OUTBOUND" ? "default" : "outline"}
+                onClick={() => handleTabChange("OUTBOUND")}
+            >
+                <ArrowUpRight className="w-4 h-4" />
+                Outbound
+            </Button>
+
+            <Button
+                variant={activeTab === "" ? "default" : "outline"}
+                onClick={() => handleTabChange("")}
+                className="flex items-center gap-2"
+            >
+                <ListFilter className="w-4 h-4" />
+                All Requests
+            </Button>
         </div>
-        <div className="w-64">
-          <FilterBar filters={filters} setFilters={setFilters} filterSelections={statusOptions} />
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            <div className="w-full sm:max-w-xl">
+                <SearchBar
+                value={searchQuery}
+                onChange={handleSearchChange}
+                />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+                <FilterDropDown 
+                    filter={filter}
+                    updateFilter={updateFilter}
+                    filterOptions={filterOptions}
+                />
+            </div>
+
         </div>
-      </div>
 
-      {/* DATA TABLE */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden flex-1">
-        {isLoading ? (
-           <div className="p-10 text-center text-gray-400">Loading requests from database...</div>
-        ) : (
-          <DataTable
-            data={filteredData}
-            columns={columns}
-          />
-        )}
-      </div>
-
-    </div>
+            <DataTable 
+                columns={requestColumns}
+                data={requests}
+                keyField="requestId"
+                asyncState={asyncState}
+                pagination={pagination}
+                filter={filter}
+                updateFilter={updateFilter}
+                selectedItem={selectedRequest}
+                onRowClick={handleRowClick}
+                onRowDoubleClick={(row) => {
+                    handleRowClick(row);
+                    handleViewRequest(row);
+                }}
+            />
+        <div className="flex justify-end">
+            <Button
+                variant={selectedRequest ? "default" : "ghost"}
+                disabled={!selectedRequest}
+                onClick={() => handleViewRequest(selectedRequest)}
+                >
+                <Eye className="h-8 w-8"/>
+                View Request
+            </Button>
+        </div>
+        
+        </div>
   );
 };
 

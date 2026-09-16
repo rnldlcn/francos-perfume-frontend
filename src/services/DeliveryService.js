@@ -1,51 +1,47 @@
-const API_BASE_URL = 'http://localhost:5000/api/Deliveries';
+import { cleanFilters } from "@/utils/formattingUtils.jsx";
+import apiClient from "./ApiClient";
 
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        let errorMessage = `Server Error (${response.status})`;
-        try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || JSON.stringify(errorData);
-        } catch {
-            errorMessage = "A validation or server error occurred.";
-        }
-        throw new Error(errorMessage);
-    }
-    return response.json();
+const PATH = "/Deliveries";
+
+export const getAllDeliveries = async (filter) => {
+    const cleanedFilter = cleanFilters(filter);
+    const response = await apiClient.get(`${PATH}`, { params: cleanedFilter });
+    return response.data;
 };
 
-export const DeliveryService = {
-    dispatchRequest: async (requestId) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/${requestId}/dispatch`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        return handleResponse(response);
-    },
+export const getDeliveryDetails = async (deliveryId) => {
+    const response = await apiClient.get(`${PATH}/${deliveryId}`);
+    return response.data;
+};
 
-    getAllDeliveries: async () => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/displayAll`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        return handleResponse(response);
-    },
+/*
+export const createDeliveryFromRequest = async (requestId) => {
+    const response = await apiClient.post(`${PATH}/${requestId}`);
+    return response.data;
+};
+*/
 
-    // 🔧 UPDATED: Now accepts a payload containing quantities and remarks
-    receiveRequest: async (requestId, payload) => {
-        const token = sessionStorage.getItem('accessToken');
-        const response = await fetch(`${API_BASE_URL}/${requestId}/receive`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        return handleResponse(response);
-    }
+export const dispatchDelivery = async (deliveryId) => {
+    const response = await apiClient.post(`${PATH}/${deliveryId}/dispatch`);
+    return response.data;
+};
+
+export const receiveDelivery = async (deliveryId, dto) => {
+    const response = await apiClient.post(`${PATH}/${deliveryId}/receive`, dto);
+    return response.data;
+};
+
+export const closeDeliveryRequest = async (requestId) => {
+    const response = await apiClient.patch(`${PATH}/${requestId}/close`);
+    return response.data;
+};
+
+export const cancelDelivery = async (deliveryId) => {
+    const response = await apiClient.post(`${PATH}/${deliveryId}/cancel`);
+    return response.data;
+};
+
+export const getDeliveryFilters = async () => {
+    const response = await apiClient.get(`${PATH}/filters`);
+    return response.data;
 };

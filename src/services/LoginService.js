@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "./ApiClient";
 
 const PATH = "/auth";
 
