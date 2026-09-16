@@ -1,10 +1,11 @@
 import { useAuth } from "@/auth/UseAuth";
 import { requestColumns } from "@/components/features/request_components/RequestColumns";
+import RequestTableSkeleton from "@/components/loaders/RequestTableSkeleton";
 import { FilterDropDown, SearchBar } from "@/components/shared";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
-import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus, Loader2 } from "lucide-react"; // ADDED: Loader2
+import { ArrowDownLeft, ArrowUpRight, Eye, ListFilter, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -72,9 +73,7 @@ const RequestPage = () => {
         <div className="flex justify-between items-end mb-6">
 
             <div>
-                {/* FIXED: Replaced text-custom-black with text-foreground */}
                 <h1 className="text-3xl font-bold text-foreground mb-1 leading-none tracking-tight">Requests</h1>
-                {/* FIXED: Replaced text-foreground with text-muted-foreground */}
                 <p className="text-muted-foreground text-sm">View and manage inventory transfer requests</p>
             </div>
 
@@ -133,12 +132,8 @@ const RequestPage = () => {
 
         </div>
 
-            {/* ADDED: Initial loading animation guard for when requests are first being fetched */}
-            {asyncState?.isLoading && (!requests || requests.length === 0) ? (
-                <div className="flex flex-col items-center justify-center min-h-[40vh] animate-fade-in">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-                    <p className="text-muted-foreground font-medium">Loading requests...</p>
-                </div>
+            {asyncState?.isLoading ? (
+                <RequestTableSkeleton rowCount={10} />
             ) : (
                 <DataTable 
                     columns={requestColumns}

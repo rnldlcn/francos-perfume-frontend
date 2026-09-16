@@ -1,8 +1,8 @@
 import { archivedAccountColumns, archivedProductColumns } from "@/components/features/archive_components/ArchiveColumns";
+import { AccountArchiveSkeleton, ProductArchiveSkeleton } from "@/components/loaders/ArchiveTableSkeletons";
 import DataTable from "@/components/shared/DataTable";
 import { useAccountArchive } from "@/hooks/archive_hooks/useAccountArchive";
 import { useProductArchive } from "@/hooks/archive_hooks/useProductArchive";
-import { Loader2 } from "lucide-react"; // Import for the loading animation
 
 const ArchivesPage = () => {
   const { 
@@ -28,7 +28,7 @@ const ArchivesPage = () => {
 
   return (
     <div className="flex flex-col h-full animate-fade-in font-montserrat pb-8 bg-background">
-      
+
       {/* HEADER - Semantic colors applied */}
       <header className="mb-8 border-b border-border pb-6">
         <h1 className="text-[32px] font-bold text-foreground mb-2 tracking-tight">Archives</h1>
@@ -40,12 +40,9 @@ const ArchivesPage = () => {
       {/* ACCOUNTS SECTION */}
       <section className="mb-10">
         <h2 className="text-2xl font-bold text-foreground mb-6">Accounts Archives</h2>
-        
+
         {isAccountsLoading ? (
-          <div className="flex flex-col justify-center items-center h-48 border border-border rounded-lg bg-card text-muted-foreground shadow-sm">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-            <span className="text-sm font-medium">Fetching archived accounts...</span>
-          </div>
+          <AccountArchiveSkeleton rowCount={3} />
         ) : (
           <DataTable 
             columns={archivedAccountColumns}
@@ -62,12 +59,9 @@ const ArchivesPage = () => {
       {/* PRODUCTS SECTION */}
       <section>
         <h2 className="text-2xl font-bold text-foreground mb-6">Products Archives</h2>
-        
+
         {isProductsLoading ? (
-          <div className="flex flex-col justify-center items-center h-48 border border-border rounded-lg bg-card text-muted-foreground shadow-sm">
-            <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
-            <span className="text-sm font-medium">Fetching archived products...</span>
-          </div>
+          <ProductArchiveSkeleton rowCount={3} />
         ) : (
           <DataTable 
             columns={archivedProductColumns}

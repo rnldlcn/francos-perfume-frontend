@@ -1,4 +1,5 @@
 import ProductGrid from '@/components/features/product_components/ProductGrid';
+import ProductGridSkeleton from '@/components/loaders/ProductGridSkeleton';
 import { FilterDropDown, SearchBar } from '@/components/shared';
 import PaginationBar from '@/components/shared/PaginationBar';
 import { Button } from '@/components/ui/button';
@@ -48,52 +49,53 @@ export default function ProductsPage() {
     }
 
     return (
-        // FIXED: Replaced bg-gray-50 with bg-background and removed hardcoded padding that might clash with global layout
         <div className="bg-background min-h-screen font-montserrat relative flex flex-col">
             
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    {/* FIXED: Replaced text-custom-black with text-foreground */}
                     <h1 className="text-3xl font-bold text-foreground">Products</h1>
-                    {/* FIXED: Replaced text-foreground with text-muted-foreground */}
                     <p className="text-sm text-muted-foreground mt-1">List of all available products and details</p>
                 </div>
             </div>
 
             <div className="flex flex-col gap-4 mb-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="w-full sm:max-w-xl">
-                <SearchBar
-                value={searchQuery}
-                onChange={handleSearchChange}
-                />
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="w-full sm:max-w-xl">
+                        <SearchBar
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                        />
+                    </div>
+
+                    {isOwner && (
+                        <Button
+                            //onClick={() => setIsCreateAccountModalOpen(true)}
+                            className="w-full sm:w-auto shrink-0"
+                        >
+                            <Plus className="h-5 w-5 mr-2" />
+                            Create New Product
+                        </Button>
+                    )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <FilterDropDown 
+                        filter={filter}
+                        updateFilter={updateFilter}
+                        filterOptions={filterOptions}
+                    />
+                </div>
             </div>
 
-            {isOwner && (
-                <Button
-                    //onClick={() => setIsCreateAccountModalOpen(true)}
-                    className="w-full sm:w-auto shrink-0"
-                >
-                    <Plus className="h-5 w-5 mr-2" />
-                    Create New Product
-                </Button>
+            {asyncState?.isLoading ? (
+                <ProductGridSkeleton count={6} />
+            ) : (
+                <ProductGrid 
+                    products={products}
+                    isOwner={isOwner}
+                    //openEditModal={openEditModal}
+                />
             )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-                <FilterDropDown 
-                filter={filter}
-                updateFilter={updateFilter}
-                filterOptions={filterOptions}
-                />
-            </div>
-            </div>
-
-            <ProductGrid 
-                products={products}
-                isOwner={isOwner}
-                //openEditModal={openEditModal}
-            />
             
             <PaginationBar
                 pageCount={filter.pageCount}
@@ -102,7 +104,6 @@ export default function ProductsPage() {
                 totalEntries={pagination.totalEntries}
                 updateFilter={updateFilter}
             />
-
 
         </div>
     );
