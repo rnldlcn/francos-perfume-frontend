@@ -1,5 +1,6 @@
 import { CancelConfirmModal, CashPaymentModal, CheckoutModal, DiscountModal, GCashPaymentModal, PointOfSaleFilterBar, ProductCard, ProductModal } from '@/components/features/point_of_sale_components';
 import { ProfileDropdown } from '@/components/shared';
+import ConfirmDialog from "@/components/shared/ConfirmDialog"; // ADDED: Import ConfirmDialog
 import { Button } from '@/components/ui/button';
 import { Loader2, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,8 @@ const PointOfSalePage = () => {
   const [showGCashModal, setShowGCashModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  const [config, setConfig] = useState(null); // ADDED: Alert state
 
   const currentDateTime = useClock();
   const { cart, handleAddToCart, handleRemoveFromCart, handleClearCart, subtotal, discountAmount, grandTotal, appliedDiscountId, appliedDiscountRate, setAppliedDiscountId, setAppliedDiscountRate } = useCart();
@@ -47,15 +50,42 @@ const PointOfSalePage = () => {
     if (method === 'GCash') setShowGCashModal(true);
   };
 
-  const onConfirmPayment= (paymentDetails) => {
-    handleFinalCheckout(paymentDetails, () => {
-      handleClearCart();
-      setAppliedDiscountRate(0);
-      setAppliedDiscountId(0);
+  // FIXED: Converted to async and added try/catch for the server-side safety net
+  const onConfirmPayment = async (paymentDetails) => {
+    try {
+      await handleFinalCheckout(paymentDetails, (receiptData) => {
+        handleClearCart();
+        setAppliedDiscountRate(0);
+        setAppliedDiscountId(0);
+        setShowCashModal(false);
+        setShowGCashModal(false);
+        setShowCheckoutModal(false);
+        
+        // Show success alert WITH the receipt details
+        setConfig({
+          isAlert: true,
+          title: "Transaction Successful!",
+          description: `Receipt Number: ${receiptData?.receiptNumber || 'N/A'} \n VAT: ₱${receiptData?.vat || 0}`,
+          confirmVariant: "default",
+          confirmText: "New Order",
+          onConfirm: () => setConfig(null)
+        });
+      });
+    } catch (error) {
+      // Catches backend inventory/processing errors from useCheckout
       setShowCashModal(false);
       setShowGCashModal(false);
       setShowCheckoutModal(false);
-    });
+      
+      setConfig({
+        isAlert: true,
+        title: "Checkout Failed",
+        description: error.message || "An error occurred during checkout. Please verify inventory levels.",
+        confirmVariant: "destructive",
+        confirmText: "Acknowledge",
+        onConfirm: () => setConfig(null)
+      });
+    }
   };
 
   return (
@@ -89,16 +119,16 @@ const PointOfSalePage = () => {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {products.map(product => (
-                <ProductCard 
-                  key={product.product_id}
-                  name={product.product_name || product.name}
-                  type={product.product_type || product.type}
-                  gender={product.product_gender || product.gender}
-                  imageUrl={product.product_image_url || product.imageUrl}
-                  price={product.product_price || product.price}
-                  onAddToCart={() => setSelectedProduct(product)}
-                />
-              ))}
+  <ProductCard 
+    key={product.productId || product.product_id}
+    name={product.productName || product.product_name || product.name}
+    type={product.productType || product.product_type || product.type}
+    gender={product.productGender || product.product_gender || product.gender}
+    imageUrl={product.productImageUrl || product.product_image_url || product.imageUrl}
+    price={product.productPrice || product.product_price || product.price}
+    onAddToCart={() => setSelectedProduct(product)}
+  />
+))}
             </div>
           )}
         </div>
@@ -177,6 +207,13 @@ const PointOfSalePage = () => {
           setShowCancelConfirm(false);
         }}
         onClose={()=> setShowCancelConfirm(false) } />
+
+      {/* ADDED: Global ConfirmDialog for the POS page */}
+      <ConfirmDialog
+        isOpen={!!config}
+        onClose={() => setConfig(null)}
+        config={config}
+      />
     </div>
   );
 };

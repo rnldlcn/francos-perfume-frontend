@@ -1,10 +1,12 @@
 import { useAuth } from '@/auth/UseAuth';
 import { ArrowRightLeft, LogOut, Settings, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ADDED: Import navigate hook
 import LogoutModal from './LogoutModal';
 
 const ProfileDropdown = () => {
   const { user, handleSwitchAccess } = useAuth();
+  const navigate = useNavigate(); // ADDED: Initialize navigate
   
   const canSwitchAccess = 
     user?.trueRole?.toLowerCase() === 'manager' || 
@@ -40,7 +42,13 @@ const ProfileDropdown = () => {
       {isOpen && (
         <div className="absolute right-0 top-full mt-3 w-48 bg-card text-card-foreground rounded shadow-2xl overflow-hidden flex flex-col border border-border">
           
-          <div className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition-colors">
+          <div 
+            onClick={() => {
+              setIsOpen(false);
+              navigate('/home/settings'); // ADDED: Navigation execution
+            }}
+            className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition-colors"
+          >
             <Settings size={18} className="text-muted-foreground" />
             <span className="text-sm font-medium">Settings</span>
           </div>
