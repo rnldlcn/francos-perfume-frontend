@@ -1,3 +1,4 @@
+import ConfirmDialog from "@/components/shared/ConfirmDialog"; // ADDED: Import ConfirmDialog
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { useRequest } from "@/hooks/request_hooks/useRequest";
@@ -19,6 +20,9 @@ export default function RequestDetailsPage() {
     const [requestPayload, setRequestPayload] = useState({});
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // ADDED: State to manage the error alert popup
+    const [config, setConfig] = useState(null);
 
     const [selectedRequest, setRequestDetails] = useState(null);
     const [itemApprovals, setItemApprovals] = useState({});
@@ -84,6 +88,16 @@ export default function RequestDetailsPage() {
         try {
             await rejectRequest(requestId, remarks);
             navigate(0);
+        } catch (err) {
+            console.error("Failed to reject request:", err);
+            setConfig({
+                isAlert: true,
+                title: "Action Failed",
+                description: err.message || "Failed to reject the request.",
+                confirmVariant: "destructive",
+                confirmText: "Acknowledge",
+                onConfirm: () => setConfig(null) 
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -108,6 +122,16 @@ export default function RequestDetailsPage() {
             console.log(payload);
             await approveRequest(requestId, payload);
             navigate(0);
+        } catch (err) {
+            console.error("Failed to approve request:", err);
+            setConfig({
+                isAlert: true,
+                title: "Action Failed",
+                description: err.message || "Failed to approve the request.",
+                confirmVariant: "destructive",
+                confirmText: "Acknowledge",
+                onConfirm: () => setConfig(null) 
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -118,6 +142,16 @@ export default function RequestDetailsPage() {
         try {
             await cancelRequest(requestId);
             navigate("/home/requests");
+        } catch (err) {
+            console.error("Failed to cancel request:", err);
+            setConfig({
+                isAlert: true,
+                title: "Action Failed",
+                description: err.message || "Failed to cancel the request.",
+                confirmVariant: "destructive",
+                confirmText: "Acknowledge",
+                onConfirm: () => setConfig(null) 
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -197,6 +231,13 @@ export default function RequestDetailsPage() {
                     />
                 </div>
             </div>
+
+            {/* ADDED: ConfirmDialog for error popups */}
+            <ConfirmDialog
+                isOpen={!!config}
+                onClose={() => setConfig(null)}
+                config={config}
+            />
         </div>
     );
 }

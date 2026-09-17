@@ -1,17 +1,79 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ConfirmDialog from "@/components/shared/ConfirmDialog"; // ADDED: Import ConfirmDialog
 
 const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
   const [quantity, setQuantity] = useState(1);
+  const [config, setConfig] = useState(null); // ADDED: Alert state
+
+  // Extract available stock (adjust property name if your backend uses something else)
+const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
 
   useEffect(() => {
     if (isOpen) setQuantity(1);
-  }, [isOpen]);
+  }, [isOpen, product]);
 
   if (!isOpen || !product) return null;
 
   const handleAddClick = () => {
-    onAdd(product, quantity);
+    // Fallback if they somehow left the input blank
+    const finalQuantity = quantity === '' || quantity < 1 ? 1 : quantity;
+    onAdd(product, finalQuantity);
+  };
+
+  // CLIENT-SIDE DEFENSE 1: Button Clicks
+  const handleIncrement = () => {
+    if (quantity >= availableStock) {
+      setConfig({
+        isAlert: true,
+        title: "Insufficient Stock",
+        description: `Only ${availableStock} items available in inventory.`,
+        confirmVariant: "destructive",
+        confirmText: "Acknowledge",
+        onConfirm: () => setConfig(null)
+      });
+    } else {
+      setQuantity((prev) => (prev === '' ? 1 : prev + 1));
+    }
+  };
+
+  const handleDecrement = () => {
+    setQuantity((prev) => {
+      if (prev === '' || prev <= 1) return 1;
+      return prev - 1;
+    });
+  };
+
+  // CLIENT-SIDE DEFENSE 2: Manual Typing
+  const handleQuantityChange = (e) => {
+    const val = e.target.value;
+    
+    // Allow empty string temporarily so they can delete and re-type
+    if (val === '') {
+      setQuantity('');
+      return;
+    }
+
+    const numVal = parseInt(val, 10);
+
+    if (isNaN(numVal) || numVal < 1) {
+      setQuantity(1);
+      return;
+    }
+
+    if (numVal > availableStock) {
+      setQuantity(availableStock); // Snap back to max stock
+      setConfig({
+        isAlert: true,
+        title: "Insufficient Stock",
+        description: `Cannot exceed available stock of ${availableStock}.`,
+        confirmVariant: "destructive",
+        confirmText: "Acknowledge",
+        onConfirm: () => setConfig(null)
+      });
+    } else {
+      setQuantity(numVal);
+    }
   };
 
   return (
@@ -26,27 +88,41 @@ const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
           
           <div className="flex-1 flex flex-col justify-center">
             <h2 className="text-[22px] font-extrabold text-foreground uppercase leading-tight mb-4 pr-6 tracking-wide">
-              {product.name}
+              {product.name || product.product_name}
             </h2>
             <p className="text-lg font-bold text-muted-foreground mb-6">
-              Price: ₱{product.price.toLocaleString()}
+              Price: ₱{(product.price || product.product_price)?.toLocaleString()}
+            </p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              In Stock: <span className="text-foreground">{availableStock}</span>
             </p>
 
             <div className="flex items-center gap-4">
               <label className="text-[16px] text-foreground font-bold">Quantity:</label>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={handleDecrement}
                   className="w-10 h-10 flex items-center justify-center bg-secondary text-secondary-foreground font-bold rounded hover:bg-secondary/80 transition-colors text-xl"
                 >
                   -
                 </button>
-                <div className="w-16 h-10 flex items-center justify-center border border-input rounded bg-transparent font-bold text-[18px] text-foreground">
-                  {quantity}
-                </div>
+                
+                {/* FIXED: Replaced static div with an input field for manual entry */}
+                <input 
+                  type="number"
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                  className="w-16 h-10 flex items-center justify-center border border-input rounded bg-transparent font-bold text-[18px] text-foreground text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+                
                 <button 
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 flex items-center justify-center bg-secondary text-secondary-foreground font-bold rounded hover:bg-secondary/80 transition-colors text-xl"
+                  onClick={handleIncrement}
+                  // Disabled visually if they hit the cap, but click handler still fires to show alert
+                  className={`w-10 h-10 flex items-center justify-center font-bold rounded transition-colors text-xl ${
+                    quantity >= availableStock 
+                      ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  }`}
                 >
                   +
                 </button>
@@ -55,8 +131,8 @@ const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
           </div>
 
           <div className="w-40 h-40 shrink-0 rounded-md overflow-hidden bg-muted shadow-inner flex items-center justify-center relative">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+            {product.imageUrl || product.product_image_url ? (
+              <img src={product.imageUrl || product.product_image_url} alt={product.name} className="w-full h-full object-cover" />
             ) : (
               <div className="w-20 h-28 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-t-full shadow-2xl opacity-80"></div>
             )}
@@ -66,12 +142,20 @@ const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
 
         <button 
           onClick={handleAddClick}
-          className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded hover:bg-primary/90 transition-colors tracking-widest text-[16px] shadow-sm"
+          disabled={quantity === '' || quantity < 1 || quantity > availableStock}
+          className="w-full bg-primary text-primary-foreground font-extrabold py-3.5 rounded hover:bg-primary/90 transition-colors tracking-widest text-[16px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           ADD TO CHECKOUT
         </button>
 
       </div>
+
+      {/* ADDED: ConfirmDialog for input error popups */}
+      <ConfirmDialog
+        isOpen={!!config}
+        onClose={() => setConfig(null)}
+        config={config}
+      />
     </div>
   );
 };

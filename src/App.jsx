@@ -9,6 +9,11 @@ import RequestDetailsPage from './components/features/request_components/Request
 import DashboardLayout from './layouts/DashboardLayout';
 import { ArchivesPage, AuditLogPage, BarcodePage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
+
+// ADDED: Import the UserSettingsPage here. 
+// Note: Adjust the path if you saved UserSettingsPage in a different folder!
+import UserSettingsPage from './pages/dashboard/UserSettingsPage'; 
+
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
 import PointOfSalePage from './pages/PointOfSalePage';
@@ -129,6 +134,9 @@ const App = () => {
               }
             >
               <Route index element={<HomePage role={user?.trueRole} />} />
+              
+              {/* ADDED: The settings route is now registered so the dropdown button works */}
+              <Route path="settings" element={<UserSettingsPage />} />
 
               <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'STAFF']} />}>
                 <Route path="inventory" element={<InventoryPage role={user?.trueRole} />} />

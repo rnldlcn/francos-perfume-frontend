@@ -67,10 +67,18 @@ const DeliveriesPage = () => {
                 try {
                     await dispatchDelivery(deliveryId);
                     fetchDeliveries();
+                    setConfig(null);
                 } catch (err) {
                     console.error("Failed to mark as in transit:", err);
+                    setConfig({
+                        isAlert: true,
+                        title: "Action Failed",
+                        description: err.message || "Failed to mark as in transit.",
+                        confirmVariant: "destructive",
+                        confirmText: "Acknowledge",
+                        onConfirm: () => setConfig(null) 
+                    });
                 }
-                setConfig(null);
             },
             onCancel: () => setConfig(null),
         });
@@ -85,10 +93,18 @@ const DeliveriesPage = () => {
                 try {
                     await cancelDelivery(deliveryId);
                     fetchDeliveries();
+                    setConfig(null);
                 } catch (err) {
                     console.error("Failed to cancel delivery:", err);
+                    setConfig({
+                        isAlert: true,
+                        title: "Action Failed",
+                        description: err.message || "Failed to cancel the delivery request.",
+                        confirmVariant: "destructive",
+                        confirmText: "Acknowledge",
+                        onConfirm: () => setConfig(null) 
+                    });
                 }
-                setConfig(null);
             },
             onCancel: () => setConfig(null),
         });
@@ -103,10 +119,18 @@ const DeliveriesPage = () => {
                 try {
                     await receiveDelivery(deliveryId, { accepted: true });
                     fetchDeliveries();
+                    setConfig(null);
                 } catch (err) {
                     console.error("Failed to accept delivery:", err);
+                    setConfig({
+                        isAlert: true,
+                        title: "Action Failed",
+                        description: err.message || "Failed to accept the delivery request.",
+                        confirmVariant: "destructive",
+                        confirmText: "Acknowledge",
+                        onConfirm: () => setConfig(null) 
+                    });
                 }
-                setConfig(null);
             },
             onCancel: () => setConfig(null),
         });
@@ -121,10 +145,18 @@ const DeliveriesPage = () => {
                 try {
                     await receiveDelivery(deliveryId, { accepted: false });
                     fetchDeliveries();
+                    setConfig(null);
                 } catch (err) {
                     console.error("Failed to reject delivery:", err);
+                    setConfig({
+                        isAlert: true,
+                        title: "Action Failed",
+                        description: err.message || "Failed to reject the delivery request.",
+                        confirmVariant: "destructive",
+                        confirmText: "Acknowledge",
+                        onConfirm: () => setConfig(null) 
+                    });
                 }
-                setConfig(null);
             },
             onCancel: () => setConfig(null),
         });
@@ -139,10 +171,18 @@ const DeliveriesPage = () => {
                 try {
                     await receiveDelivery(deliveryId, { received: true });
                     fetchDeliveries();
+                    setConfig(null);
                 } catch (err) {
                     console.error("Failed to confirm delivery:", err);
+                    setConfig({
+                        isAlert: true,
+                        title: "Action Failed",
+                        description: err.message || "Failed to confirm the delivery.",
+                        confirmVariant: "destructive",
+                        confirmText: "Acknowledge",
+                        onConfirm: () => setConfig(null) 
+                    });
                 }
-                setConfig(null);
             },
             onCancel: () => setConfig(null),
         });

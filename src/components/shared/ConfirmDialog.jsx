@@ -21,7 +21,6 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
             }
             onClose();
         } catch (error) {
-            // CHANGE THIS TO HAVE AN ERROR
             console.error("Confirmation action failed:", error);
         }
     };
@@ -33,7 +32,7 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
     }
 
     const confirmVariant = config.confirmVariant || "destructive";
-
+    const isAlertOnly = config.isAlert === true;
 
     return (
         <AlertDialog
@@ -43,27 +42,32 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
             <AlertDialogContent>
 
                 <AlertDialogHeader className="items-center text-center sm:items-center sm:text-center">
-                    <AlertDialogTitle className="text-center justify-center font-bold">{config.title}</AlertDialogTitle>
-                    {/* FIXED: Replaced text-custom-gray with text-muted-foreground */}
-                    <AlertDialogDescription className="mt-2 text-justify"><span className="text-muted-foreground">{config.description || null}</span></AlertDialogDescription>
+                    <AlertDialogTitle className="text-center justify-center font-bold">
+                        {config.title}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="mt-2 text-justify">
+                        <span className="text-muted-foreground">{config.description || null}</span>
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
 
                 <AlertDialogFooter className="w-full sm:flex-col sm:justify-stretch">
-                    <div className="grid grid-cols-2 gap-6 mt-4 ">
-                        <AlertDialogCancel
-                            onClick={handleCancel}
-                            variant="outline"
-                            className="w-full"
-                        >
-                            {config.cancelText || "Cancel"}
-                        </AlertDialogCancel>
+                    <div className={`grid ${isAlertOnly ? 'grid-cols-1' : 'grid-cols-2'} gap-6 mt-4 w-full`}>
+                        {!isAlertOnly && (
+                            <AlertDialogCancel
+                                onClick={handleCancel}
+                                variant="outline"
+                                className="w-full"
+                            >
+                                {config.cancelText || "Cancel"}
+                            </AlertDialogCancel>
+                        )}
 
                         <AlertDialogAction
                             onClick={handleConfirm}
                             variant={confirmVariant}
                             className="w-full"
                         >
-                            {config.confirmText || "Confirm"}
+                            {config.confirmText || (isAlertOnly ? "OK" : "Confirm")}
                         </AlertDialogAction>
                     </div>
                 </AlertDialogFooter>
