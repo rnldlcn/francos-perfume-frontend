@@ -34,6 +34,19 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
     const confirmVariant = config.confirmVariant || "destructive";
     const isAlertOnly = config.isAlert === true;
 
+    // Force Tailwind color classes based on the requested variant
+    const getButtonColor = (variant) => {
+        switch (variant) {
+            case "success":
+                return "bg-emerald-600 hover:bg-emerald-500 text-white border-transparent";
+            case "destructive":
+                return "bg-destructive hover:bg-destructive/90 text-destructive-foreground border-transparent";
+            case "default":
+            default:
+                return "bg-primary hover:bg-primary/90 text-primary-foreground border-transparent";
+        }
+    };
+
     return (
         <AlertDialog
             open={isOpen}
@@ -55,8 +68,7 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
                         {!isAlertOnly && (
                             <AlertDialogCancel
                                 onClick={handleCancel}
-                                variant="outline"
-                                className="w-full"
+                                className="w-full mt-0 border-input bg-background hover:bg-muted text-foreground"
                             >
                                 {config.cancelText || "Cancel"}
                             </AlertDialogCancel>
@@ -64,8 +76,7 @@ const ConfirmDialog = ({ isOpen, onClose, config }) => {
 
                         <AlertDialogAction
                             onClick={handleConfirm}
-                            variant={confirmVariant}
-                            className="w-full"
+                            className={`w-full font-bold ${getButtonColor(confirmVariant)}`}
                         >
                             {config.confirmText || (isAlertOnly ? "OK" : "Confirm")}
                         </AlertDialogAction>

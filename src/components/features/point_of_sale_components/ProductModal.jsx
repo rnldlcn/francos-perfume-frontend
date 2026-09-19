@@ -1,13 +1,11 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ConfirmDialog from "@/components/shared/ConfirmDialog"; // ADDED: Import ConfirmDialog
 
 const ProductModal = ({ product, isOpen, onClose, onAdd }) => {
   const [quantity, setQuantity] = useState(1);
-  const [config, setConfig] = useState(null); // ADDED: Alert state
 
-  // Extract available stock (adjust property name if your backend uses something else)
-const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
+  // Extract available stock matching the POSItemDisplayDTO exactly
+  const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
 
   useEffect(() => {
     if (isOpen) setQuantity(1);
@@ -19,20 +17,11 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
     // Fallback if they somehow left the input blank
     const finalQuantity = quantity === '' || quantity < 1 ? 1 : quantity;
     onAdd(product, finalQuantity);
+    onClose(); // Automatically close the modal after adding to checkout
   };
 
-  // CLIENT-SIDE DEFENSE 1: Button Clicks
   const handleIncrement = () => {
-    if (quantity >= availableStock) {
-      setConfig({
-        isAlert: true,
-        title: "Insufficient Stock",
-        description: `Only ${availableStock} items available in inventory.`,
-        confirmVariant: "destructive",
-        confirmText: "Acknowledge",
-        onConfirm: () => setConfig(null)
-      });
-    } else {
+    if (quantity < availableStock) {
       setQuantity((prev) => (prev === '' ? 1 : prev + 1));
     }
   };
@@ -44,7 +33,6 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
     });
   };
 
-  // CLIENT-SIDE DEFENSE 2: Manual Typing
   const handleQuantityChange = (e) => {
     const val = e.target.value;
     
@@ -61,16 +49,9 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
       return;
     }
 
+    // Silent cap: Snap back to maximum available stock if they type too much
     if (numVal > availableStock) {
-      setQuantity(availableStock); // Snap back to max stock
-      setConfig({
-        isAlert: true,
-        title: "Insufficient Stock",
-        description: `Cannot exceed available stock of ${availableStock}.`,
-        confirmVariant: "destructive",
-        confirmText: "Acknowledge",
-        onConfirm: () => setConfig(null)
-      });
+      setQuantity(availableStock);
     } else {
       setQuantity(numVal);
     }
@@ -88,10 +69,10 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
           
           <div className="flex-1 flex flex-col justify-center">
             <h2 className="text-[22px] font-extrabold text-foreground uppercase leading-tight mb-4 pr-6 tracking-wide">
-              {product.name || product.product_name}
+              {product.name || product.product_name || product.ProductName || product.productName}
             </h2>
             <p className="text-lg font-bold text-muted-foreground mb-6">
-              Price: ₱{(product.price || product.product_price)?.toLocaleString()}
+              Price: ₱{(product.price || product.product_price || product.ProductPrice || product.productPrice)?.toLocaleString()}
             </p>
             <p className="text-sm font-medium text-muted-foreground mb-2">
               In Stock: <span className="text-foreground">{availableStock}</span>
@@ -107,7 +88,6 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
                   -
                 </button>
                 
-                {/* FIXED: Replaced static div with an input field for manual entry */}
                 <input 
                   type="number"
                   value={quantity}
@@ -117,7 +97,7 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
                 
                 <button 
                   onClick={handleIncrement}
-                  // Disabled visually if they hit the cap, but click handler still fires to show alert
+                  disabled={quantity >= availableStock}
                   className={`w-10 h-10 flex items-center justify-center font-bold rounded transition-colors text-xl ${
                     quantity >= availableStock 
                       ? 'bg-muted text-muted-foreground cursor-not-allowed' 
@@ -131,8 +111,8 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
           </div>
 
           <div className="w-40 h-40 shrink-0 rounded-md overflow-hidden bg-muted shadow-inner flex items-center justify-center relative">
-            {product.imageUrl || product.product_image_url ? (
-              <img src={product.imageUrl || product.product_image_url} alt={product.name} className="w-full h-full object-cover" />
+            {product.imageUrl || product.product_image_url || product.ProductImageUrl || product.productImageUrl ? (
+              <img src={product.imageUrl || product.product_image_url || product.ProductImageUrl || product.productImageUrl} alt="Product" className="w-full h-full object-cover" />
             ) : (
               <div className="w-20 h-28 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-t-full shadow-2xl opacity-80"></div>
             )}
@@ -149,13 +129,6 @@ const availableStock = product?.ProductQty ?? product?.productQty ?? 0;
         </button>
 
       </div>
-
-      {/* ADDED: ConfirmDialog for input error popups */}
-      <ConfirmDialog
-        isOpen={!!config}
-        onClose={() => setConfig(null)}
-        config={config}
-      />
     </div>
   );
 };

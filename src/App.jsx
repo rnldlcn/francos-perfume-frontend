@@ -9,16 +9,12 @@ import RequestDetailsPage from './components/features/request_components/Request
 import DashboardLayout from './layouts/DashboardLayout';
 import { ArchivesPage, AuditLogPage, BarcodePage, DeliveriesPage, DiscountPage, ForecastPage, HomePage, InventoryPage, ProductsPage, RequestPage, TransactionsPage } from './pages/dashboard/index.js';
 import AccountsPage from './pages/dashboard/ManageAccountsPage';
-
-// ADDED: Import the UserSettingsPage here. 
-// Note: Adjust the path if you saved UserSettingsPage in a different folder!
 import UserSettingsPage from './pages/dashboard/UserSettingsPage'; 
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
 import PointOfSalePage from './pages/PointOfSalePage';
 
-// Shadcn UI Toast Imports
 import { Toaster } from '@/components/ui/toaster';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -37,7 +33,9 @@ const NavigationManager = ({ user }) => {
   useEffect(() => {
     if (user) {
       const role = user.activeRole;
-      if (role === 'CASHIER' && path !== '/pos') {
+      
+      // FIXED: Use startsWith to allow sub-routes like /pos/settings
+      if (role === 'CASHIER' && !path.startsWith('/pos')) {
         navigate('/pos', { replace: true });
       } 
       else if (['MANAGER', 'OWNER', 'ADMIN', 'STAFF'].includes(role)) {
@@ -64,16 +62,12 @@ const App = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Global Offline / Server Connection Monitor
   useEffect(() => {
     const handleOffline = () => setIsOffline(true);
     const handleOnline = () => setIsOffline(false);
     
-    // Listen to actual Wi-Fi drop
     window.addEventListener('offline', handleOffline);
     window.addEventListener('online', handleOnline);
-    
-    // Listen to our backend crash event
     window.addEventListener('server-connection-error', handleOffline);
 
     return () => {
@@ -83,7 +77,6 @@ const App = () => {
     };
   }, []);
 
-  // Global Session Expiration (401) Listener
   useEffect(() => {
     const handleSessionExpired = () => {
       toast({
@@ -111,7 +104,6 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* GLOBAL OFFLINE BANNER */}
       {isOffline && (
         <div className="w-full bg-destructive text-destructive-foreground text-center py-2 font-semibold text-sm z-[9999]">
           Lost internet connectivity! Contact administrators if problem is not on your end.
@@ -134,8 +126,6 @@ const App = () => {
               }
             >
               <Route index element={<HomePage role={user?.trueRole} />} />
-              
-              {/* ADDED: The settings route is now registered so the dropdown button works */}
               <Route path="settings" element={<UserSettingsPage />} />
 
               <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'OWNER', 'STAFF']} />}>
@@ -168,6 +158,8 @@ const App = () => {
             
             <Route element={<ProtectedRoute user={user} allowedRoles={['MANAGER', 'CASHIER']} />}>
               <Route path="/pos" element={<PointOfSalePage />} />
+              {/* FIXED: Added the missing setting route for cashiers */}
+              <Route path="/pos/settings" element={<UserSettingsPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/login" replace />} />

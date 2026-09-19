@@ -1,6 +1,6 @@
 import { CancelConfirmModal, CashPaymentModal, CheckoutModal, DiscountModal, GCashPaymentModal, PointOfSaleFilterBar, ProductCard, ProductModal } from '@/components/features/point_of_sale_components';
 import { ProfileDropdown } from '@/components/shared';
-import ConfirmDialog from "@/components/shared/ConfirmDialog"; // ADDED: Import ConfirmDialog
+import ConfirmDialog from "@/components/shared/ConfirmDialog"; 
 import { Button } from '@/components/ui/button';
 import { Loader2, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -21,7 +21,7 @@ const PointOfSalePage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  const [config, setConfig] = useState(null); // ADDED: Alert state
+  const [config, setConfig] = useState(null); 
 
   const currentDateTime = useClock();
   const { cart, handleAddToCart, handleRemoveFromCart, handleClearCart, subtotal, discountAmount, grandTotal, appliedDiscountId, appliedDiscountRate, setAppliedDiscountId, setAppliedDiscountRate } = useCart();
@@ -50,7 +50,6 @@ const PointOfSalePage = () => {
     if (method === 'GCash') setShowGCashModal(true);
   };
 
-  // FIXED: Converted to async and added try/catch for the server-side safety net
   const onConfirmPayment = async (paymentDetails) => {
     try {
       await handleFinalCheckout(paymentDetails, (receiptData) => {
@@ -61,7 +60,6 @@ const PointOfSalePage = () => {
         setShowGCashModal(false);
         setShowCheckoutModal(false);
         
-        // Show success alert WITH the receipt details
         setConfig({
           isAlert: true,
           title: "Transaction Successful!",
@@ -72,7 +70,6 @@ const PointOfSalePage = () => {
         });
       });
     } catch (error) {
-      // Catches backend inventory/processing errors from useCheckout
       setShowCashModal(false);
       setShowGCashModal(false);
       setShowCheckoutModal(false);
@@ -119,16 +116,22 @@ const PointOfSalePage = () => {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {products.map(product => (
-  <ProductCard 
-    key={product.productId || product.product_id}
-    name={product.productName || product.product_name || product.name}
-    type={product.productType || product.product_type || product.type}
-    gender={product.productGender || product.product_gender || product.gender}
-    imageUrl={product.productImageUrl || product.product_image_url || product.imageUrl}
-    price={product.productPrice || product.product_price || product.price}
-    onAddToCart={() => setSelectedProduct(product)}
-  />
-))}
+                <ProductCard 
+                  key={product.productId || product.product_id}
+                  name={product.productName || product.product_name || product.name}
+                  type={product.productType || product.product_type || product.type}
+                  gender={product.productGender || product.product_gender || product.gender}
+                  imageUrl={product.productImageUrl || product.product_image_url || product.imageUrl}
+                  price={product.productPrice || product.product_price || product.price}
+                  
+                  onAddToCart={() => setSelectedProduct({
+                      ...product, 
+                      name: product.productName || product.product_name || product.name,
+                      price: product.productPrice || product.product_price || product.price,
+                      product_id: product.productId || product.product_id || product.id
+                  })}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -155,7 +158,24 @@ const PointOfSalePage = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <p className="font-bold text-emerald-500">₱{(item.price * item.cartQty).toLocaleString()}</p>
-                  <button onClick={() => handleRemoveFromCart(item.product_id)} className="text-destructive hover:text-destructive/80 font-bold transition-colors">×</button>
+                  <button 
+                    onClick={() => {
+                      setConfig({
+                        isAlert: false,
+                        title: "Remove Item",
+                        description: `Are you sure you want to remove ${item.name} from the cart?`,
+                        confirmVariant: "destructive",
+                        confirmText: "Remove",
+                        onConfirm: () => {
+                          handleRemoveFromCart(item.product_id);
+                          setConfig(null);
+                        }
+                      });
+                    }} 
+                    className="text-destructive hover:text-destructive/80 font-bold transition-colors"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
             ))
@@ -208,7 +228,6 @@ const PointOfSalePage = () => {
         }}
         onClose={()=> setShowCancelConfirm(false) } />
 
-      {/* ADDED: Global ConfirmDialog for the POS page */}
       <ConfirmDialog
         isOpen={!!config}
         onClose={() => setConfig(null)}
