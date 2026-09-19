@@ -26,6 +26,30 @@ const CashPaymentModal = ({ isOpen, onClose, grandTotal, onConfirmPayment }) => 
     onClose();
   };
 
+  // ADDED: Intercept keystrokes to strictly enforce a 5-digit limit (Max 99,999)
+  const handleAmountChange = (e) => {
+    const val = e.target.value;
+    
+    // Allow empty string so the user can delete their input
+    if (val === "") {
+      setAmountReceived("");
+      return;
+    }
+
+    // Prevent negative numbers and values over 99,999
+    if (Number(val) < 0 || Number(val) > 99999) {
+      return;
+    }
+
+    // Prevent the integer part from exceeding 5 digits (in case of pasting)
+    const integerPart = val.split('.')[0];
+    if (integerPart.length > 5) {
+      return;
+    }
+
+    setAmountReceived(val);
+  };
+
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl w-full max-w-[500px] overflow-hidden animate-in fade-in zoom-in-95 duration-200 relative p-10">
@@ -58,7 +82,7 @@ const CashPaymentModal = ({ isOpen, onClose, grandTotal, onConfirmPayment }) => 
               type="number"
               placeholder="Enter amount..."
               value={amountReceived}
-              onChange={(e) => setAmountReceived(e.target.value)}
+              onChange={handleAmountChange}
               className="border border-input bg-transparent rounded-md px-4 py-2 text-xl font-bold text-foreground w-48 text-right focus:outline-none focus:ring-2 focus:ring-ring transition-all"
               autoFocus
             />

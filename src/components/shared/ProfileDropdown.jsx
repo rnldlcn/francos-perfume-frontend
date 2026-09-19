@@ -1,12 +1,12 @@
 import { useAuth } from '@/auth/UseAuth';
 import { ArrowRightLeft, LogOut, Settings, User } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ADDED: Import navigate hook
+import { useNavigate } from 'react-router-dom';
 import LogoutModal from './LogoutModal';
 
 const ProfileDropdown = () => {
   const { user, handleSwitchAccess } = useAuth();
-  const navigate = useNavigate(); // ADDED: Initialize navigate
+  const navigate = useNavigate();
   
   const canSwitchAccess = 
     user?.trueRole?.toLowerCase() === 'manager' || 
@@ -45,7 +45,8 @@ const ProfileDropdown = () => {
           <div 
             onClick={() => {
               setIsOpen(false);
-              navigate('/home/settings'); // ADDED: Navigation execution
+              // FIXED: Only route cashiers to /pos/settings. Everyone else goes to /home/settings.
+              navigate(user?.activeRole === 'CASHIER' ? '/pos/settings' : '/home/settings');
             }}
             className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted transition-colors"
           >

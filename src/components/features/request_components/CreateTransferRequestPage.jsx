@@ -1,3 +1,4 @@
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Button } from '@/components/ui/button';
 import { useRequest } from '@/hooks/request_hooks/useRequest';
 import { createRequest } from '@/services/RequestService';
@@ -13,34 +14,31 @@ import TransferSummary from './create_transfer_components/TransferSummary';
 const INITIAL_DATA_STATE = {
     fromBranch: null,
     toBranch: null,
-    requestMessage: null,
+    requestMessage: "", 
     items: []
 }
 
 const requestValidationSchema = {
     requestMessage: [isValid.maxLength(255)],
     items: [
-        (value) => (value.length == 0 ? "Please add at least one product" : null)
+        (value) => (value.length === 0 ? "Please add at least one product" : null)
     ]
 }
 
 const CreateTransferRequestPage = () => {
     const navigate = useNavigate();
 
-    const {
-        fetchRequestFilters
-    } = useRequest();
+    const { fetchRequestFilters } = useRequest();
     
     const [data, setData] = useState(INITIAL_DATA_STATE);
-
     const [selectedProduct, setSelectedProduct] = useState('');
     const [quantity, setQuantity] = useState(1);
-    
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const [config, setConfig] = useState(null);
 
     const totalUnits = (data.items || []).reduce((sum, item) => sum + item.quantity, 0);
     
-
     const [branchOptions, setBranchOptions] = useState([]);
     const [productOptions, setProductOptions] = useState([]);
 
@@ -107,7 +105,7 @@ const CreateTransferRequestPage = () => {
             }
 
             return { ...prev, items: updatedItems };
-        })
+        });
         setSelectedProduct('');
         setQuantity(1);
     };
@@ -119,31 +117,87 @@ const CreateTransferRequestPage = () => {
         }));
     };
 
-    const handleSubmit = async () => {
-    const validationError = validateForm(data, requestValidationSchema);
-    if (Object.keys(validationError).length > 0) return;
+    // FIXED: Extract string labels from options and attach them to the payload
+    const executeSubmission = async () => {
+        setIsSubmitting(true);
+        try {
+            // Find the literal text strings (e.g., "RIVERBANKS") from the state options
+            const fromBranchStr = branchOptions.find(b => b.value === data.fromBranch)?.label || "";
+            const toBranchStr = branchOptions.find(b => b.value === data.toBranch)?.label || "";
 
-    setIsSubmitting(true);
-    try {
-        const payload = {
-            fromBranch: data.fromBranch,
-            toBranch: data.toBranch,
-            requestMessage: data.requestMessage || null,
-            items: data.items.map(item => ({
-                productId: item.productId,
-                requestedQty: item.quantity,
-            }))
-        };
+            const payload = {
+                fromBranch: data.fromBranch,
+                toBranch: data.toBranch,
+                // Appending multiple common variations of string names for backend mapping
+                fromBranchName: fromBranchStr,
+                toBranchName: toBranchStr,
+                requestedFrom: fromBranchStr,
+                deliveredTo: toBranchStr,
+                requestMessage: data.requestMessage || null,
+                items: data.items.map(item => ({
+                    productId: item.productId,
+                    requestedQty: item.quantity,
+                }))
+            };
 
-        await createRequest(payload);
-        navigate('/home/requests');
+            await createRequest(payload);
+            setConfig(null);
+            navigate('/home/requests');
+        } catch (error) {
+            console.error("Submission failed:", error);
+            setConfig({
+                isAlert: true,
+                title: "Submission Failed",
+                description: error.message || "Failed to create transfer request.",
+                confirmVariant: "destructive",
+                confirmText: "Acknowledge",
+                onConfirm: () => setConfig(null)
+            });
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleSubmitClick = () => {
+        // Validate required fields
+        if (!data.fromBranch || !data.toBranch) {
+            setConfig({
+                isAlert: true,
+                title: "Missing Branches",
+                description: "You must select both a Source Branch and a Destination Branch.",
+                confirmVariant: "default",
+                confirmText: "Okay",
+                onConfirm: () => setConfig(null)
+            });
+            return;
+        }
+
+        const validationError = validateForm(data, requestValidationSchema);
+        if (Object.keys(validationError).length > 0) {
+            setConfig({
+                isAlert: true,
+                title: "Validation Error",
+                description: Object.values(validationError)[0], 
+                confirmVariant: "destructive",
+                confirmText: "Fix Errors",
+                onConfirm: () => setConfig(null)
+            });
+            return;
+        }
+
+        // Show confirmation modal before executing API call
+        setConfig({
+            isAlert: false,
+            title: "Submit Transfer Request?",
+            description: `You are requesting ${totalUnits} units of ${data.items.length} products. This action will place the request in a pending state for approval.`,
+            confirmVariant: "success",
+            confirmText: "Submit Request",
+            onConfirm: executeSubmission
+        });
+    };
+
     return (
-        <div className="flex flex-col h-full font-montserrat animate-fade-in">
+        <div className="flex flex-col h-full font-montserrat animate-fade-in relative">
             <div className="flex items-center gap-4 mb-6">
                 <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
                     <ArrowLeft size={16} /> Back
@@ -184,11 +238,17 @@ const CreateTransferRequestPage = () => {
                     totalUnits={totalUnits}
                     message={data.requestMessage}
                     onMessageChange={(value) => setData(prev => ({ ...prev, requestMessage: value }))}
-                    onSubmit={handleSubmit}
+                    onSubmit={handleSubmitClick} 
                     isSubmitting={isSubmitting}
                     branchOptions={branchOptions}
                 />
             </div>
+
+            <ConfirmDialog
+                isOpen={!!config}
+                onClose={() => setConfig(null)}
+                config={config}
+            />
         </div>
     );
 };
