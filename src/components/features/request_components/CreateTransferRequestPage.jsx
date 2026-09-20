@@ -117,7 +117,6 @@ const CreateTransferRequestPage = () => {
         }));
     };
 
-    // FIXED: Extract string labels from options and attach them to the payload
     const executeSubmission = async () => {
         setIsSubmitting(true);
         try {
@@ -125,14 +124,10 @@ const CreateTransferRequestPage = () => {
             const fromBranchStr = branchOptions.find(b => b.value === data.fromBranch)?.label || "";
             const toBranchStr = branchOptions.find(b => b.value === data.toBranch)?.label || "";
 
+            // Mapped exactly to Leo's updated DTO (expecting strings)
             const payload = {
-                fromBranch: data.fromBranch,
-                toBranch: data.toBranch,
-                // Appending multiple common variations of string names for backend mapping
-                fromBranchName: fromBranchStr,
-                toBranchName: toBranchStr,
-                requestedFrom: fromBranchStr,
-                deliveredTo: toBranchStr,
+                fromBranch: fromBranchStr,
+                toBranch: toBranchStr,
                 requestMessage: data.requestMessage || null,
                 items: data.items.map(item => ({
                     productId: item.productId,
