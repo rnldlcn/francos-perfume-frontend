@@ -14,6 +14,9 @@ export const useLogin = () => {
   const [pendingAuthData, setPendingAuthData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // ADDED: State to control the password modal
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const displayName = email ? email.split('@')[0] : 'User';
 
@@ -23,36 +26,63 @@ export const useLogin = () => {
     else navigate('/home');
   };
 
+  // ADDED: Helper function to process the user data once a token is successfully acquired
+  const processSuccessfulLogin = (result) => {
+    const normalizedRole = result.role;
+    const userData = {
+      email: result.email,
+      accessToken: result.accessToken,
+      trueRole: normalizedRole,
+      activeRole: normalizedRole,
+      branchId: result.branchId,
+      branchLocation: result.branchLocation
+    };
+
+    setTrueRole(normalizedRole);
+
+    if (normalizedRole === 'MANAGER') {
+      setPendingAuthData(userData);
+      setView('module');
+    } else {
+      setAuthUser(userData);
+      navigateByRole(normalizedRole);
+    }
+  };
+
   const handleLogin = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
       const result = await loginApi(email, password);
-      const normalizedRole = result.role;
 
-      const userData = {
-        email: result.email,
-        accessToken: result.accessToken,
-        trueRole: normalizedRole,
-        activeRole: normalizedRole,
-        branchId: result.branchId,
-        branchLocation: result.branchLocation
-      };
-
-
-      setTrueRole(normalizedRole);
-
-      if (normalizedRole === 'MANAGER') {
-        setPendingAuthData(userData);
-        setView('module');
-      } else {
-        setAuthUser(userData);
-        navigateByRole(normalizedRole);
+      // FIXED: Intercept Leo's flag before processing the login
+      if (result.requiresPasswordChange) {
+        setShowPasswordModal(true);
+        return; // Halt execution here
       }
+
+      processSuccessfulLogin(result);
     } catch (err) {
       setError(err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ADDED: Submission handler for the modal
+  const handlePasswordUpdate = async (newPassword) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Send the login request again, but this time with the new password attached
+      const result = await loginApi(email, password, newPassword);
+      
+      setShowPasswordModal(false);
+      processSuccessfulLogin(result);
+    } catch (err) {
+      setError(err.message || 'Failed to update password');
     } finally {
       setIsLoading(false);
     }
@@ -82,5 +112,9 @@ export const useLogin = () => {
     setPassword,
     email,
     setEmail,
+    // ADDED: Export the new states and functions so LoginPage.jsx can use them
+    showPasswordModal,
+    setShowPasswordModal,
+    handlePasswordUpdate
   };
 };
